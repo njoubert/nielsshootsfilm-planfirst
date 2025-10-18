@@ -4126,29 +4126,27 @@ testdata/
 
 ---
 
-#### 5.3.5 Continuous Integration
+#### 5.3.5 Local Test Execution Strategy
 
-**Test Execution Strategy**:
-
-##### Pre-commit Hook
+**Pre-commit Hook** (via pre-commit framework):
 ```bash
 # Run fast unit tests only
 bazel test //frontend:unit_tests //backend:models_test //backend:services_test
 ```
 
-##### Pull Request CI
+**Manual Full Test Suite**:
 ```bash
 # Run all tests except E2E
 bazel test //... --test_tag_filters=-e2e
 ```
 
-##### Nightly CI
+**Manual E2E Testing**:
 ```bash
 # Run everything including E2E
 bazel test //... --test_output=all
 ```
 
-##### Coverage Reports
+**Coverage Reports**:
 ```bash
 # Frontend coverage
 bazel coverage //frontend:unit_tests
@@ -5382,568 +5380,201 @@ ssh $target "sudo systemctl start photography-admin"
 
 ---
 
-### 7.8 CI/CD with GitHub Actions
+### 7.8 Release and Deployment Process
 
-**Philosophy**: Automated testing and deployment pipeline. Run tests on every PR, automate releases, optional automated deployments.
+**Philosophy**: Manual release process with automated local testing via pre-commit hooks. All quality checks run locally before push.
 
-#### 7.8.1 CI Pipeline - Test on Every Push/PR
+#### 7.8.1 Pre-release Checklist
 
-**File**: `.github/workflows/ci.yml`
-```yaml
-name: CI
+Before creating a release, ensure all quality gates pass locally:
 
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+```bash
+# 1. Run pre-commit hooks on all files
+pre-commit run --all-files
 
-jobs:
-  lint:
-    name: Lint Code
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+# 2. Run full test suite
+bazel test //... --test_output=errors
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+# 3. Run E2E tests manually
+cd e2e && npm run test:e2e
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
+# 4. Check for security vulnerabilities
+cd frontend && npm audit
+cd ../backend && go list -json -m all | docker run --rm -i sonatypecommunity/nancy:latest sleuth
 
-      - name: Install frontend dependencies
-        run: cd frontend && npm ci
-
-      - name: Lint frontend (ESLint + Prettier)
-        run: cd frontend && npm run lint
-
-      - name: Lint backend (golangci-lint)
-        uses: golangci/golangci-lint-action@v4
-        with:
-          version: latest
-          working-directory: backend
-
-      - name: Check formatting (Prettier)
-        run: cd frontend && npm run format:check
-
-      - name: Check formatting (gofmt)
-        run: |
-          cd backend
-          if [ -n "$(gofmt -l .)" ]; then
-            echo "Go files not formatted:"
-            gofmt -l .
-            exit 1
-          fi
-
-  test-frontend:
-    name: Test Frontend
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        run: cd frontend && npm ci
-
-      - name: Run unit tests
-        run: cd frontend && npm run test
-
-      - name: Run component tests
-        run: cd frontend && npm run test:components
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./frontend/coverage/coverage-final.json
-          flags: frontend
-          name: frontend-coverage
-
-  test-backend:
-    name: Test Backend
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-
-      - name: Cache Go modules
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Run tests
-        run: |
-          cd backend
-          go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./backend/coverage.txt
-          flags: backend
-          name: backend-coverage
-
-  test-e2e:
-    name: E2E Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-
-      - name: Install dependencies
-        run: |
-          cd frontend && npm ci
-          cd ../backend && go mod download
-
-      - name: Build frontend
-        run: cd frontend && npm run build
-
-      - name: Build backend
-        run: cd backend && go build -o ../dist/admin_server cmd/admin/main.go
-
-      - name: Install Playwright
-        run: npx playwright install --with-deps
-
-      - name: Run E2E tests
-        run: npm run test:e2e
-        env:
-          BASE_URL: http://localhost:8080
-
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
-
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-
-      - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy-results.sarif'
-
-      - name: Scan Go dependencies for vulnerabilities
-        run: |
-          cd backend
-          go install golang.org/x/vuln/cmd/govulncheck@latest
-          govulncheck ./...
-
-      - name: Scan npm dependencies
-        run: |
-          cd frontend
-          npm audit --audit-level=moderate
+# 5. Verify build artifacts
+bazel build //...
+cd frontend && npm run build
+cd ../backend && go build ./cmd/admin/main.go
 ```
 
-#### 7.8.2 Build and Release Pipeline
-
-**File**: `.github/workflows/release.yml`
-```yaml
-name: Release
-
-on:
-  push:
-    tags:
-      - 'v*.*.*'
-
-permissions:
-  contents: write
-
-jobs:
-  build:
-    name: Build Release Artifacts
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-
-      - name: Get version from tag
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Build frontend
-        run: |
-          cd frontend
-          npm ci
-          npm run build
-
-      - name: Build backend
-        run: |
-          cd backend
-          go build -ldflags="-X main.Version=${{ steps.get_version.outputs.VERSION }}" \
-            -o ../dist/admin_server cmd/admin/main.go
-
-      - name: Create deployment package
-        run: |
-          mkdir -p release
-          tar -czf release/photography-site-${{ steps.get_version.outputs.VERSION }}.tar.gz \
-            -C dist .
-
-      - name: Generate checksums
-        run: |
-          cd release
-          sha256sum *.tar.gz > checksums.txt
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            release/*.tar.gz
-            release/checksums.txt
-          generate_release_notes: true
-          draft: false
-          prerelease: false
-
-  docker:
-    name: Build and Push Docker Image
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Extract version
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./deployment/docker/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/photography-site:${{ steps.get_version.outputs.VERSION }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/photography-site:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-```
-
-#### 7.8.3 Automated Deployment (Optional)
-
-**File**: `.github/workflows/deploy.yml`
-```yaml
-name: Deploy
-
-on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        type: choice
-        options:
-          - staging
-          - production
-      version:
-        description: 'Version to deploy (tag name, e.g., v1.2.3)'
-        required: true
-
-jobs:
-  deploy:
-    name: Deploy to ${{ inputs.environment }}
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.version }}
-
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Download release artifact
-        run: |
-          gh release download ${{ inputs.version }} \
-            --pattern 'photography-site-*.tar.gz'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Deploy to server
-        run: |
-          # Upload artifact
-          scp photography-site-*.tar.gz ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/
-
-          # Run deployment script
-          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
-            set -e
-            cd /var/www/photography-site
-
-            # Stop service
-            sudo systemctl stop photography-admin
-
-            # Backup current version
-            sudo mv app app.backup || true
-
-            # Extract new version
-            sudo mkdir -p app
-            sudo tar -xzf /tmp/photography-site-*.tar.gz -C app/
-
-            # Run migrations (if any)
-            sudo -u www-data ./app/admin_server migrate
-
-            # Start service
-            sudo systemctl start photography-admin
-
-            # Verify service started
-            sleep 5
-            sudo systemctl status photography-admin
-
-            echo "Deployment complete!"
-          EOF
-
-      - name: Verify deployment
-        run: |
-          # Check health endpoint
-          curl -f https://${{ secrets.DEPLOY_HOST }}/api/health || exit 1
-
-      - name: Rollback on failure
-        if: failure()
-        run: |
-          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
-            sudo systemctl stop photography-admin
-            sudo rm -rf app
-            sudo mv app.backup app
-            sudo systemctl start photography-admin
-          EOF
-```
-
-#### 7.8.4 Bazel with GitHub Actions
-
-**File**: `.github/workflows/bazel-ci.yml`
-```yaml
-name: Bazel CI
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  bazel-build:
-    name: Bazel Build & Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Mount bazel cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/bazel
-            ~/.cache/bazelisk
-          key: bazel-${{ runner.os }}-${{ hashFiles('.bazelversion', 'WORKSPACE', 'BUILD.bazel') }}
-          restore-keys: |
-            bazel-${{ runner.os }}-
-
-      - name: Install Bazelisk
-        run: |
-          curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
-          chmod +x /usr/local/bin/bazel
-
-      - name: Build all targets
-        run: bazel build //...
-
-      - name: Run all tests
-        run: bazel test //... --test_output=errors
-
-      - name: Build deployment package
-        run: bazel run //:deploy_package
-```
-
-#### 7.8.5 Pre-commit Hooks in CI
-
-**File**: `.github/workflows/pre-commit.yml`
-```yaml
-name: Pre-commit Checks
-
-on:
-  pull_request:
-
-jobs:
-  pre-commit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install pre-commit
-        run: pip install pre-commit
-
-      - name: Run pre-commit on all files
-        run: pre-commit run --all-files --show-diff-on-failure
-```
-
-#### 7.8.6 Required GitHub Secrets
-
-**Repository Settings → Secrets and Variables → Actions**:
-
-Add these secrets for automated deployment:
-- `SSH_PRIVATE_KEY` - SSH private key for deployment
-- `DEPLOY_HOST` - Deployment server hostname
-- `DEPLOY_USER` - SSH user for deployment
-- `DOCKERHUB_USERNAME` - Docker Hub username (if using Docker)
-- `DOCKERHUB_TOKEN` - Docker Hub access token
-
-#### 7.8.7 Branch Protection Rules
-
-**Settings → Branches → Add rule**:
-
-For `main` branch:
-- ✅ Require a pull request before merging
-- ✅ Require status checks to pass before merging
-  - ✅ lint
-  - ✅ test-frontend
-  - ✅ test-backend
-  - ✅ test-e2e
-- ✅ Require conversation resolution before merging
-- ✅ Do not allow bypassing the above settings
-
-#### 7.8.8 Automated Dependency Updates
-
-**File**: `.github/dependabot.yml`
-```yaml
-version: 2
-updates:
-  # Frontend dependencies
-  - package-ecosystem: "npm"
-    directory: "/frontend"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-    groups:
-      dev-dependencies:
-        patterns:
-          - "@types/*"
-          - "eslint*"
-          - "prettier*"
-          - "vitest*"
-
-  # Backend dependencies
-  - package-ecosystem: "gomod"
-    directory: "/backend"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-
-  # GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-```
-
-#### 7.8.9 Release Process
+#### 7.8.2 Manual Release Process
 
 **Creating a new release**:
 
 1. **Update version number**:
    ```bash
    # Update package.json, go.mod, or version file
+   vim frontend/package.json  # Update version
+   vim backend/cmd/admin/main.go  # Update const Version
    git add .
    git commit -m "chore: bump version to v1.2.3"
    ```
 
-2. **Create and push tag**:
+2. **Run pre-release checklist** (see 7.8.1 above)
+
+3. **Create and push tag**:
    ```bash
-   git tag v1.2.3
+   git tag -a v1.2.3 -m "Release v1.2.3"
    git push origin v1.2.3
+   git push origin main
    ```
 
-3. **GitHub Actions automatically**:
-   - Runs all tests
-   - Builds release artifacts
-   - Creates GitHub release
-   - Builds and pushes Docker image
-
-4. **Deploy** (manual or automated):
+4. **Build release artifacts**:
    ```bash
-   # Manual deployment
-   gh workflow run deploy.yml -f environment=production -f version=v1.2.3
+   # Frontend
+   cd frontend
+   npm ci
+   npm run build
+   cd ..
 
-   # Or use the GitHub UI: Actions → Deploy → Run workflow
+   # Backend
+   cd backend
+   go build -ldflags="-X main.Version=v1.2.3" -o ../dist/admin_server cmd/admin/main.go
+   cd ..
+
+   # Create deployment package
+   mkdir -p release
+   tar -czf release/photography-site-v1.2.3.tar.gz \
+     -C dist . \
+     --exclude='*.map'
+
+   # Generate checksums
+   cd release
+   sha256sum *.tar.gz > checksums.txt
    ```
 
-#### 7.8.10 Implementation Checklist
+5. **Create GitHub release manually**:
+   - Go to GitHub → Releases → Draft a new release
+   - Choose tag v1.2.3
+   - Add release notes
+   - Upload `photography-site-v1.2.3.tar.gz` and `checksums.txt`
+   - Publish release
 
-- [ ] Create `.github/workflows/ci.yml` for continuous integration
-- [ ] Create `.github/workflows/release.yml` for releases
-- [ ] Create `.github/workflows/deploy.yml` for automated deployment (optional)
-- [ ] Create `.github/workflows/pre-commit.yml` for pre-commit checks
-- [ ] Create `.github/dependabot.yml` for dependency updates
-- [ ] Configure GitHub secrets for deployment
-- [ ] Set up branch protection rules
-- [ ] Test CI pipeline with a test PR
-- [ ] Test release process with a test tag
+#### 7.8.3 Manual Deployment Process
+
+```bash
+# 1. Download release artifact from GitHub
+wget https://github.com/user/repo/releases/download/v1.2.3/photography-site-v1.2.3.tar.gz
+
+# 2. Verify checksum
+sha256sum -c checksums.txt
+
+# 3. Upload to server
+scp photography-site-v1.2.3.tar.gz user@server:/tmp/
+
+# 4. Deploy on server
+ssh user@server << 'EOF'
+  set -e
+  cd /var/www/photography-site
+
+  # Stop service
+  sudo systemctl stop photography-admin
+
+  # Backup current version
+  sudo mv app app.backup.$(date +%Y%m%d_%H%M%S) || true
+
+  # Extract new version
+  sudo mkdir -p app
+  sudo tar -xzf /tmp/photography-site-v1.2.3.tar.gz -C app/
+
+  # Set permissions
+  sudo chown -R www-data:www-data app/
+
+  # Start service
+  sudo systemctl start photography-admin
+
+  # Verify service started
+  sleep 5
+  sudo systemctl status photography-admin
+
+  echo "Deployment complete!"
+EOF
+
+# 5. Verify deployment
+curl -f https://your-domain.com/api/health || echo "Health check failed!"
+
+# 6. Rollback if needed
+# ssh user@server 'sudo systemctl stop photography-admin && sudo rm -rf app && sudo mv app.backup.TIMESTAMP app && sudo systemctl start photography-admin'
+```
+
+#### 7.8.4 Development Workflow
+
+**Daily development**:
+```bash
+# Pre-commit hooks run automatically on git commit
+git add .
+git commit -m "feat: add new feature"  # Pre-commit hooks run here
+
+# If hooks fail, fix issues and retry
+git add .
+git commit -m "feat: add new feature"
+```
+
+**Before pushing to main**:
+```bash
+# Run full test suite manually
+bazel test //...
+
+# Or run specific test suites
+bazel test //frontend:all_tests
+bazel test //backend:all_tests
+bazel test //e2e:all_tests
+```
+
+#### 7.8.5 Dependency Management
+
+**Frontend dependencies**:
+```bash
+# Check for outdated packages
+cd frontend
+npm outdated
+
+# Update dependencies (review changes carefully)
+npm update
+
+# Or update specific package
+npm install lit@latest
+
+# Audit for security vulnerabilities
+npm audit
+npm audit fix
+```
+
+**Backend dependencies**:
+```bash
+# Check for outdated modules
+cd backend
+go list -u -m all
+
+# Update dependencies
+go get -u ./...
+go mod tidy
+
+# Check for vulnerabilities
+go list -json -m all | nancy sleuth
+```
+
+#### 7.8.6 Implementation Checklist
+
+- [ ] Set up pre-commit hooks (see Phase 1.5)
+- [ ] Create `scripts/build-release.sh` for automated release builds
+- [ ] Create `scripts/deploy.sh` for deployment automation
 - [ ] Document release process in `docs/RELEASE.md`
-- [ ] Optional: Set up status badges in README
-- [ ] Optional: Configure Codecov for coverage reporting
-- [ ] Optional: Set up Slack/Discord notifications for builds
+- [ ] Create deployment rollback procedure in `docs/ROLLBACK.md`
+- [ ] Set up version management strategy (semver)
+- [ ] Create changelog template
+- [ ] Test full release process with v0.1.0
 
 ---
 
@@ -6000,8 +5631,7 @@ updates:
 - [ ] Migration scripts for data schema changes
 - [ ] Monitoring and logging
 - [ ] Automated backups
-- [ ] CI/CD pipeline
-- [ ] Automated testing in CI
+- [ ] Local testing scripts and pre-commit hooks
 
 ---
 
