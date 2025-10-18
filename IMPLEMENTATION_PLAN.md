@@ -1808,20 +1808,1001 @@ if (!config.features.enable_analytics) {
 ## Phase 4: Backend - Admin Server (Week 6-8)
 
 ### 4.1 Core Server Setup
-- [ ] HTTP server with routing
+- [ ] HTTP server with routing (chi router)
 - [ ] Static file serving (for uploaded images)
 - [ ] CORS configuration
-- [ ] Logging middleware
-- [ ] Error handling
+- [ ] Logging middleware (structured logging)
+- [ ] Error handling middleware
+- [ ] Request ID tracking
+- [ ] Panic recovery middleware
+
+#### 4.1.1 Error Handling Strategy
+
+**Philosophy**:
+- Log everything server-side with full context
+- Return safe, user-friendly errors to clients
+- Never expose internal details in production
+- Provide detailed errors in development mode
+- Track errors for debugging and monitoring
+
+**Error Types**:
+
+```go
+// backend/internal/errors/errors.go
+package errors
+
+import (
+    "fmt"
+    "net/http"
+)
+
+type AppError struct {
+    // Internal details (logged, not sent to client)
+    Err        error  // Underlying error
+    StackTrace string // Stack trace for debugging
+    Context    map[string]interface{} // Additional context
+
+    // Public details (can be sent to client)
+    Code       string // Error code (e.g., "ALBUM_NOT_FOUND")
+    Message    string // User-friendly message
+    HTTPStatus int    // HTTP status code
+}
+
+func (e *AppError) Error() string {
+    if e.Err != nil {
+        return e.Err.Error()
+    }
+    return e.Message
+}
+
+// Error constructors
+func NotFound(resource, id string) *AppError {
+    return &AppError{
+        Code:       "NOT_FOUND",
+        Message:    fmt.Sprintf("%s not found", resource),
+        HTTPStatus: http.StatusNotFound,
+        Context:    map[string]interface{}{"resource": resource, "id": id},
+    }
+}
+
+func InvalidInput(field, reason string) *AppError {
+    return &AppError{
+        Code:       "INVALID_INPUT",
+        Message:    fmt.Sprintf("Invalid %s: %s", field, reason),
+        HTTPStatus: http.StatusBadRequest,
+        Context:    map[string]interface{}{"field": field, "reason": reason},
+    }
+}
+
+func Unauthorized(reason string) *AppError {
+    return &AppError{
+        Code:       "UNAUTHORIZED",
+        Message:    "Authentication required",
+        HTTPStatus: http.StatusUnauthorized,
+        Context:    map[string]interface{}{"reason": reason},
+    }
+}
+
+func Forbidden(reason string) *AppError {
+    return &AppError{
+        Code:       "FORBIDDEN",
+        Message:    "Access denied",
+        HTTPStatus: http.StatusForbidden,
+        Context:    map[string]interface{}{"reason": reason},
+    }
+}
+
+func Internal(err error, context string) *AppError {
+    return &AppError{
+        Err:        err,
+        Code:       "INTERNAL_ERROR",
+        Message:    "An internal error occurred",
+        HTTPStatus: http.StatusInternalServerError,
+        Context:    map[string]interface{}{"context": context},
+    }
+}
+
+func Conflict(resource, reason string) *AppError {
+    return &AppError{
+        Code:       "CONFLICT",
+        Message:    fmt.Sprintf("Conflict: %s", reason),
+        HTTPStatus: http.StatusConflict,
+        Context:    map[string]interface{}{"resource": resource, "reason": reason},
+    }
+}
+```
+
+**Error Handler Middleware**:
+
+```go
+// backend/internal/middleware/errors.go
+func ErrorHandler(devMode bool) func(http.Handler) http.Handler {
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            // Wrap response writer to capture errors
+            wrapped := &errorResponseWriter{ResponseWriter: w, request: r}
+
+            // Recover from panics
+            defer func() {
+                if err := recover(); err != nil {
+                    stack := string(debug.Stack())
+
+                    logger := GetLogger(r.Context())
+                    logger.Error("panic recovered",
+                        "error", err,
+                        "stack", stack,
+                        "path", r.URL.Path,
+                        "method", r.Method,
+                    )
+
+                    appErr := &errors.Internal(
+                        fmt.Errorf("panic: %v", err),
+                        "panic recovered",
+                    )
+                    wrapped.writeError(appErr, devMode)
+                }
+            }()
+
+            next.ServeHTTP(wrapped, r)
+        })
+    }
+}
+
+type errorResponseWriter struct {
+    http.ResponseWriter
+    request *http.Request
+}
+
+func (w *errorResponseWriter) writeError(err *errors.AppError, devMode bool) {
+    logger := GetLogger(w.request.Context())
+
+    // Log full error details
+    logger.Error("request error",
+        "code", err.Code,
+        "status", err.HTTPStatus,
+        "message", err.Message,
+        "underlying_error", err.Err,
+        "context", err.Context,
+        "path", w.request.URL.Path,
+        "method", w.request.Method,
+    )
+
+    // Prepare client response
+    response := map[string]interface{}{
+        "error": map[string]interface{}{
+            "code":    err.Code,
+            "message": err.Message,
+        },
+    }
+
+    // Include additional details in dev mode
+    if devMode && err.Err != nil {
+        response["error"].(map[string]interface{})["details"] = err.Err.Error()
+        response["error"].(map[string]interface{})["context"] = err.Context
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(err.HTTPStatus)
+    json.NewEncoder(w).Encode(response)
+}
+```
+
+**Usage in Handlers**:
+
+```go
+func (h *AlbumHandler) GetAlbum(w http.ResponseWriter, r *http.Request) {
+    albumID := chi.URLParam(r, "id")
+
+    album, err := h.service.GetAlbum(albumID)
+    if err != nil {
+        // Return structured error
+        if errors.Is(err, ErrAlbumNotFound) {
+            writeError(w, r, errors.NotFound("album", albumID))
+            return
+        }
+        writeError(w, r, errors.Internal(err, "failed to get album"))
+        return
+    }
+
+    json.NewEncoder(w).Encode(album)
+}
+
+// Helper function
+func writeError(w http.ResponseWriter, r *http.Request, err *errors.AppError) {
+    // Error handler middleware will catch this
+    // But we can also handle it directly here
+    w.(*errorResponseWriter).writeError(err, isDevMode())
+}
+```
+
+#### 4.1.2 Logging Strategy
+
+**Philosophy**:
+- Structured logging for easy parsing and searching
+- Different log levels for different environments
+- Request tracing with unique IDs
+- Log rotation and retention
+- No sensitive data in logs (passwords, tokens, full IPs)
+
+**Logging Library**: Use Go's `log/slog` (standard library, Go 1.21+)
+
+**Logger Configuration**:
+
+```go
+// backend/internal/logger/logger.go
+package logger
+
+import (
+    "context"
+    "log/slog"
+    "os"
+)
+
+type Config struct {
+    Level      string // debug, info, warn, error
+    Format     string // json, text
+    Output     string // stdout, file path
+    AddSource  bool   // Include source file/line
+}
+
+func New(cfg Config) *slog.Logger {
+    // Parse level
+    var level slog.Level
+    switch cfg.Level {
+    case "debug":
+        level = slog.LevelDebug
+    case "info":
+        level = slog.LevelInfo
+    case "warn":
+        level = slog.LevelWarn
+    case "error":
+        level = slog.LevelError
+    default:
+        level = slog.LevelInfo
+    }
+
+    // Choose handler
+    var handler slog.Handler
+    opts := &slog.HandlerOptions{
+        Level:     level,
+        AddSource: cfg.AddSource,
+    }
+
+    if cfg.Format == "json" {
+        handler = slog.NewJSONHandler(os.Stdout, opts)
+    } else {
+        handler = slog.NewTextHandler(os.Stdout, opts)
+    }
+
+    return slog.New(handler)
+}
+```
+
+**Request Logging Middleware**:
+
+```go
+// backend/internal/middleware/logging.go
+func RequestLogger(logger *slog.Logger) func(http.Handler) http.Handler {
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            start := time.Now()
+
+            // Generate request ID
+            requestID := generateRequestID()
+
+            // Add request ID to context
+            ctx := context.WithValue(r.Context(), "request_id", requestID)
+
+            // Add logger with request context to context
+            reqLogger := logger.With(
+                "request_id", requestID,
+                "method", r.Method,
+                "path", r.URL.Path,
+                "ip", hashIP(r.RemoteAddr), // Hash IP for privacy
+                "user_agent", r.UserAgent(),
+            )
+            ctx = context.WithValue(ctx, "logger", reqLogger)
+
+            // Wrap response writer to capture status
+            wrapped := &responseWriter{ResponseWriter: w, statusCode: 200}
+
+            // Log request start
+            reqLogger.Info("request started")
+
+            // Process request
+            next.ServeHTTP(wrapped, r.WithContext(ctx))
+
+            // Log request completion
+            duration := time.Since(start)
+            reqLogger.Info("request completed",
+                "status", wrapped.statusCode,
+                "duration_ms", duration.Milliseconds(),
+                "bytes", wrapped.bytesWritten,
+            )
+        })
+    }
+}
+
+type responseWriter struct {
+    http.ResponseWriter
+    statusCode   int
+    bytesWritten int
+}
+
+func (w *responseWriter) WriteHeader(statusCode int) {
+    w.statusCode = statusCode
+    w.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (w *responseWriter) Write(b []byte) (int, error) {
+    n, err := w.ResponseWriter.Write(b)
+    w.bytesWritten += n
+    return n, err
+}
+
+// Helper to get logger from context
+func GetLogger(ctx context.Context) *slog.Logger {
+    if logger, ok := ctx.Value("logger").(*slog.Logger); ok {
+        return logger
+    }
+    return slog.Default()
+}
+
+// Hash IP for privacy (store hash, not full IP)
+func hashIP(ip string) string {
+    h := sha256.Sum256([]byte(ip))
+    return base64.StdEncoding.EncodeToString(h[:8]) // First 8 bytes
+}
+
+func generateRequestID() string {
+    b := make([]byte, 16)
+    rand.Read(b)
+    return fmt.Sprintf("%x", b)
+}
+```
+
+**Application Logging Examples**:
+
+```go
+// In handlers or services
+logger := GetLogger(r.Context())
+
+// Info level
+logger.Info("album created",
+    "album_id", album.ID,
+    "title", album.Title,
+    "photo_count", len(album.Photos),
+)
+
+// Warning level
+logger.Warn("disk space low",
+    "available_gb", availableGB,
+    "threshold_gb", thresholdGB,
+)
+
+// Error level
+logger.Error("failed to process image",
+    "photo_id", photoID,
+    "error", err,
+)
+
+// Debug level (only in dev)
+logger.Debug("cache hit",
+    "key", cacheKey,
+    "ttl_seconds", ttl,
+)
+```
+
+**Log Rotation Configuration**:
+
+```go
+// Use lumberjack for log rotation
+import "gopkg.in/natefinch/lumberjack.v2"
+
+func setupFileLogger(path string) *slog.Logger {
+    logFile := &lumberjack.Logger{
+        Filename:   path,
+        MaxSize:    100, // MB
+        MaxBackups: 5,
+        MaxAge:     30, // days
+        Compress:   true,
+    }
+
+    handler := slog.NewJSONHandler(logFile, &slog.HandlerOptions{
+        Level: slog.LevelInfo,
+    })
+
+    return slog.New(handler)
+}
+```
+
+**Environment Configuration**:
+
+```bash
+# .env
+LOG_LEVEL=info          # debug, info, warn, error
+LOG_FORMAT=json         # json, text
+LOG_OUTPUT=/var/log/photoadmin/app.log  # or stdout
+LOG_ADD_SOURCE=false    # Include source file/line in production
+```
+
+**What to Log**:
+
+✅ **DO Log**:
+- All HTTP requests (method, path, status, duration)
+- Authentication events (login, logout, failed attempts)
+- Data mutations (create, update, delete operations)
+- Image processing events (upload, resize, errors)
+- System events (startup, shutdown, disk space warnings)
+- Errors with full context
+- Performance metrics
+
+❌ **DO NOT Log**:
+- Passwords or password hashes
+- Session tokens or CSRF tokens
+- Full IP addresses (hash them)
+- Photo file contents or binary data
+- Personal identifying information
+
+#### 4.1.3 Error Handling in Frontend
+
+**Global Error Handler**:
+
+```typescript
+// frontend/src/utils/errors.ts
+interface APIError {
+    code: string;
+    message: string;
+    details?: string;
+}
+
+class ErrorHandler {
+    async handleResponse(response: Response): Promise<any> {
+        if (response.ok) {
+            return response.json();
+        }
+
+        // Handle error responses
+        let error: APIError;
+        try {
+            const body = await response.json();
+            error = body.error;
+        } catch {
+            error = {
+                code: 'NETWORK_ERROR',
+                message: 'An error occurred. Please try again.'
+            };
+        }
+
+        // Handle specific error codes
+        switch (error.code) {
+            case 'UNAUTHORIZED':
+                // Redirect to login
+                window.location.href = '/admin/login';
+                break;
+
+            case 'FORBIDDEN':
+                showNotification('Access denied', 'error');
+                break;
+
+            case 'NOT_FOUND':
+                showNotification('Resource not found', 'error');
+                break;
+
+            case 'INVALID_INPUT':
+                // Show field-specific error
+                showNotification(error.message, 'error');
+                break;
+
+            default:
+                showNotification(
+                    error.message || 'An unexpected error occurred',
+                    'error'
+                );
+        }
+
+        throw error;
+    }
+}
+
+// Usage
+const errorHandler = new ErrorHandler();
+
+async function fetchAlbums() {
+    try {
+        const response = await fetch('/api/admin/albums');
+        return await errorHandler.handleResponse(response);
+    } catch (error) {
+        // Error already handled and displayed
+        console.error('Failed to fetch albums:', error);
+    }
+}
+```
+
+**Toast/Notification System**:
+
+```typescript
+// Show user-friendly notifications
+function showNotification(message: string, type: 'success' | 'error' | 'warning' | 'info') {
+    // Implementation using native browser notifications or custom UI
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => toast.remove(), 5000);
+}
+```
+
+#### 4.1.4 Monitoring and Alerting
+
+**Health Check Endpoint**:
+
+```go
+// GET /api/health
+func HealthCheck(w http.ResponseWriter, r *http.Request) {
+    health := map[string]interface{}{
+        "status": "healthy",
+        "timestamp": time.Now().Unix(),
+        "checks": map[string]bool{
+            "disk_space": checkDiskSpace(),
+            "data_files": checkDataFiles(),
+            "analytics_db": checkAnalyticsDB(),
+        },
+    }
+
+    json.NewEncoder(w).Encode(health)
+}
+```
+
+**Metrics Endpoint** (Optional):
+
+```go
+// GET /api/metrics (Prometheus format)
+func MetricsHandler(w http.ResponseWriter, r *http.Request) {
+    // Expose basic metrics
+    // - Request count by path and status
+    // - Request duration histogram
+    // - Active sessions
+    // - Disk usage
+    // - Image processing queue size
+}
+```
+
+**Implementation Checklist**:
+- [ ] AppError type with internal/public fields
+- [ ] Error constructor functions
+- [ ] Error handler middleware
+- [ ] Panic recovery middleware
+- [ ] Structured logger setup (slog)
+- [ ] Request logging middleware
+- [ ] Request ID generation and tracking
+- [ ] Log rotation configuration
+- [ ] Frontend error handler
+- [ ] Toast notification system
+- [ ] Health check endpoint
+- [ ] Audit logging for sensitive operations
+- [ ] Error tracking integration (optional: Sentry, Rollbar)
 
 ### 4.2 Authentication & Authorization
-- [ ] Session-based authentication
-- [ ] Login page
-- [ ] Password hashing (bcrypt)
-- [ ] Session storage (in-memory or file-based)
-- [ ] Auth middleware
-- [ ] Logout functionality
-- [ ] CSRF protection
+
+**Philosophy**: Simple, secure authentication for a single admin user. No database needed - use file-based sessions and environment variables for credentials.
+
+#### 4.2.1 Authentication Strategy
+
+**Single Admin User Model**:
+- Admin credentials stored in environment variables (`.env`)
+- Password hashed with bcrypt (stored hash in env or first-run setup)
+- Session-based authentication (not JWT - simpler for single-page admin)
+- Sessions stored in encrypted files or in-memory with persistence
+
+**Why Session-Based**:
+- Simpler than JWT for single-user admin panel
+- Can be easily invalidated server-side
+- Works well with CSRF protection
+- No token refresh complexity
+
+#### 4.2.2 Session Management
+
+**Session Storage** (`backend/internal/session/storage.go`):
+```go
+type Session struct {
+    ID        string    `json:"id"`
+    Username  string    `json:"username"`
+    CreatedAt time.Time `json:"created_at"`
+    ExpiresAt time.Time `json:"expires_at"`
+    IPAddress string    `json:"ip_address"`
+    UserAgent string    `json:"user_agent"`
+}
+
+type SessionStore interface {
+    Create(username, ipAddress, userAgent string) (*Session, error)
+    Get(sessionID string) (*Session, error)
+    Delete(sessionID string) error
+    Cleanup() error // Remove expired sessions
+}
+```
+
+**Implementation Options**:
+
+1. **File-Based Sessions** (Recommended for simplicity):
+   ```go
+   // Store sessions in data/sessions/{session-id}.json
+   // Encrypted with SESSION_SECRET from environment
+   // Automatic cleanup on server start and periodically
+   ```
+
+2. **In-Memory with Persistence**:
+   ```go
+   // Keep sessions in memory map with RW mutex
+   // Persist to file periodically for server restarts
+   // Cleanup expired sessions every hour
+   ```
+
+**Session Configuration**:
+- Session duration: 24 hours (configurable)
+- Extend session on activity: Yes
+- Session cookie name: `photoadmin_session`
+- Cookie settings:
+  - `HttpOnly: true` (prevent XSS)
+  - `Secure: true` (HTTPS only in production)
+  - `SameSite: Strict` (CSRF protection)
+  - `Path: /admin`
+
+#### 4.2.3 Authentication Flow
+
+**Login Process**:
+```
+1. User visits /admin → Redirected to /admin/login
+2. User submits credentials
+3. Backend verifies against env variables
+4. Create session and set cookie
+5. Redirect to /admin/dashboard
+```
+
+**Login Handler** (`backend/internal/handlers/auth.go`):
+```go
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+    var req struct {
+        Username string `json:"username"`
+        Password string `json:"password"`
+    }
+
+    json.NewDecoder(r.Body).Decode(&req)
+
+    // Verify credentials
+    if !h.verifyCredentials(req.Username, req.Password) {
+        // Add rate limiting here
+        http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+        return
+    }
+
+    // Create session
+    session, err := h.sessions.Create(
+        req.Username,
+        getIPAddress(r),
+        r.UserAgent(),
+    )
+    if err != nil {
+        http.Error(w, "Session creation failed", http.StatusInternalServerError)
+        return
+    }
+
+    // Set session cookie
+    http.SetCookie(w, &http.Cookie{
+        Name:     "photoadmin_session",
+        Value:    session.ID,
+        Path:     "/admin",
+        HttpOnly: true,
+        Secure:   h.config.Production,
+        SameSite: http.SameSiteStrictMode,
+        Expires:  session.ExpiresAt,
+    })
+
+    // Generate CSRF token
+    csrfToken := h.generateCSRFToken(session.ID)
+
+    json.NewEncoder(w).Encode(map[string]string{
+        "status": "success",
+        "csrf_token": csrfToken,
+    })
+}
+```
+
+**Logout Handler**:
+```go
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+    cookie, err := r.Cookie("photoadmin_session")
+    if err == nil {
+        h.sessions.Delete(cookie.Value)
+    }
+
+    // Clear cookie
+    http.SetCookie(w, &http.Cookie{
+        Name:     "photoadmin_session",
+        Value:    "",
+        Path:     "/admin",
+        MaxAge:   -1,
+        HttpOnly: true,
+    })
+
+    w.WriteHeader(http.StatusOK)
+}
+```
+
+#### 4.2.4 Authentication Middleware
+
+**Auth Middleware** (`backend/internal/middleware/auth.go`):
+```go
+func RequireAuth(sessions SessionStore) func(http.Handler) http.Handler {
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            // Get session cookie
+            cookie, err := r.Cookie("photoadmin_session")
+            if err != nil {
+                http.Error(w, "Unauthorized", http.StatusUnauthorized)
+                return
+            }
+
+            // Validate session
+            session, err := sessions.Get(cookie.Value)
+            if err != nil || session.ExpiresAt.Before(time.Now()) {
+                http.Error(w, "Session expired", http.StatusUnauthorized)
+                return
+            }
+
+            // Optional: Verify IP and User-Agent match
+            if session.IPAddress != getIPAddress(r) {
+                // Log suspicious activity
+                http.Error(w, "Session invalid", http.StatusUnauthorized)
+                return
+            }
+
+            // Add session to context
+            ctx := context.WithValue(r.Context(), "session", session)
+            next.ServeHTTP(w, r.WithContext(ctx))
+        })
+    }
+}
+```
+
+**Usage**:
+```go
+// Apply to all admin routes
+adminRouter := chi.NewRouter()
+adminRouter.Use(RequireAuth(sessionStore))
+adminRouter.Post("/api/admin/albums", albumHandler.Create)
+adminRouter.Put("/api/admin/albums/{id}", albumHandler.Update)
+// ... all other admin endpoints
+```
+
+#### 4.2.5 CSRF Protection
+
+**CSRF Token Generation**:
+```go
+// Generate CSRF token = HMAC(session_id, csrf_secret)
+func generateCSRFToken(sessionID string, secret []byte) string {
+    h := hmac.New(sha256.New, secret)
+    h.Write([]byte(sessionID))
+    return base64.StdEncoding.EncodeToString(h.Sum(nil))
+}
+
+func validateCSRFToken(sessionID, token string, secret []byte) bool {
+    expected := generateCSRFToken(sessionID, secret)
+    return hmac.Equal([]byte(expected), []byte(token))
+}
+```
+
+**CSRF Middleware**:
+```go
+func CSRFProtection(secret []byte) func(http.Handler) http.Handler {
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            // Only check on state-changing methods
+            if r.Method == "GET" || r.Method == "HEAD" || r.Method == "OPTIONS" {
+                next.ServeHTTP(w, r)
+                return
+            }
+
+            // Get CSRF token from header
+            token := r.Header.Get("X-CSRF-Token")
+            if token == "" {
+                http.Error(w, "CSRF token missing", http.StatusForbidden)
+                return
+            }
+
+            // Get session
+            session := r.Context().Value("session").(*Session)
+
+            // Validate token
+            if !validateCSRFToken(session.ID, token, secret) {
+                http.Error(w, "CSRF token invalid", http.StatusForbidden)
+                return
+            }
+
+            next.ServeHTTP(w, r)
+        })
+    }
+}
+```
+
+**Frontend Usage**:
+```typescript
+// Store CSRF token from login response
+let csrfToken = '';
+
+async function login(username: string, password: string) {
+    const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    });
+    const data = await response.json();
+    csrfToken = data.csrf_token;
+}
+
+// Include in all admin API calls
+async function updateAlbum(albumId: string, data: any) {
+    await fetch(`/api/admin/albums/${albumId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken
+        },
+        body: JSON.stringify(data)
+    });
+}
+```
+
+#### 4.2.6 Password Management
+
+**Initial Setup**:
+```bash
+# On first run, generate admin password hash
+go run cmd/admin-setup/main.go
+
+# Prompts for password, outputs hash to add to .env:
+# ADMIN_PASSWORD_HASH=\$2a\$10\$...
+```
+
+**Environment Variables**:
+```bash
+# .env
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD_HASH=\$2a\$10\$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
+
+# Session encryption
+SESSION_SECRET=<64-char-hex-string>
+CSRF_SECRET=<64-char-hex-string>
+
+# Generate with:
+# openssl rand -hex 32
+```
+
+**Password Verification**:
+```go
+func verifyPassword(password, hash string) bool {
+    err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+    return err == nil
+}
+```
+
+**Password Change Endpoint**:
+```go
+// POST /api/admin/auth/change-password
+func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+    var req struct {
+        CurrentPassword string `json:"current_password"`
+        NewPassword     string `json:"new_password"`
+    }
+    json.NewDecoder(r.Body).Decode(&req)
+
+    // Verify current password
+    if !h.verifyPassword(req.CurrentPassword, h.config.PasswordHash) {
+        http.Error(w, "Current password incorrect", http.StatusUnauthorized)
+        return
+    }
+
+    // Validate new password (min 12 chars, complexity requirements)
+    if len(req.NewPassword) < 12 {
+        http.Error(w, "Password too short", http.StatusBadRequest)
+        return
+    }
+
+    // Hash new password
+    hash, _ := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+
+    // Update .env file (or prompt to update manually)
+    fmt.Fprintf(w, "New password hash:\nADMIN_PASSWORD_HASH=%s\n", hash)
+}
+```
+
+#### 4.2.7 Rate Limiting
+
+**Login Rate Limiting**:
+```go
+// Prevent brute force attacks
+// Max 5 login attempts per IP per 15 minutes
+
+type RateLimiter struct {
+    attempts map[string][]time.Time
+    mu       sync.Mutex
+}
+
+func (rl *RateLimiter) AllowLogin(ip string) bool {
+    rl.mu.Lock()
+    defer rl.mu.Unlock()
+
+    now := time.Now()
+    cutoff := now.Add(-15 * time.Minute)
+
+    // Clean old attempts
+    recent := []time.Time{}
+    for _, t := range rl.attempts[ip] {
+        if t.After(cutoff) {
+            recent = append(recent, t)
+        }
+    }
+
+    rl.attempts[ip] = recent
+
+    // Check limit
+    if len(recent) >= 5 {
+        return false
+    }
+
+    // Record attempt
+    rl.attempts[ip] = append(recent, now)
+    return true
+}
+```
+
+#### 4.2.8 Security Headers
+
+**Add security headers to all admin responses**:
+```go
+func SecurityHeaders(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("X-Content-Type-Options", "nosniff")
+        w.Header().Set("X-Frame-Options", "DENY")
+        w.Header().Set("X-XSS-Protection", "1; mode=block")
+        w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+        w.Header().Set("Content-Security-Policy", "default-src 'self'")
+        next.ServeHTTP(w, r)
+    })
+}
+```
+
+#### 4.2.9 Implementation Checklist
+
+**Backend**:
+- [ ] Session store implementation (file-based or in-memory)
+- [ ] Login handler with bcrypt verification
+- [ ] Logout handler
+- [ ] Session cleanup task (runs hourly)
+- [ ] Auth middleware for protected routes
+- [ ] CSRF token generation and validation
+- [ ] CSRF middleware
+- [ ] Rate limiting for login attempts
+- [ ] Security headers middleware
+- [ ] Password change endpoint
+- [ ] Admin setup CLI tool for initial password
+
+**Frontend**:
+- [ ] Login page component
+- [ ] Login form with validation
+- [ ] Store session/CSRF token
+- [ ] Include CSRF token in all API calls
+- [ ] Handle 401 responses (redirect to login)
+- [ ] Logout button in admin header
+- [ ] Session expiration warning (show modal 5 mins before expiry)
+- [ ] Auto-logout on session expiration
+
+**Environment/Config**:
+- [ ] Add auth variables to `.env.example`
+- [ ] Document session configuration options
+- [ ] Add password requirements to docs
+- [ ] Security best practices documentation
 
 ### 4.3 JSON File Management Service
 - [ ] Atomic file read/write operations
@@ -1834,11 +2815,292 @@ if (!config.features.enable_analytics) {
 
 **Philosophy**: Professional photography requires careful handling - preserve originals, generate optimized versions for web.
 
-#### Upload Pipeline
+#### 4.4.1 Upload Constraints and Validation
+
+**File Size Limits**:
+- **Single file maximum**: 50 MB (configurable)
+- **Batch upload maximum**: 500 MB total (configurable)
+- **Max files per batch**: 50 files (configurable)
+- **Rationale**: Balance between professional photography file sizes and server resources
+
+**Allowed File Types**:
+- **JPEG**: `.jpg`, `.jpeg` (most common)
+- **PNG**: `.png` (transparency support)
+- **WebP**: `.webp` (modern format)
+- **HEIC**: `.heic`, `.heif` (iPhone photos)
+- **Future**: RAW formats (`.cr2`, `.nef`, `.arw`, `.dng`) - requires additional processing
+
+**File Type Detection**:
+- **DO NOT trust file extension** - validate via magic bytes
+- Use Go's `http.DetectContentType()` or `github.com/h2non/filetype`
+- Reject files that don't match expected image MIME types
+
+**Image Dimension Validation**:
+- **Minimum dimensions**: 800px on shortest side
+  - Ensures quality - reject tiny images
+  - Professional photos should be high resolution
+- **Maximum dimensions**: 12000px on longest side
+  - Prevents abuse with extremely large files
+  - Most professional cameras: 6000-9000px
+  - Medium format: up to 12000px
+- **Aspect ratio**: No restrictions (support panoramas, squares, etc.)
+
+**Filename Sanitization**:
+- Original filename stored in metadata but not used for storage
+- Storage filename: UUID + `.webp` (or original extension for originals)
+- Reject filenames with path traversal attempts (`../`, `..\\`)
+- Strip special characters that could cause filesystem issues
+
+**Configuration** (`.env` or `site_config.json`):
+```go
+type UploadConfig struct {
+    MaxFileSizeMB      int    `json:"max_file_size_mb"`      // Default: 50
+    MaxBatchSizeMB     int    `json:"max_batch_size_mb"`     // Default: 500
+    MaxFilesPerBatch   int    `json:"max_files_per_batch"`   // Default: 50
+    MinDimensionPx     int    `json:"min_dimension_px"`      // Default: 800
+    MaxDimensionPx     int    `json:"max_dimension_px"`      // Default: 12000
+    AllowedFormats     []string `json:"allowed_formats"`     // Default: ["jpeg", "png", "webp", "heic"]
+    EnableRAWSupport   bool   `json:"enable_raw_support"`    // Default: false
+}
+```
+
+#### 4.4.2 Upload Validation Pipeline
+
+**Step 1: Pre-Upload Validation (Frontend)**:
+```typescript
+// Check before upload starts
+function validateFileBeforeUpload(file: File): ValidationError | null {
+    // Check file size
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+        return { field: 'size', message: `File too large: ${formatBytes(file.size)}. Max: 50MB` };
+    }
+
+    // Check file type (preliminary)
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
+    if (!allowedTypes.includes(file.type) && !file.type.startsWith('image/')) {
+        return { field: 'type', message: 'Invalid file type. Please upload an image.' };
+    }
+
+    // Check filename
+    if (file.name.includes('../') || file.name.includes('..\\')) {
+        return { field: 'name', message: 'Invalid filename.' };
+    }
+
+    return null;
+}
+
+function validateBatch(files: File[]): ValidationError | null {
+    if (files.length > 50) {
+        return { field: 'count', message: `Too many files. Max: 50. Selected: ${files.length}` };
+    }
+
+    const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+    const maxBatchSize = 500 * 1024 * 1024; // 500MB
+    if (totalSize > maxBatchSize) {
+        return { field: 'batch_size', message: `Batch too large: ${formatBytes(totalSize)}. Max: 500MB` };
+    }
+
+    return null;
+}
+```
+
+**Step 2: Backend Upload Validation**:
+```go
+// backend/internal/handlers/upload.go
+func (h *UploadHandler) ValidateUpload(r *http.Request) error {
+    // Parse multipart form with size limit
+    err := r.ParseMultipartForm(h.config.MaxBatchSizeMB << 20) // Convert MB to bytes
+    if err != nil {
+        return fmt.Errorf("batch size exceeds limit: %w", err)
+    }
+
+    files := r.MultipartForm.File["photos"]
+
+    // Validate batch count
+    if len(files) > h.config.MaxFilesPerBatch {
+        return fmt.Errorf("too many files: %d (max: %d)", len(files), h.config.MaxFilesPerBatch)
+    }
+
+    // Validate each file
+    for _, fileHeader := range files {
+        if err := h.validateSingleFile(fileHeader); err != nil {
+            return err
+        }
+    }
+
+    return nil
+}
+
+func (h *UploadHandler) validateSingleFile(fileHeader *multipart.FileHeader) error {
+    // Check size
+    maxBytes := int64(h.config.MaxFileSizeMB << 20)
+    if fileHeader.Size > maxBytes {
+        return fmt.Errorf("file %s too large: %d bytes (max: %d)",
+            fileHeader.Filename, fileHeader.Size, maxBytes)
+    }
+
+    // Open file to validate content
+    file, err := fileHeader.Open()
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+
+    // Read first 512 bytes for content type detection
+    buffer := make([]byte, 512)
+    _, err = file.Read(buffer)
+    if err != nil {
+        return err
+    }
+
+    // Detect content type via magic bytes
+    contentType := http.DetectContentType(buffer)
+    if !h.isAllowedContentType(contentType) {
+        return fmt.Errorf("invalid content type: %s", contentType)
+    }
+
+    // Reset file pointer for further processing
+    file.Seek(0, 0)
+
+    // Decode image to validate it's actually an image and get dimensions
+    img, format, err := image.Decode(file)
+    if err != nil {
+        return fmt.Errorf("invalid image file: %w", err)
+    }
+
+    // Validate dimensions
+    bounds := img.Bounds()
+    width := bounds.Dx()
+    height := bounds.Dy()
+
+    minDim := min(width, height)
+    maxDim := max(width, height)
+
+    if minDim < h.config.MinDimensionPx {
+        return fmt.Errorf("image too small: %dx%d (min: %dpx on shortest side)",
+            width, height, h.config.MinDimensionPx)
+    }
+
+    if maxDim > h.config.MaxDimensionPx {
+        return fmt.Errorf("image too large: %dx%d (max: %dpx on longest side)",
+            width, height, h.config.MaxDimensionPx)
+    }
+
+    return nil
+}
+
+func (h *UploadHandler) isAllowedContentType(contentType string) bool {
+    allowed := []string{
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/heic",
+    }
+
+    for _, allowed := range allowed {
+        if contentType == allowed {
+            return true
+        }
+    }
+
+    return false
+}
+```
+
+**Step 3: Error Handling and User Feedback**:
+```go
+// Return detailed validation errors to frontend
+type UploadError struct {
+    Filename string `json:"filename"`
+    Error    string `json:"error"`
+    Field    string `json:"field"` // size, type, dimensions, etc.
+}
+
+type UploadResponse struct {
+    Success    []PhotoMetadata `json:"success"`    // Successfully uploaded photos
+    Failed     []UploadError   `json:"failed"`     // Failed uploads with reasons
+    TotalCount int            `json:"total_count"`
+}
+```
+
+**Frontend Error Display**:
+```typescript
+// Show validation errors in upload dialog
+function displayUploadResults(response: UploadResponse) {
+    if (response.success.length > 0) {
+        showNotification(`Successfully uploaded ${response.success.length} photos`, 'success');
+    }
+
+    if (response.failed.length > 0) {
+        // Show detailed error list
+        const errorList = response.failed.map(err =>
+            `${err.filename}: ${err.error}`
+        ).join('\n');
+
+        showErrorDialog(
+            `${response.failed.length} files failed to upload`,
+            errorList
+        );
+    }
+}
+```
+
+#### 4.4.3 Disk Space Management
+
+**Check Available Space Before Upload**:
+```go
+func (h *UploadHandler) checkDiskSpace(requiredBytes int64) error {
+    var stat syscall.Statfs_t
+    syscall.Statfs(h.config.UploadPath, &stat)
+
+    availableBytes := stat.Bavail * uint64(stat.Bsize)
+
+    // Require 3x the upload size (original + display + thumbnail)
+    // Plus 20% buffer for safety
+    requiredWithBuffer := uint64(requiredBytes) * 3 * 120 / 100
+
+    if availableBytes < requiredWithBuffer {
+        return fmt.Errorf("insufficient disk space: %d bytes available, %d required",
+            availableBytes, requiredWithBuffer)
+    }
+
+    return nil
+}
+```
+
+**Disk Space Warning in Admin UI**:
+```typescript
+// Show disk space warning in dashboard
+interface DiskSpaceInfo {
+    total_gb: number;
+    used_gb: number;
+    available_gb: number;
+    percent_used: number;
+}
+
+// GET /api/admin/system/disk-space
+async function checkDiskSpace(): Promise<DiskSpaceInfo> {
+    const response = await fetch('/api/admin/system/disk-space');
+    return response.json();
+}
+
+// Display warning if > 85% full
+if (diskSpace.percent_used > 85) {
+    showWarning(`Disk space low: ${diskSpace.available_gb}GB remaining`);
+}
+```
+
+#### 4.4.4 Upload Pipeline
 - [ ] Multi-file upload handler (drag-drop or click-to-upload)
+- [ ] **File validation** (size, type, dimensions, magic bytes)
+- [ ] **Disk space check** before processing
+- [ ] **Sanitize filenames** for security
 - [ ] Progress tracking for batch uploads
 - [ ] Unique filename generation (UUID-based)
 - [ ] Concurrent processing (process multiple images in parallel)
+- [ ] **Detailed error reporting** for failed uploads
+- [ ] **Partial success handling** (some files succeed, some fail)
 
 #### Image Processing Workflow
 When an image is uploaded, the backend creates three versions:
@@ -2212,6 +3474,167 @@ Endpoints:
 - [ ] Search/filter for finding specific settings
 - [ ] Keyboard shortcuts (Cmd/Ctrl+S to save)
 - [ ] Mobile-responsive layout
+
+#### Analytics Page
+
+**Purpose**: View detailed analytics about site usage, album performance, and photo downloads.
+
+**Route**: `/admin/analytics`
+
+**Layout**:
+```
+┌────────────────────────────────────────────┐
+│ Analytics                                  │
+├────────────────────────────────────────────┤
+│ Time Period: [Last 7 days ▼]              │
+├─────────────┬─────────────┬────────────────┤
+│ Total Views │ Total       │ Unique         │
+│    12,345   │ Downloads   │ Visitors       │
+│             │    1,234    │    3,456       │
+└─────────────┴─────────────┴────────────────┘
+
+Album Performance
+┌─────────────────────────────────────────────┐
+│ Album Name      │ Views │ Downloads │ Rate  │
+├─────────────────┼───────┼───────────┼───────┤
+│ Portfolio       │ 8,234 │    456    │ 5.5%  │
+│ Wedding 2024    │ 1,205 │    234    │ 19.4% │
+│ Landscapes      │   876 │     45    │ 5.1%  │
+└─────────────────┴───────┴───────────┴───────┘
+
+Photo Performance (Top 10)
+┌─────────────────────────────────────────────┐
+│ [Thumbnail] Album       │ Views │ Downloads │
+├────────────────────────┼───────┼───────────┤
+│ [IMG] Portfolio         │ 1,234 │    123    │
+│ [IMG] Wedding 2024      │   987 │     89    │
+└────────────────────────┴───────┴───────────┘
+
+Referrer Sources
+┌─────────────────────────────────────────────┐
+│ Source              │ Views │ Percentage    │
+├─────────────────────┼───────┼───────────────┤
+│ Direct              │ 5,678 │    46%        │
+│ google.com          │ 3,456 │    28%        │
+│ instagram.com       │ 1,234 │    10%        │
+└─────────────────────┴───────┴───────────────┘
+
+Timeline Chart
+┌─────────────────────────────────────────────┐
+│     │                                        │
+│ 500 │     ╱╲                                │
+│ 400 │    ╱  ╲      ╱╲                       │
+│ 300 │   ╱    ╲    ╱  ╲                      │
+│ 200 │  ╱      ╲  ╱    ╲    ╱╲               │
+│ 100 │╱         ╲╱      ╲  ╱  ╲              │
+│   0 └───────────────────────────────────────│
+│     Mon  Tue  Wed  Thu  Fri  Sat  Sun       │
+└─────────────────────────────────────────────┘
+
+[Export CSV] [Export JSON]
+```
+
+**Features**:
+- [ ] Time period selector (last 7 days, 30 days, 90 days, all time)
+- [ ] Overview stats cards
+  - Total views across all content
+  - Total downloads
+  - Unique visitors (based on IP hash)
+- [ ] Album performance table
+  - Sortable by views, downloads, download rate
+  - Shows public vs private albums
+  - Click to see individual photo stats
+- [ ] Top performing photos
+  - Thumbnail preview
+  - Views and download counts
+  - Link to edit photo
+- [ ] Referrer statistics
+  - Top traffic sources
+  - Percentage breakdown
+  - Link to view details
+- [ ] Timeline visualization
+  - Line chart showing views/downloads over time
+  - Toggle between daily and cumulative views
+  - Responsive chart using Chart.js or D3.js
+- [ ] Export functionality
+  - Export to CSV for spreadsheet analysis
+  - Export to JSON for custom processing
+- [ ] Real-time updates
+  - Auto-refresh every 30 seconds (optional)
+  - Manual refresh button
+
+**API Endpoints Used**:
+```typescript
+// Overview stats
+GET /api/admin/analytics/overview?period=7d
+Response: {
+  total_views: 12345,
+  total_downloads: 1234,
+  unique_visitors: 3456,
+  period: "7d"
+}
+
+// Album performance
+GET /api/admin/analytics/albums?period=7d&sort=views&order=desc
+Response: {
+  albums: [
+    {
+      album_id: "uuid",
+      album_name: "Portfolio",
+      album_slug: "portfolio",
+      views: 8234,
+      downloads: 456,
+      download_rate: 0.055
+    }
+  ]
+}
+
+// Photo performance
+GET /api/admin/analytics/photos?limit=10&sort=views&order=desc
+Response: {
+  photos: [
+    {
+      photo_id: "uuid",
+      album_id: "uuid",
+      album_name: "Portfolio",
+      filename: "sunset.jpg",
+      thumbnail_url: "/data/photos/...",
+      views: 1234,
+      downloads: 123
+    }
+  ]
+}
+
+// Referrer stats
+GET /api/admin/analytics/referrers?period=7d
+Response: {
+  referrers: [
+    { source: "Direct", views: 5678, percentage: 46 },
+    { source: "google.com", views: 3456, percentage: 28 }
+  ]
+}
+
+// Timeline data
+GET /api/admin/analytics/timeline?period=7d&metric=views
+Response: {
+  timeline: [
+    { date: "2024-01-01", views: 234, downloads: 23 },
+    { date: "2024-01-02", views: 345, downloads: 34 }
+  ]
+}
+
+// Export
+GET /api/admin/analytics/export?period=7d&format=csv
+Response: CSV file download
+```
+
+**Implementation Notes**:
+- Analytics data is read from SQLite database (Phase 2.2)
+- All queries should be efficient with proper indexes
+- Cache aggregated stats for common time periods
+- Daily stats table provides fast queries for historical data
+- Privacy: Only show hashed IPs, never raw IPs
+- Consider data retention policy (90 days by default)
 
 ---
 
@@ -3308,7 +4731,408 @@ bazel run //:deploy
 
 ---
 
-### 7.4 Data Migration System
+### 7.4 Automated Backup Strategy
+
+**Philosophy**: Automatic, regular backups with retention policy. Separate backups for data files vs uploaded photos. Easy to restore.
+
+#### 7.4.1 What to Backup
+
+**Critical Data** (must backup):
+- `data/content/albums.json` - Album metadata and structure
+- `data/content/blog_posts.json` - Blog content
+- `data/config/site_config.json` - Site configuration
+- `data/sessions/` - Active sessions (optional, can recreate)
+- `data/analytics.db` - SQLite analytics database
+
+**Large Binary Data** (backup separately):
+- `data/uploads/originals/` - Original photos (most important!)
+- `data/uploads/display/` - Display versions (can regenerate from originals)
+- `data/uploads/thumbnails/` - Thumbnails (can regenerate from originals)
+
+**Do NOT Backup** (ephemeral/logs):
+- `data/logs/` - Log files
+- `data/tmp/` - Temporary files
+- `.env` - Secrets (manage separately, never in backups that leave server)
+
+#### 7.4.2 Backup Storage Structure
+
+```
+/var/backups/photography-site/
+├── daily/
+│   ├── data-20240115-030000.tar.gz        # JSON + config + analytics DB
+│   ├── photos-20240115-030000.tar.gz      # Original photos only
+│   └── ...
+├── weekly/
+│   ├── data-20240114-week02.tar.gz
+│   ├── photos-20240114-week02.tar.gz
+│   └── ...
+└── monthly/
+    ├── data-202401.tar.gz
+    ├── photos-202401.tar.gz
+    └── ...
+```
+
+#### 7.4.3 Backup Script
+
+**File**: `scripts/backup.sh`
+```bash
+#!/bin/bash
+set -euo pipefail
+
+# Configuration (can be overridden by environment)
+SITE_ROOT="${SITE_ROOT:-/var/www/photography-site}"
+BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/photography-site}"
+DATE=$(date +%Y%m%d-%H%M%S)
+WEEK=$(date +%Y%m%d-week%V)
+MONTH=$(date +%Y%m)
+
+# Retention policy
+KEEP_DAILY=7      # Keep last 7 daily backups
+KEEP_WEEKLY=4     # Keep last 4 weekly backups
+KEEP_MONTHLY=12   # Keep last 12 monthly backups
+
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*"
+}
+
+# Create backup directories
+mkdir -p "$BACKUP_ROOT"/{daily,weekly,monthly}
+
+# 1. Backup data files (JSON, config, database)
+log "Backing up data files..."
+tar -czf "$BACKUP_ROOT/daily/data-${DATE}.tar.gz" \
+    -C "$SITE_ROOT/data" \
+    --exclude='logs' \
+    --exclude='tmp' \
+    --exclude='uploads' \
+    --exclude='sessions/*.json' \
+    .
+
+DATA_SIZE=$(du -h "$BACKUP_ROOT/daily/data-${DATE}.tar.gz" | cut -f1)
+log "Data backup complete: $DATA_SIZE"
+
+# 2. Backup photos (originals only, incremental if possible)
+log "Backing up photos..."
+if command -v rsync &> /dev/null; then
+    # Use rsync for incremental backups
+    PHOTO_BACKUP_DIR="$BACKUP_ROOT/daily/photos-${DATE}"
+    mkdir -p "$PHOTO_BACKUP_DIR"
+    rsync -a --link-dest="$BACKUP_ROOT/daily/photos-latest" \
+        "$SITE_ROOT/data/uploads/originals/" \
+        "$PHOTO_BACKUP_DIR/"
+
+    # Update "latest" symlink
+    ln -snf "$PHOTO_BACKUP_DIR" "$BACKUP_ROOT/daily/photos-latest"
+
+    # Create tarball for weekly/monthly rotation
+    if [ "$(date +%u)" -eq 7 ] || [ "$(date +%d)" -eq 01 ]; then
+        tar -czf "$BACKUP_ROOT/daily/photos-${DATE}.tar.gz" \
+            -C "$PHOTO_BACKUP_DIR" .
+    fi
+else
+    # Fallback: full tar backup
+    tar -czf "$BACKUP_ROOT/daily/photos-${DATE}.tar.gz" \
+        -C "$SITE_ROOT/data/uploads/originals" \
+        .
+fi
+
+PHOTO_SIZE=$(du -sh "$BACKUP_ROOT/daily/photos-${DATE}"* | cut -f1)
+log "Photo backup complete: $PHOTO_SIZE"
+
+# 3. Weekly backup (every Sunday)
+if [ "$(date +%u)" -eq 7 ]; then
+    log "Creating weekly backup..."
+    cp "$BACKUP_ROOT/daily/data-${DATE}.tar.gz" \
+       "$BACKUP_ROOT/weekly/data-${WEEK}.tar.gz"
+
+    if [ -f "$BACKUP_ROOT/daily/photos-${DATE}.tar.gz" ]; then
+        cp "$BACKUP_ROOT/daily/photos-${DATE}.tar.gz" \
+           "$BACKUP_ROOT/weekly/photos-${WEEK}.tar.gz"
+    fi
+fi
+
+# 4. Monthly backup (first of month)
+if [ "$(date +%d)" -eq 01 ]; then
+    log "Creating monthly backup..."
+    cp "$BACKUP_ROOT/daily/data-${DATE}.tar.gz" \
+       "$BACKUP_ROOT/monthly/data-${MONTH}.tar.gz"
+
+    if [ -f "$BACKUP_ROOT/daily/photos-${DATE}.tar.gz" ]; then
+        cp "$BACKUP_ROOT/daily/photos-${DATE}.tar.gz" \
+           "$BACKUP_ROOT/monthly/photos-${MONTH}.tar.gz"
+    fi
+fi
+
+# 5. Cleanup old backups (retention policy)
+log "Cleaning up old backups..."
+
+# Remove old daily backups
+find "$BACKUP_ROOT/daily" -name "data-*.tar.gz" -type f -mtime +$KEEP_DAILY -delete
+find "$BACKUP_ROOT/daily" -name "photos-*.tar.gz" -type f -mtime +$KEEP_DAILY -delete
+
+# Remove old weekly backups
+cd "$BACKUP_ROOT/weekly" && ls -t data-*.tar.gz 2>/dev/null | tail -n +$((KEEP_WEEKLY + 1)) | xargs -r rm
+cd "$BACKUP_ROOT/weekly" && ls -t photos-*.tar.gz 2>/dev/null | tail -n +$((KEEP_WEEKLY + 1)) | xargs -r rm
+
+# Remove old monthly backups
+cd "$BACKUP_ROOT/monthly" && ls -t data-*.tar.gz 2>/dev/null | tail -n +$((KEEP_MONTHLY + 1)) | xargs -r rm
+cd "$BACKUP_ROOT/monthly" && ls -t photos-*.tar.gz 2>/dev/null | tail -n +$((KEEP_MONTHLY + 1)) | xargs -r rm
+
+# 6. Backup summary
+log "Backup complete!"
+log "Total backup size: $(du -sh $BACKUP_ROOT | cut -f1)"
+log "Daily backups: $(ls -1 $BACKUP_ROOT/daily/*.tar.gz 2>/dev/null | wc -l)"
+log "Weekly backups: $(ls -1 $BACKUP_ROOT/weekly/*.tar.gz 2>/dev/null | wc -l)"
+log "Monthly backups: $(ls -1 $BACKUP_ROOT/monthly/*.tar.gz 2>/dev/null | wc -l)"
+
+# 7. Optional: Upload to remote storage (S3, B2, etc.)
+if [ -n "${BACKUP_REMOTE_ENABLED:-}" ] && [ "$BACKUP_REMOTE_ENABLED" = "true" ]; then
+    log "Uploading to remote storage..."
+
+    # Example with rclone (configure rclone first)
+    if command -v rclone &> /dev/null; then
+        rclone sync "$BACKUP_ROOT" remote:photography-backups \
+            --progress \
+            --exclude 'photos-latest/**'
+        log "Remote backup complete"
+    fi
+fi
+
+exit 0
+```
+
+#### 7.4.4 Automated Backup Scheduling
+
+**Cron Configuration** (`/etc/cron.d/photography-backup`):
+```cron
+# Run backup daily at 3 AM
+0 3 * * * www-data /var/www/photography-site/app/scripts/backup.sh >> /var/log/photography-backup.log 2>&1
+```
+
+**Systemd Timer** (alternative to cron):
+
+**File**: `deployment/systemd/photography-backup.timer`
+```ini
+[Unit]
+Description=Photography Site Backup Timer
+Requires=photography-backup.service
+
+[Timer]
+# Run daily at 3 AM
+OnCalendar=daily
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+**File**: `deployment/systemd/photography-backup.service`
+```ini
+[Unit]
+Description=Photography Site Backup
+After=network.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/photography-site
+ExecStart=/var/www/photography-site/app/scripts/backup.sh
+StandardOutput=append:/var/log/photography-backup.log
+StandardError=append:/var/log/photography-backup.log
+
+# Environment
+Environment="SITE_ROOT=/var/www/photography-site"
+Environment="BACKUP_ROOT=/var/backups/photography-site"
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**Enable systemd timer**:
+```bash
+sudo systemctl enable photography-backup.timer
+sudo systemctl start photography-backup.timer
+
+# Check timer status
+sudo systemctl list-timers photography-backup.timer
+
+# Run backup manually
+sudo systemctl start photography-backup.service
+```
+
+#### 7.4.5 Restore Procedure
+
+**File**: `scripts/restore.sh`
+```bash
+#!/bin/bash
+set -euo pipefail
+
+# Usage: ./restore.sh <backup-date>
+# Example: ./restore.sh 20240115-030000
+
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 <backup-date>"
+    echo "Available backups:"
+    ls -1 /var/backups/photography-site/daily/data-*.tar.gz | sed 's/.*data-\(.*\)\.tar\.gz/\1/'
+    exit 1
+fi
+
+BACKUP_DATE=$1
+SITE_ROOT="${SITE_ROOT:-/var/www/photography-site}"
+BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/photography-site}"
+
+# Find backup files
+DATA_BACKUP="$BACKUP_ROOT/daily/data-${BACKUP_DATE}.tar.gz"
+PHOTO_BACKUP="$BACKUP_ROOT/daily/photos-${BACKUP_DATE}.tar.gz"
+
+# Validate backups exist
+if [ ! -f "$DATA_BACKUP" ]; then
+    echo "Error: Data backup not found: $DATA_BACKUP"
+    exit 1
+fi
+
+echo "Found backups:"
+echo "  Data: $DATA_BACKUP"
+if [ -f "$PHOTO_BACKUP" ]; then
+    echo "  Photos: $PHOTO_BACKUP"
+else
+    echo "  Photos: (not found, will skip)"
+fi
+
+read -p "Restore these backups? This will OVERWRITE current data. (yes/no): " confirm
+if [ "$confirm" != "yes" ]; then
+    echo "Restore cancelled."
+    exit 0
+fi
+
+# Stop backend service
+echo "Stopping backend service..."
+sudo systemctl stop photography-admin
+
+# Backup current state before restore (just in case)
+echo "Creating safety backup of current state..."
+SAFETY_BACKUP="/tmp/photography-pre-restore-$(date +%Y%m%d-%H%M%S).tar.gz"
+tar -czf "$SAFETY_BACKUP" -C "$SITE_ROOT/data" .
+echo "Safety backup created: $SAFETY_BACKUP"
+
+# Restore data files
+echo "Restoring data files..."
+sudo tar -xzf "$DATA_BACKUP" -C "$SITE_ROOT/data"
+
+# Restore photos (if available)
+if [ -f "$PHOTO_BACKUP" ]; then
+    echo "Restoring photos..."
+    sudo mkdir -p "$SITE_ROOT/data/uploads/originals"
+    sudo tar -xzf "$PHOTO_BACKUP" -C "$SITE_ROOT/data/uploads/originals"
+
+    # Regenerate display and thumbnail versions
+    echo "Regenerating display and thumbnail versions..."
+    # Call backend API to regenerate (implement this endpoint)
+    # curl -X POST http://localhost:8080/api/admin/photos/regenerate-all
+fi
+
+# Fix permissions
+echo "Fixing permissions..."
+sudo chown -R www-data:www-data "$SITE_ROOT/data"
+
+# Start backend service
+echo "Starting backend service..."
+sudo systemctl start photography-admin
+
+echo "Restore complete!"
+echo "Safety backup available at: $SAFETY_BACKUP"
+```
+
+#### 7.4.6 Backup Monitoring
+
+**Health Check for Backups**:
+
+Add to backend API:
+```go
+// GET /api/admin/system/backup-status
+func BackupStatus(w http.ResponseWriter, r *http.Request) {
+    backupRoot := os.Getenv("BACKUP_ROOT")
+
+    // Check latest backup age
+    latestBackup := findLatestBackup(backupRoot + "/daily")
+    age := time.Since(latestBackup.ModTime)
+
+    status := map[string]interface{}{
+        "latest_backup": latestBackup.Name,
+        "age_hours": age.Hours(),
+        "healthy": age.Hours() < 36, // Warn if > 36 hours old
+        "backup_count": countBackups(backupRoot),
+        "total_size_gb": calculateTotalSize(backupRoot),
+    }
+
+    json.NewEncoder(w).Encode(status)
+}
+```
+
+**Admin Dashboard Widget**:
+```typescript
+// Show backup status in admin dashboard
+interface BackupStatus {
+    latest_backup: string;
+    age_hours: number;
+    healthy: boolean;
+    backup_count: number;
+    total_size_gb: number;
+}
+
+// Display warning if backup is stale
+if (backupStatus.age_hours > 36) {
+    showWarning(`Last backup was ${Math.round(backupStatus.age_hours)} hours ago`);
+}
+```
+
+#### 7.4.7 Remote Backup Options
+
+**Option 1: rclone to any cloud storage**
+```bash
+# Install rclone
+curl https://rclone.org/install.sh | sudo bash
+
+# Configure remote (interactive)
+rclone config
+
+# Add to backup script
+rclone sync /var/backups/photography-site remote:backups/photography-site
+```
+
+**Option 2: AWS S3**
+```bash
+# Using AWS CLI
+aws s3 sync /var/backups/photography-site s3://my-bucket/photography-backups/ \
+    --storage-class STANDARD_IA
+```
+
+**Option 3: Backblaze B2**
+```bash
+# Using B2 CLI
+b2 sync /var/backups/photography-site b2://my-bucket/photography-backups/
+```
+
+#### 7.4.8 Implementation Checklist
+
+- [ ] Create backup script with retention policy
+- [ ] Test backup script on development machine
+- [ ] Create restore script
+- [ ] Test restore procedure (critical!)
+- [ ] Set up cron or systemd timer for automated backups
+- [ ] Configure log rotation for backup logs
+- [ ] Add backup status endpoint to backend API
+- [ ] Add backup status widget to admin dashboard
+- [ ] Document restore procedure for emergencies
+- [ ] Optional: Configure remote backup destination
+- [ ] Optional: Add email/Slack notifications for backup failures
+- [ ] Schedule monthly restore drill (test that backups work!)
+
+---
+
+### 7.5 Data Migration System
 
 **Philosophy**: Treat data like a database - use migrations for schema changes.
 
@@ -3558,7 +5382,572 @@ ssh $target "sudo systemctl start photography-admin"
 
 ---
 
-### 7.8 Documentation
+### 7.8 CI/CD with GitHub Actions
+
+**Philosophy**: Automated testing and deployment pipeline. Run tests on every PR, automate releases, optional automated deployments.
+
+#### 7.8.1 CI Pipeline - Test on Every Push/PR
+
+**File**: `.github/workflows/ci.yml`
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: Lint frontend (ESLint + Prettier)
+        run: cd frontend && npm run lint
+
+      - name: Lint backend (golangci-lint)
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+          working-directory: backend
+
+      - name: Check formatting (Prettier)
+        run: cd frontend && npm run format:check
+
+      - name: Check formatting (gofmt)
+        run: |
+          cd backend
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "Go files not formatted:"
+            gofmt -l .
+            exit 1
+          fi
+
+  test-frontend:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: cd frontend && npm ci
+
+      - name: Run unit tests
+        run: cd frontend && npm run test
+
+      - name: Run component tests
+        run: cd frontend && npm run test:components
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./frontend/coverage/coverage-final.json
+          flags: frontend
+          name: frontend-coverage
+
+  test-backend:
+    name: Test Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Run tests
+        run: |
+          cd backend
+          go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./backend/coverage.txt
+          flags: backend
+          name: backend-coverage
+
+  test-e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Install dependencies
+        run: |
+          cd frontend && npm ci
+          cd ../backend && go mod download
+
+      - name: Build frontend
+        run: cd frontend && npm run build
+
+      - name: Build backend
+        run: cd backend && go build -o ../dist/admin_server cmd/admin/main.go
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          BASE_URL: http://localhost:8080
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Scan Go dependencies for vulnerabilities
+        run: |
+          cd backend
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+      - name: Scan npm dependencies
+        run: |
+          cd frontend
+          npm audit --audit-level=moderate
+```
+
+#### 7.8.2 Build and Release Pipeline
+
+**File**: `.github/workflows/release.yml`
+```yaml
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Release Artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Build backend
+        run: |
+          cd backend
+          go build -ldflags="-X main.Version=${{ steps.get_version.outputs.VERSION }}" \
+            -o ../dist/admin_server cmd/admin/main.go
+
+      - name: Create deployment package
+        run: |
+          mkdir -p release
+          tar -czf release/photography-site-${{ steps.get_version.outputs.VERSION }}.tar.gz \
+            -C dist .
+
+      - name: Generate checksums
+        run: |
+          cd release
+          sha256sum *.tar.gz > checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            release/*.tar.gz
+            release/checksums.txt
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+
+  docker:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./deployment/docker/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/photography-site:${{ steps.get_version.outputs.VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/photography-site:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+```
+
+#### 7.8.3 Automated Deployment (Optional)
+
+**File**: `.github/workflows/deploy.yml`
+```yaml
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: 'Version to deploy (tag name, e.g., v1.2.3)'
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Download release artifact
+        run: |
+          gh release download ${{ inputs.version }} \
+            --pattern 'photography-site-*.tar.gz'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to server
+        run: |
+          # Upload artifact
+          scp photography-site-*.tar.gz ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/
+
+          # Run deployment script
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+            set -e
+            cd /var/www/photography-site
+
+            # Stop service
+            sudo systemctl stop photography-admin
+
+            # Backup current version
+            sudo mv app app.backup || true
+
+            # Extract new version
+            sudo mkdir -p app
+            sudo tar -xzf /tmp/photography-site-*.tar.gz -C app/
+
+            # Run migrations (if any)
+            sudo -u www-data ./app/admin_server migrate
+
+            # Start service
+            sudo systemctl start photography-admin
+
+            # Verify service started
+            sleep 5
+            sudo systemctl status photography-admin
+
+            echo "Deployment complete!"
+          EOF
+
+      - name: Verify deployment
+        run: |
+          # Check health endpoint
+          curl -f https://${{ secrets.DEPLOY_HOST }}/api/health || exit 1
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+            sudo systemctl stop photography-admin
+            sudo rm -rf app
+            sudo mv app.backup app
+            sudo systemctl start photography-admin
+          EOF
+```
+
+#### 7.8.4 Bazel with GitHub Actions
+
+**File**: `.github/workflows/bazel-ci.yml`
+```yaml
+name: Bazel CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  bazel-build:
+    name: Bazel Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mount bazel cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/bazel
+            ~/.cache/bazelisk
+          key: bazel-${{ runner.os }}-${{ hashFiles('.bazelversion', 'WORKSPACE', 'BUILD.bazel') }}
+          restore-keys: |
+            bazel-${{ runner.os }}-
+
+      - name: Install Bazelisk
+        run: |
+          curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
+          chmod +x /usr/local/bin/bazel
+
+      - name: Build all targets
+        run: bazel build //...
+
+      - name: Run all tests
+        run: bazel test //... --test_output=errors
+
+      - name: Build deployment package
+        run: bazel run //:deploy_package
+```
+
+#### 7.8.5 Pre-commit Hooks in CI
+
+**File**: `.github/workflows/pre-commit.yml`
+```yaml
+name: Pre-commit Checks
+
+on:
+  pull_request:
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit on all files
+        run: pre-commit run --all-files --show-diff-on-failure
+```
+
+#### 7.8.6 Required GitHub Secrets
+
+**Repository Settings → Secrets and Variables → Actions**:
+
+Add these secrets for automated deployment:
+- `SSH_PRIVATE_KEY` - SSH private key for deployment
+- `DEPLOY_HOST` - Deployment server hostname
+- `DEPLOY_USER` - SSH user for deployment
+- `DOCKERHUB_USERNAME` - Docker Hub username (if using Docker)
+- `DOCKERHUB_TOKEN` - Docker Hub access token
+
+#### 7.8.7 Branch Protection Rules
+
+**Settings → Branches → Add rule**:
+
+For `main` branch:
+- ✅ Require a pull request before merging
+- ✅ Require status checks to pass before merging
+  - ✅ lint
+  - ✅ test-frontend
+  - ✅ test-backend
+  - ✅ test-e2e
+- ✅ Require conversation resolution before merging
+- ✅ Do not allow bypassing the above settings
+
+#### 7.8.8 Automated Dependency Updates
+
+**File**: `.github/dependabot.yml`
+```yaml
+version: 2
+updates:
+  # Frontend dependencies
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      dev-dependencies:
+        patterns:
+          - "@types/*"
+          - "eslint*"
+          - "prettier*"
+          - "vitest*"
+
+  # Backend dependencies
+  - package-ecosystem: "gomod"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+```
+
+#### 7.8.9 Release Process
+
+**Creating a new release**:
+
+1. **Update version number**:
+   ```bash
+   # Update package.json, go.mod, or version file
+   git add .
+   git commit -m "chore: bump version to v1.2.3"
+   ```
+
+2. **Create and push tag**:
+   ```bash
+   git tag v1.2.3
+   git push origin v1.2.3
+   ```
+
+3. **GitHub Actions automatically**:
+   - Runs all tests
+   - Builds release artifacts
+   - Creates GitHub release
+   - Builds and pushes Docker image
+
+4. **Deploy** (manual or automated):
+   ```bash
+   # Manual deployment
+   gh workflow run deploy.yml -f environment=production -f version=v1.2.3
+
+   # Or use the GitHub UI: Actions → Deploy → Run workflow
+   ```
+
+#### 7.8.10 Implementation Checklist
+
+- [ ] Create `.github/workflows/ci.yml` for continuous integration
+- [ ] Create `.github/workflows/release.yml` for releases
+- [ ] Create `.github/workflows/deploy.yml` for automated deployment (optional)
+- [ ] Create `.github/workflows/pre-commit.yml` for pre-commit checks
+- [ ] Create `.github/dependabot.yml` for dependency updates
+- [ ] Configure GitHub secrets for deployment
+- [ ] Set up branch protection rules
+- [ ] Test CI pipeline with a test PR
+- [ ] Test release process with a test tag
+- [ ] Document release process in `docs/RELEASE.md`
+- [ ] Optional: Set up status badges in README
+- [ ] Optional: Configure Codecov for coverage reporting
+- [ ] Optional: Set up Slack/Discord notifications for builds
+
+---
+
+### 7.9 Documentation
 
 - [ ] Deployment Guide (`docs/DEPLOYMENT.md`)
   - Apache setup
