@@ -19,45 +19,46 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 │                    Public Website                        │
 │  (Static HTML/CSS/JS + JSON data files)                 │
 │  - Landing/Portfolio Page                                │
-│  - Public Galleries                                      │
-│  - Private Client Galleries (password protected)        │
-│  - Blog Section                                          │
+│  - Public Albums                                         │
+│  - Password-Protected Albums                             │
+│  - Unlisted Albums                                       │
 └─────────────────────────────────────────────────────────┘
                            │
                            │ Static files served by
-                           │ any web server (nginx, etc.)
+                           │ any web server (nginx, Apache)
                            │
 ┌─────────────────────────────────────────────────────────┐
 │                    Admin Backend                         │
-│  (Go server with authentication)                        │
-│  - Content Management Interface                         │
-│  - Gallery Management                                    │
-│  - Blog Post Editor                                      │
-│  - Image Upload & Processing                            │
+│  (Go server with authentication - optional for viewing)  │
+│  - Album Management                                      │
+│  - Photo Upload & Processing                            │
+│  - Site Configuration                                    │
 │  - JSON File Manipulation                               │
+│  - Analytics API (optional)                             │
 └─────────────────────────────────────────────────────────┘
                            │
                            │ Reads/Writes
                            ▼
 ┌─────────────────────────────────────────────────────────┐
 │              Data Layer (JSON Files)                     │
-│  - galleries.json                                        │
-│  - blog_posts.json                                       │
-│  - portfolio_items.json                                  │
-│  - site_config.json                                      │
-│  - client_galleries.json (encrypted access)             │
+│  - albums.json         (all albums, public & private)    │
+│  - site_config.json    (site-wide settings)             │
+│  - analytics.db        (optional SQLite database)       │
 └─────────────────────────────────────────────────────────┘
 ```
+
+**Note**: The public website works entirely without the backend. The backend is only needed for content management (admin functions). Visitors can view albums using just static file hosting.
 
 ---
 
 ## Technology Stack
 
 ### Build System
-- **Bazel**: Monorepo build system
-  - Polyglot support (TypeScript, Go)
-  - Hermetic builds
-  - Incremental compilation
+- **Bazel**: Monorepo build orchestrator
+  - Coordinates TypeScript (via npm/vite) and Go builds
+  - Hermetic builds with reproducible outputs
+  - Incremental compilation for fast rebuilds
+  - **Note**: Bazel wraps existing tools (npm, go build, vite) rather than replacing them
 
 ### Frontend (Public Site)
 - **TypeScript**: Type-safe JavaScript
@@ -1407,6 +1408,159 @@ CREATE TABLE daily_stats (
 - [ ] Create repository pattern for file I/O
 - [ ] Create SQLite repository for analytics
 - [ ] Add migration for analytics schema
+
+### 2.4 Data Initialization & Bootstrap
+
+**Purpose**: Set up empty data files and create initial admin credentials for first-time setup.
+
+#### Initial Data Files
+
+Create minimal valid JSON files:
+
+**`data/albums.json`**:
+```json
+{
+  "albums": []
+}
+```
+
+**`data/site_config.json`**:
+```json
+{
+  "version": "1.0.0",
+  "last_updated": "2025-10-18T00:00:00Z",
+  "site": {
+    "title": "My Photography Portfolio",
+    "tagline": "",
+    "description": "",
+    "language": "en",
+    "timezone": "America/Los_Angeles"
+  },
+  "owner": {
+    "name": "",
+    "bio": "",
+    "email": "",
+    "phone": "",
+    "location": ""
+  },
+  "social": {},
+  "branding": {
+    "primary_color": "#000000",
+    "secondary_color": "#666666",
+    "accent_color": "#ff6b6b"
+  },
+  "portfolio": {
+    "show_exif_data": true,
+    "enable_lightbox": true
+  },
+  "navigation": {
+    "show_home": true,
+    "show_albums": true,
+    "show_about": true,
+    "show_contact": true
+  },
+  "features": {
+    "enable_analytics": false
+  }
+}
+```
+
+#### Bootstrap Script
+
+Create `scripts/bootstrap.sh`:
+```bash
+#!/bin/bash
+set -e
+
+echo "Bootstrapping photography site..."
+
+# Create directory structure
+mkdir -p data
+mkdir -p static/uploads/{originals,display,thumbnails}
+
+# Create empty data files if they don't exist
+if [ ! -f data/albums.json ]; then
+    echo '{"albums":[]}' > data/albums.json
+    echo "✓ Created data/albums.json"
+fi
+
+if [ ! -f data/site_config.json ]; then
+    cp scripts/templates/site_config.template.json data/site_config.json
+    echo "✓ Created data/site_config.json"
+fi
+
+# Create .gitkeep files
+touch static/uploads/originals/.gitkeep
+touch static/uploads/display/.gitkeep
+touch static/uploads/thumbnails/.gitkeep
+
+# Generate admin password hash
+echo ""
+echo "=== Admin Setup ==="
+read -p "Enter admin username (default: admin): " ADMIN_USER
+ADMIN_USER=${ADMIN_USER:-admin}
+
+read -sp "Enter admin password: " ADMIN_PASSWORD
+echo ""
+
+# Generate bcrypt hash (requires bcrypt command or Go helper)
+HASH=$(go run scripts/hash_password.go "$ADMIN_PASSWORD")
+
+# Create admin config
+cat > data/admin_config.json <<EOF
+{
+  "username": "$ADMIN_USER",
+  "password_hash": "$HASH",
+  "created_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+}
+EOF
+
+echo "✓ Created admin credentials"
+echo ""
+echo "Bootstrap complete! You can now:"
+echo "  1. Run the frontend: cd frontend && npm run dev"
+echo "  2. Run the backend: cd backend && go run cmd/admin/main.go"
+echo "  3. Access admin at: http://localhost:8080/admin"
+```
+
+#### Password Hasher Utility
+
+Create `scripts/hash_password.go`:
+```go
+// Simple utility to generate bcrypt hashes for passwords
+package main
+
+import (
+	"fmt"
+	"os"
+	"golang.org/x/crypto/bcrypt"
+)
+
+func main() {
+	if len(os.Args) != 2 {
+		fmt.Fprintln(os.Stderr, "Usage: hash_password <password>")
+		os.Exit(1)
+	}
+
+	password := os.Args[1]
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error:", err)
+		os.Exit(1)
+	}
+
+	fmt.Print(string(hash))
+}
+```
+
+#### Checklist
+- [ ] Create `data/` directory structure
+- [ ] Create `static/uploads/` directories
+- [ ] Create template JSON files
+- [ ] Write bootstrap script
+- [ ] Write password hasher utility
+- [ ] Add bootstrap instructions to README
+- [ ] Test first-time setup process
 
 ---
 
