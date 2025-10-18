@@ -12,6 +12,67 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 
 ---
 
+## Quick Start: Critical Path to MVP
+
+**Goal**: Get a working photography portfolio with admin interface deployed as quickly as possible.
+
+### Phase Priority
+
+**Must Have (MVP)**:
+1. ✅ **Phase 1**: Setup (Bazel, repo structure, pre-commit hooks)
+2. ✅ **Phase 2**: Data Model (albums.json, site_config.json schemas)
+3. ✅ **Phase 3**: Frontend (portfolio page, album viewing, password protection)
+4. ✅ **Phase 4**: Backend (album CRUD, photo upload, admin auth)
+5. ✅ **Phase 5**: Testing (pre-commit hooks, manual E2E checklist)
+6. ⏩ **Phase 7**: Deployment (get it live!)
+
+**Nice to Have (Phase 8 - Advanced Features)**:
+- Blog functionality
+- Download albums as ZIP
+- Analytics dashboard
+- Comprehensive automated test suite
+- Client-side bcrypt password verification
+- Multiple image sizes for different screens
+
+**Developer Experience (Phase 9)**:
+- CLI tools
+- Migration scripts
+- Enhanced monitoring
+
+### Simplified Workflow
+
+```bash
+# 1. Setup (one-time)
+git clone repo && cd repo
+brew install pre-commit && pre-commit install
+cd frontend && npm install
+cd ../backend && go mod download
+./scripts/bootstrap.sh  # Creates data files, sets admin password
+
+# 2. Daily development
+cd frontend && npm run dev          # Terminal 1: Frontend (localhost:5173)
+cd backend && go run cmd/admin/main.go  # Terminal 2: Backend (localhost:8080)
+
+# 3. Before committing (pre-commit hooks run automatically)
+git add . && git commit -m "feat: your change"
+
+# 4. Deploy
+./scripts/build-release.sh v1.0.0
+scp release/*.tar.gz user@server:/tmp/
+ssh user@server './deploy.sh'
+```
+
+### What to Skip Initially
+
+- Don't implement blog until albums work perfectly
+- Don't implement analytics until you have traffic to analyze
+- Don't implement download-as-ZIP until someone asks for it
+- Don't implement multiple admin users
+
+**Focus**: Get one person's photography portfolio online with working admin interface. Everything else is enhancement.
+
+---
+
 ## Architecture Overview
 
 ```
@@ -737,29 +798,32 @@ All Lit components should accept settings as properties or access via a global c
 - [ ] Load data from `albums.json` by slug
 
 ### 3.3 Password-Protected & Unlisted Albums
+
+> **MVP**: Server-side password check. Client-side bcrypt can be added in Phase 8.
+
 **Password Entry Page**:
 - [ ] Clean, minimal password form
-- [ ] Client-side bcrypt verification against stored hash
+- [ ] Submit password to backend API for verification
+- [ ] Backend returns session token on success
 - [ ] Error message for incorrect password
-- [ ] Success → redirect to album view
-- [ ] Store successful password in sessionStorage
+- [ ] Store session token in sessionStorage
 
 **Album View** (same as public, but with access control):
-- [ ] Check password/access in sessionStorage
-- [ ] Show expiration warning if near expiration date
+- [ ] Check session token before displaying album
+- [ ] Show expiration warning if applicable
 - [ ] Same photo grid and lightbox as public albums
-- [ ] Download functionality (if enabled)
 
-### 3.4 Blog Section
-- [ ] Blog listing page
-  - Post cards with excerpts
-  - Pagination
-  - Tag filtering
-- [ ] Individual blog post page
-  - Full content display
-  - Image support
-  - Related posts
-- [ ] Load data from `blog_posts.json`
+**Phase 8 Enhancement**: Client-side bcrypt verification (no server required)
+
+### 3.4 Blog Section (Phase 8 - Advanced Feature)
+
+> **Defer to Phase 8**: Focus on albums first. Blog can be added later without affecting core functionality.
+
+Planned features (Phase 8):
+- Blog listing page with post cards
+- Individual blog post pages
+- Tag filtering and pagination
+- Markdown or rich text support
 
 ### 3.5 Lit Web Components
 Create reusable Lit components for the public site:
@@ -829,225 +893,27 @@ Create reusable Lit components for the public site:
 - [ ] Touch gesture support for mobile
 - [ ] URL state management (e.g., lightbox photo index in URL)
 
-### 3.6 Download Functionality
+### 3.6 Download Functionality (Phase 8 - Advanced Feature)
 
-**User Experience**:
-Visitors can download photos if the album has `allow_downloads: true`.
+> **Defer to Phase 8**: Simple right-click "Save Image As..." works for MVP. Add download buttons later.
 
-#### Single Photo Download
-- [ ] Download button in lightbox
-- [ ] Quality selector modal/dropdown:
-  - "Original" (full resolution, original format)
-  - "Display Quality" (3840px WebP, ~800KB-1.5MB - 4K optimized)
-  - "Thumbnail" (800px WebP, ~50-100KB)
-- [ ] Click → Browser download via `<a download>` attribute
-- [ ] Filename: `albumname-photonumber-quality.ext`
+**MVP**: Albums display photos at full quality. Users can right-click to save.
 
-#### Album Download
-- [ ] "Download Album" button visible on album page
-- [ ] Quality selector (same options as single photo)
-- [ ] Implementation approach:
-  - Browser's native multi-download capability
-  - Loop through photos, trigger download for each
-  - Show progress indicator
-  - Note: Modern browsers handle multiple downloads well
-  - Alternative: Could add ZIP generation on backend as future enhancement
+**Phase 8 Enhancement**:
+- Download button in lightbox
+- Quality selector (Original/Display/Thumbnail)
+- Batch album download
+- Optional: ZIP generation on backend
 
-#### Technical Implementation
-- [ ] `downloadPhoto()` utility function
-  ```typescript
-  async function downloadPhoto(photoUrl: string, filename: string) {
-    const response = await fetch(photoUrl);
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-  ```
-- [ ] `downloadAlbum()` utility function
-  - Takes array of photos and quality preference
-  - Shows progress dialog
-  - Downloads photos sequentially with small delay (avoid overwhelming browser)
-  - Handles errors gracefully
+### 3.7 Analytics Tracking (Phase 8 - Advanced Feature)
 
-### 3.7 Analytics Tracking (Frontend)
+> **Defer to Phase 8**: Start without analytics. Add when you have traffic to analyze.
 
-**Critical Requirements**:
-- ✅ **Completely asynchronous** - Never blocks page rendering
-- ✅ **Gracefully degrades** - If API unavailable, silently fails
-- ✅ **No user impact** - Invisible to user if tracking fails
-- ✅ **Works with static-only** - Site functions perfectly without backend
-
-#### Analytics Utility (`frontend/src/utils/analytics.ts`)
-
-```typescript
-/**
- * Analytics tracking utility
- * - All calls are fire-and-forget
- * - No error handling visible to user
- * - Configurable API endpoint
- */
-
-interface AnalyticsConfig {
-  enabled: boolean;
-  apiEndpoint: string;
-}
-
-class Analytics {
-  private config: AnalyticsConfig = {
-    enabled: true,
-    apiEndpoint: '/api/analytics'
-  };
-
-  /**
-   * Track album view
-   * Called when album page loads
-   */
-  trackAlbumView(albumId: string, albumSlug: string): void {
-    this.track('album-view', { album_id: albumId, album_slug: albumSlug });
-  }
-
-  /**
-   * Track photo view in lightbox
-   * Called when photo opened in lightbox
-   */
-  trackPhotoView(photoId: string, albumId: string): void {
-    this.track('photo-view', { photo_id: photoId, album_id: albumId });
-  }
-
-  /**
-   * Track photo download
-   * Called when download initiated
-   */
-  trackPhotoDownload(photoId: string, albumId: string, quality: string): void {
-    this.track('photo-download', {
-      photo_id: photoId,
-      album_id: albumId,
-      quality: quality
-    });
-  }
-
-  /**
-   * Track album download
-   * Called when album download initiated
-   */
-  trackAlbumDownload(albumId: string, quality: string, photoCount: number): void {
-    this.track('album-download', {
-      album_id: albumId,
-      quality: quality,
-      photo_count: photoCount
-    });
-  }
-
-  /**
-   * Track page view
-   * Called on route change
-   */
-  trackPageView(pagePath: string, pageTitle: string): void {
-    this.track('page-view', { page_path: pagePath, page_title: pageTitle });
-  }
-
-  /**
-   * Generic track function - fire and forget
-   * Uses navigator.sendBeacon if available, falls back to fetch
-   */
-  private track(event: string, data: Record<string, any>): void {
-    if (!this.config.enabled) return;
-
-    const payload = {
-      event,
-      data,
-      timestamp: new Date().toISOString(),
-      referrer: document.referrer,
-      user_agent: navigator.userAgent
-    };
-
-    const url = `${this.config.apiEndpoint}/${event}`;
-
-    // Use sendBeacon if available (doesn't block page unload)
-    if (navigator.sendBeacon) {
-      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-      navigator.sendBeacon(url, blob);
-    } else {
-      // Fallback to fetch (fire and forget, no await)
-      fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        keepalive: true
-      }).catch(() => {
-        // Silently fail - do not log or show errors
-      });
-    }
-  }
-
-  /**
-   * Disable tracking (for pure static deployments)
-   */
-  disable(): void {
-    this.config.enabled = false;
-  }
-}
-
-// Export singleton
-export const analytics = new Analytics();
-```
-
-#### Integration in Components
-
-```typescript
-// In album-detail-page.ts
-import { analytics } from '../utils/analytics';
-
-class AlbumDetailPage extends LitElement {
-  connectedCallback() {
-    super.connectedCallback();
-    // Track album view
-    analytics.trackAlbumView(this.albumId, this.albumSlug);
-  }
-}
-
-// In photo-lightbox.ts
-class PhotoLightbox extends LitElement {
-  private onPhotoChange(photoId: string) {
-    // Track photo view in lightbox
-    analytics.trackPhotoView(photoId, this.albumId);
-  }
-}
-
-// In download utility
-async function downloadPhoto(photoId: string, albumId: string, quality: string, url: string) {
-  // Track download
-  analytics.trackPhotoDownload(photoId, albumId, quality);
-
-  // Proceed with download
-  const response = await fetch(url);
-  // ... rest of download logic
-}
-```
-
-#### Configuration
-
-Tracking can be disabled via site_config.json:
-```json
-{
-  "features": {
-    "enable_analytics": true
-  }
-}
-```
-
-Load config and disable if needed:
-```typescript
-const config = await loadSiteConfig();
-if (!config.features.enable_analytics) {
-  analytics.disable();
-}
-```
-
+**Planned for Phase 8**:
+- Fire-and-forget analytics tracking
+- Album/photo view counts
+- Download tracking
+- Privacy-focused (no PII)
 ### 3.8 TypeScript Utilities
 - [ ] JSON data fetching utilities with type safety
 - [ ] Type definitions for all JSON schemas (Album, Photo, BlogPost, SiteConfig)
