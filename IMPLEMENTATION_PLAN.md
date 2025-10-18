@@ -1,0 +1,3512 @@
+# Implementation Plan: Photography Portfolio & Gallery Website
+
+## Executive Summary
+
+This document outlines the implementation plan for a hybrid static/dynamic photography website that combines the speed and simplicity of static site generation with the ease of content management through a dynamic admin interface.
+
+### Core Philosophy
+- **Visitor-facing pages**: Pure static files (HTML, CSS, JS, JSON) served by simple web server
+- **Admin interface**: Dynamic Go backend that modifies static JSON files
+- **No traditional database**: JSON files act as the data store
+- **Benefits**: Blazing fast load times, easy hosting, minimal server requirements for public site
+
+---
+
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Public Website                        │
+│  (Static HTML/CSS/JS + JSON data files)                 │
+│  - Landing/Portfolio Page                                │
+│  - Public Galleries                                      │
+│  - Private Client Galleries (password protected)        │
+│  - Blog Section                                          │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           │ Static files served by
+                           │ any web server (nginx, etc.)
+                           │
+┌─────────────────────────────────────────────────────────┐
+│                    Admin Backend                         │
+│  (Go server with authentication)                        │
+│  - Content Management Interface                         │
+│  - Gallery Management                                    │
+│  - Blog Post Editor                                      │
+│  - Image Upload & Processing                            │
+│  - JSON File Manipulation                               │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           │ Reads/Writes
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│              Data Layer (JSON Files)                     │
+│  - galleries.json                                        │
+│  - blog_posts.json                                       │
+│  - portfolio_items.json                                  │
+│  - site_config.json                                      │
+│  - client_galleries.json (encrypted access)             │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Technology Stack
+
+### Build System
+- **Bazel**: Monorepo build system
+  - Polyglot support (TypeScript, Go)
+  - Hermetic builds
+  - Incremental compilation
+
+### Frontend (Public Site)
+- **TypeScript**: Type-safe JavaScript
+- **Lit**: Lightweight web components library (~5KB)
+  - Native web components
+  - Reactive properties and templates
+  - First-class TypeScript support
+  - Scoped styles with Shadow DOM
+- **HTML5/CSS3**: Modern web standards
+- **Vite**: Fast build tool and dev server with HMR
+- **Development server**: Vite dev server with hot module replacement
+
+### Backend (Admin)
+- **Go**: Backend server language
+  - `net/http`: Web server
+  - `encoding/json`: JSON manipulation
+  - `html/template`: Admin UI templating
+  - `github.com/disintegration/imaging`: Image resizing and processing
+  - `github.com/rwcarlsen/goexif`: EXIF extraction
+  - `golang.org/x/crypto/bcrypt`: Password hashing
+  - `github.com/google/uuid`: UUID generation
+  - `github.com/stretchr/testify`: Testing assertions and mocks
+  - Authentication middleware
+
+### Assets & Storage
+- **Image formats**: JPEG, WebP (for web optimization)
+- **File storage**: Local filesystem
+- **JSON**: Data persistence format
+
+---
+
+## Phase 1: Project Setup & Infrastructure (Week 1-2)
+
+### 1.1 Bazel Workspace Setup
+- [ ] Initialize Bazel workspace (`WORKSPACE` file)
+- [ ] Configure `rules_typescript` for frontend
+- [ ] Configure `rules_go` for backend
+- [ ] Set up `rules_nodejs` for npm dependencies
+- [ ] Create `.bazelrc` with common configurations
+- [ ] Set up `.bazelignore` for excluded directories
+
+### 1.1.1 Frontend Dependencies (npm)
+Add to `frontend/package.json`:
+
+**Production Dependencies**:
+- [ ] `lit` - Web components library (~5KB)
+- [ ] `bcryptjs` - Client-side password verification
+- [ ] `@types/bcryptjs` - TypeScript types for bcryptjs
+
+**Development Dependencies**:
+- [ ] `vite` - Build tool and dev server
+- [ ] `typescript` - TypeScript compiler
+- [ ] `@types/node` - Node.js type definitions
+- [ ] `vitest` - Fast Vite-native test runner
+- [ ] `@vitest/ui` - UI for Vitest tests
+- [ ] `@web/test-runner` - Real browser testing for web components
+- [ ] `@open-wc/testing` - Testing helpers for web components
+- [ ] `@testing-library/dom` - DOM testing utilities
+- [ ] `sinon` - Mocking and spying
+- [ ] `@playwright/test` - E2E testing framework
+- [ ] `eslint` - Linting for TypeScript/JavaScript
+- [ ] `@typescript-eslint/parser` - TypeScript parser for ESLint
+- [ ] `@typescript-eslint/eslint-plugin` - TypeScript linting rules
+- [ ] `eslint-plugin-lit` - Lit-specific linting rules
+- [ ] `eslint-config-prettier` - Disable conflicting ESLint rules
+- [ ] `prettier` - Code formatter
+- [ ] `vite-plugin-lit-css` - CSS in Lit components (optional)
+
+### 1.2 Repository Structure
+```
+/
+├── WORKSPACE
+├── BUILD.bazel
+├── .bazelrc
+├── frontend/
+│   ├── BUILD.bazel
+│   ├── src/
+│   │   ├── index.html
+│   │   ├── pages/
+│   │   │   ├── portfolio.html
+│   │   │   ├── galleries.html
+│   │   │   ├── gallery-detail.html
+│   │   │   ├── client-gallery.html
+│   │   │   └── blog.html
+│   │   ├── components/
+│   │   │   ├── app-nav.ts
+│   │   │   ├── app-nav.test.ts
+│   │   │   ├── photo-grid.ts
+│   │   │   ├── photo-grid.test.ts
+│   │   │   ├── photo-lightbox.ts
+│   │   │   ├── photo-lightbox.test.ts
+│   │   │   └── ... (other components + tests)
+│   │   ├── styles/
+│   │   │   ├── global.css
+│   │   │   └── variables.css
+│   │   ├── utils/
+│   │   │   ├── api.ts
+│   │   │   ├── api.test.ts
+│   │   │   ├── router.ts
+│   │   │   ├── router.test.ts
+│   │   │   └── ... (other utils + tests)
+│   │   ├── types/
+│   │   │   └── data-models.ts
+│   │   └── main.ts
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── vitest.config.ts
+│   └── vite.config.ts
+├── backend/
+│   ├── BUILD.bazel
+│   ├── cmd/
+│   │   └── admin/
+│   │       └── main.go
+│   ├── internal/
+│   │   ├── handlers/
+│   │   │   ├── album_handler.go
+│   │   │   └── album_handler_test.go
+│   │   ├── services/
+│   │   │   ├── album_service.go
+│   │   │   └── album_service_test.go
+│   │   └── models/
+│   │       ├── album.go
+│   │       └── album_test.go
+│   ├── tests/
+│   │   └── integration/
+│   │       └── album_lifecycle_test.go
+│   └── go.mod
+├── e2e/
+│   ├── BUILD.bazel
+│   ├── public/
+│   │   ├── landing-page.spec.ts
+│   │   ├── album-browsing.spec.ts
+│   │   └── password-protected-album.spec.ts
+│   ├── admin/
+│   │   ├── auth.spec.ts
+│   │   ├── album-management.spec.ts
+│   │   └── photo-upload.spec.ts
+│   └── playwright.config.ts
+├── testdata/
+│   ├── BUILD.bazel
+│   ├── images/
+│   │   ├── test-photo-1.jpg
+│   │   └── test-photo-2.jpg
+│   └── json/
+│       ├── albums-fixture.json
+│       └── site-config-fixture.json
+├── data/
+│   ├── albums.json
+│   ├── blog_posts.json
+│   └── site_config.json
+├── static/
+│   └── uploads/
+│       ├── originals/
+│       ├── display/
+│       └── thumbnails/
+├── .vscode/
+│   ├── settings.json
+│   ├── extensions.json
+│   └── launch.json
+├── .pre-commit-config.yaml
+├── .editorconfig
+├── .gitignore
+├── .secrets.baseline
+└── docs/
+    └── IMPLEMENTATION_PLAN.md
+```
+
+### 1.3 Development Environment
+- [ ] Set up local development scripts
+- [ ] Create Bazel targets for running dev servers
+- [ ] Configure Vite for frontend with HMR (hot module replacement)
+- [ ] Set up Go air/realize for backend hot-reload
+- [ ] Create `vite.config.ts` with proper TypeScript and Lit configuration
+- [ ] Configure Vite to serve static JSON files from `/data` directory
+
+---
+
+## Phase 1.5: Developer Experience & Code Quality (Week 1-2)
+
+**Philosophy**: Automate code quality checks to maintain consistency across the polyglot codebase.
+
+### 1.5.1 Pre-commit Hooks Setup
+
+**Framework**: [pre-commit](https://pre-commit.com/) - Git hook manager
+
+#### Installation
+```bash
+# Install pre-commit (Python-based)
+pip install pre-commit
+
+# Or via brew on macOS
+brew install pre-commit
+
+# Install git hook scripts
+pre-commit install
+```
+
+#### Configuration File: `.pre-commit-config.yaml`
+
+```yaml
+# Pre-commit hooks configuration
+# See https://pre-commit.com for more information
+
+default_language_version:
+  python: python3.11
+  node: system
+
+repos:
+  # ====================
+  # General / Multi-language
+  # ====================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # Prevent committing large files
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      # Check for files that would conflict on case-insensitive filesystems
+      - id: check-case-conflict
+      # Check for merge conflicts
+      - id: check-merge-conflict
+      # Check JSON files
+      - id: check-json
+      # Check YAML files
+      - id: check-yaml
+        args: ['--unsafe']  # Allow custom YAML tags
+      # Detect private keys
+      - id: detect-private-key
+      # Fix end of files
+      - id: end-of-file-fixer
+      # Fix trailing whitespace
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      # Prevent committing to main
+      - id: no-commit-to-branch
+        args: ['--branch', 'main', '--branch', 'master']
+
+  # ====================
+  # Secrets Detection
+  # ====================
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: package-lock.json
+
+  # ====================
+  # TypeScript / JavaScript
+  # ====================
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v8.56.0
+    hooks:
+      - id: eslint
+        files: \.(js|ts)$
+        types: [file]
+        args:
+          - --fix
+        additional_dependencies:
+          - eslint@8.56.0
+          - '@typescript-eslint/parser@6.19.0'
+          - '@typescript-eslint/eslint-plugin@6.19.0'
+          - 'eslint-plugin-lit@1.11.0'
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        files: \.(js|ts|json|yaml|yml|md|html|css)$
+        args:
+          - --write
+          - --ignore-unknown
+
+  # ====================
+  # Go
+  # ====================
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.1
+    hooks:
+      # Format Go code
+      - id: go-fmt
+        args: [-w]
+      # Organize imports
+      - id: go-imports
+      # Run go vet
+      - id: go-vet
+      # Run golangci-lint (comprehensive linter)
+      - id: golangci-lint
+        args: ['--fix']
+      # Check go.mod is tidy
+      - id: go-mod-tidy
+
+  # ====================
+  # Bazel
+  # ====================
+  - repo: https://github.com/keith/pre-commit-buildifier
+    rev: 6.4.0
+    hooks:
+      - id: buildifier
+        args: [--lint=fix]
+      - id: buildifier-lint
+
+  # ====================
+  # Markdown / Documentation
+  # ====================
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.38.0
+    hooks:
+      - id: markdownlint
+        args: ['--fix']
+
+  # ====================
+  # Shell scripts
+  # ====================
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.6
+    hooks:
+      - id: shellcheck
+
+  # ====================
+  # Commitlint (optional - enforce commit message format)
+  # ====================
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.11.0
+    hooks:
+      - id: commitlint
+        stages: [commit-msg]
+        additional_dependencies: ['@commitlint/config-conventional']
+
+# Local hooks for custom checks
+  - repo: local
+    hooks:
+      # Run fast unit tests before commit
+      - id: frontend-unit-tests
+        name: Frontend Unit Tests
+        entry: bash -c 'cd frontend && npm run test:ci'
+        language: system
+        pass_filenames: false
+        stages: [push]  # Only on push, not every commit
+
+      - id: go-unit-tests
+        name: Go Unit Tests
+        entry: bash -c 'cd backend && go test -short ./...'
+        language: system
+        pass_filenames: false
+        stages: [push]  # Only on push, not every commit
+```
+
+#### Secrets Baseline Setup
+
+```bash
+# Generate initial secrets baseline (will detect existing secrets)
+detect-secrets scan > .secrets.baseline
+
+# Audit the baseline (mark false positives)
+detect-secrets audit .secrets.baseline
+```
+
+---
+
+### 1.5.2 Language-Specific Tools
+
+#### TypeScript / JavaScript
+
+**ESLint** - Linting
+```json
+// frontend/.eslintrc.json
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "plugins": ["@typescript-eslint", "lit"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "plugin:lit/recommended",
+    "prettier"
+  ],
+  "rules": {
+    "@typescript-eslint/explicit-function-return-type": "warn",
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-explicit-any": "error",
+    "no-console": ["warn", { "allow": ["warn", "error"] }]
+  }
+}
+```
+
+**Prettier** - Formatting
+```json
+// .prettierrc
+{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "arrowParens": "always",
+  "endOfLine": "lf"
+}
+```
+
+```
+// .prettierignore
+node_modules/
+dist/
+build/
+bazel-*
+*.min.js
+package-lock.json
+```
+
+**TypeScript Config**
+```json
+// frontend/tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
+```
+
+**Package Scripts**
+```json
+// frontend/package.json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ci": "vitest run",
+    "test:watch": "vitest watch",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write 'src/**/*.{ts,css,html}'",
+    "format:check": "prettier --check 'src/**/*.{ts,css,html}'",
+    "type-check": "tsc --noEmit"
+  }
+}
+```
+
+#### Go
+
+**golangci-lint** - Comprehensive Go linter
+```yaml
+# .golangci.yml
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - gofmt          # Format code
+    - goimports      # Organize imports
+    - govet          # Vet examines Go source code
+    - errcheck       # Check for unchecked errors
+    - staticcheck    # Static analysis
+    - unused         # Check for unused code
+    - gosimple       # Simplify code
+    - ineffassign    # Detect ineffectual assignments
+    - typecheck      # Type checking
+    - gocritic       # Opinionated Go linter
+    - misspell       # Spell check
+    - gosec          # Security checks
+    - dupl           # Duplicate code detection
+    - godot          # Check comments end with period
+    - gocyclo        # Cyclomatic complexity
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+
+issues:
+  exclude-rules:
+    # Exclude test files from some checks
+    - path: _test\.go
+      linters:
+        - dupl
+        - gosec
+```
+
+**Go Formatting**
+```bash
+# Format all Go files
+gofmt -w .
+
+# Organize imports
+goimports -w .
+
+# Run golangci-lint
+golangci-lint run --fix
+```
+
+---
+
+### 1.5.3 VS Code Configuration
+
+#### Workspace Settings
+```json
+// .vscode/settings.json
+{
+  // General
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true,
+    "source.organizeImports": true
+  },
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.eol": "\n",
+
+  // TypeScript / JavaScript
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.rulers": [100]
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // Go
+  "[go]": {
+    "editor.defaultFormatter": "golang.go",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    }
+  },
+  "go.lintTool": "golangci-lint",
+  "go.lintFlags": ["--fast"],
+  "go.useLanguageServer": true,
+  "gopls": {
+    "ui.semanticTokens": true,
+    "ui.completion.usePlaceholders": true
+  },
+
+  // Bazel
+  "[bazel]": {
+    "editor.defaultFormatter": "BazelBuild.vscode-bazel"
+  },
+
+  // Markdown
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.wordWrap": "on"
+  },
+
+  // File associations
+  "files.associations": {
+    "BUILD": "bazel",
+    "*.BUILD": "bazel",
+    "WORKSPACE": "bazel",
+    ".bazelrc": "shellscript"
+  },
+
+  // Search exclusions
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bazel-*": true,
+    "**/dist": true,
+    "**/build": true
+  },
+
+  // File exclusions
+  "files.exclude": {
+    "**/bazel-*": true
+  }
+}
+```
+
+#### Recommended Extensions
+```json
+// .vscode/extensions.json
+{
+  "recommendations": [
+    // TypeScript / JavaScript
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "runem.lit-plugin",
+
+    // Go
+    "golang.go",
+
+    // Bazel
+    "BazelBuild.vscode-bazel",
+
+    // Testing
+    "ZixuanChen.vitest-explorer",
+    "ms-playwright.playwright",
+
+    // Git
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+
+    // Markdown
+    "yzhang.markdown-all-in-one",
+    "DavidAnson.vscode-markdownlint",
+
+    // General
+    "EditorConfig.EditorConfig",
+    "streetsidesoftware.code-spell-checker",
+    "christian-kohler.path-intellisense",
+    "wayou.vscode-todo-highlight",
+
+    // Security
+    "Equinusocio.vsc-material-theme-icons"
+  ]
+}
+```
+
+#### Debug Configuration
+```json
+// .vscode/launch.json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Frontend Dev Server",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Go Admin Server",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/backend/cmd/admin",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "DATA_DIR": "${workspaceFolder}/data",
+        "STATIC_DIR": "${workspaceFolder}/static"
+      }
+    },
+    {
+      "name": "Run Frontend Tests",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "test"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Run Go Tests",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${workspaceFolder}/backend"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack",
+      "configurations": ["Frontend Dev Server", "Go Admin Server"]
+    }
+  ]
+}
+```
+
+---
+
+### 1.5.4 EditorConfig
+
+```ini
+# .editorconfig
+# EditorConfig helps maintain consistent coding styles across editors
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{js,ts,json,yaml,yml}]
+indent_style = space
+indent_size = 2
+
+[*.go]
+indent_style = tab
+indent_size = 4
+
+[*.{md,markdown}]
+trim_trailing_whitespace = false
+
+[*.py]
+indent_style = space
+indent_size = 4
+
+[BUILD,*.bazel,*.bzl,WORKSPACE]
+indent_style = space
+indent_size = 4
+
+[Makefile]
+indent_style = tab
+```
+
+---
+
+### 1.5.5 Secrets Management
+
+**Tools**:
+- **detect-secrets**: Prevent committing secrets
+- **.env files**: For local development (gitignored)
+- **Bazel secrets**: Never commit secrets to BUILD files
+
+#### .gitignore
+```
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build outputs
+dist/
+build/
+bazel-*/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Secrets
+*.pem
+*.key
+*.cert
+credentials.json
+secrets.yaml
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+*.coverage
+
+# Logs
+*.log
+logs/
+
+# Uploaded content (for local dev)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Data files (for local dev)
+data/*.json
+!data/.gitkeep
+```
+
+#### Environment Variables Template
+```bash
+# .env.example (commit this)
+# Copy to .env and fill in values
+
+# Admin authentication
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=changeme
+
+# Server configuration
+PORT=8080
+HOST=localhost
+
+# File paths
+DATA_DIR=./data
+STATIC_DIR=./static
+
+# Development mode
+DEV_MODE=true
+
+# Session secret (generate with: openssl rand -hex 32)
+SESSION_SECRET=your-secret-key-here
+```
+
+---
+
+### 1.5.6 Developer Workflow
+
+#### First-time Setup
+```bash
+# 1. Clone repository
+git clone <repo-url>
+cd nielsshootsfilm-playground
+
+# 2. Install pre-commit
+pip install pre-commit
+pre-commit install
+
+# 3. Setup secrets baseline
+detect-secrets scan > .secrets.baseline
+
+# 4. Install frontend dependencies
+cd frontend
+npm install
+
+# 5. Install Go dependencies
+cd ../backend
+go mod download
+
+# 6. Copy environment file
+cp .env.example .env
+# Edit .env with your values
+
+# 7. Initialize data files
+bazel run //:init_data
+
+# 8. Run pre-commit on all files (optional)
+pre-commit run --all-files
+```
+
+#### Daily Development
+```bash
+# Start development servers
+bazel run //frontend:dev_server  # Terminal 1
+bazel run //backend:admin_server # Terminal 2
+
+# Or use VS Code compound launch configuration
+# Debug -> "Full Stack"
+
+# Before committing
+npm run lint:fix             # Fix linting issues
+npm run format               # Format code
+npm run test:ci              # Run tests
+
+# Commit (pre-commit hooks run automatically)
+git add .
+git commit -m "feat: add photo upload feature"
+git push
+```
+
+#### Manual Checks
+```bash
+# Run all linters manually
+cd frontend && npm run lint
+cd backend && golangci-lint run
+
+# Format all code
+cd frontend && npm run format
+cd backend && gofmt -w . && goimports -w .
+
+# Run tests
+bazel test //...
+
+# Check for secrets
+detect-secrets scan --baseline .secrets.baseline
+
+# Run pre-commit hooks manually
+pre-commit run --all-files
+```
+
+---
+
+### 1.5.7 Bazel Integration
+
+**Run pre-commit checks via Bazel**:
+```python
+# //BUILD.bazel
+
+sh_test(
+    name = "pre_commit_check",
+    srcs = ["scripts/pre_commit_check.sh"],
+    tags = ["lint", "format"],
+)
+
+# Run all linters
+sh_test(
+    name = "lint_all",
+    srcs = ["scripts/lint_all.sh"],
+    tags = ["lint"],
+)
+```
+
+```bash
+# scripts/pre_commit_check.sh
+#!/bin/bash
+set -e
+
+echo "Running pre-commit checks..."
+pre-commit run --all-files
+
+echo "All checks passed!"
+```
+
+**CI Integration**:
+```bash
+# Run in CI
+bazel test //:pre_commit_check
+bazel test //:lint_all
+```
+
+---
+
+### 1.5.8 Commit Message Convention
+
+**Format**: Using [Conventional Commits](https://www.conventionalcommits.org/)
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Types**:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting)
+- `refactor`: Code refactoring
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks
+
+**Examples**:
+```
+feat(albums): add password protection for client galleries
+
+Implements bcrypt-based password protection for albums with
+visibility set to 'password_protected'.
+
+Closes #123
+
+---
+
+fix(image-processing): correct 4K display image dimensions
+
+Changed display image size from 1920px to 3840px for 4K displays.
+
+---
+
+test(photo-lightbox): add keyboard navigation tests
+
+Adds tests for arrow key navigation and ESC key closing.
+```
+
+**Commitlint Config**:
+```js
+// .commitlintrc.js
+module.exports = {
+  extends: ['@commitlint/config-conventional'],
+  rules: {
+    'type-enum': [
+      2,
+      'always',
+      [
+        'feat',
+        'fix',
+        'docs',
+        'style',
+        'refactor',
+        'test',
+        'chore',
+        'perf',
+        'ci',
+        'build',
+        'revert'
+      ]
+    ],
+    'subject-case': [2, 'always', 'sentence-case']
+  }
+};
+```
+
+---
+
+### 1.5.9 Code Review Checklist
+
+Before requesting review:
+- [ ] All pre-commit hooks pass
+- [ ] Code is formatted (Prettier for TS, gofmt for Go)
+- [ ] All linters pass (ESLint, golangci-lint)
+- [ ] Tests written and passing
+- [ ] No secrets committed (detect-secrets)
+- [ ] Conventional commit messages
+- [ ] Documentation updated if needed
+- [ ] Manual testing completed
+
+---
+
+## Phase 2: Data Model & JSON Schema (Week 2)
+
+### 2.1 Define JSON Schemas
+
+#### `site_config.json`
+**Comprehensive site configuration - all settings editable via admin interface**
+
+```json
+{
+  "version": "1.0.0",
+  "last_updated": "ISO8601",
+
+  "site": {
+    "title": "Photographer Name",
+    "tagline": "Optional tagline or subtitle",
+    "description": "Site description for SEO and about section",
+    "language": "en",
+    "timezone": "America/Los_Angeles"
+  },
+
+  "owner": {
+    "name": "Photographer Name",
+    "bio": "Multi-paragraph bio (Markdown supported)",
+    "email": "contact@example.com",
+    "phone": "+1-555-0100",
+    "location": "San Francisco, CA"
+  },
+
+  "social": {
+    "instagram": "username",
+    "facebook": "username",
+    "twitter": "username",
+    "linkedin": "username",
+    "youtube": "channel-id",
+    "pinterest": "username",
+    "tiktok": "username",
+    "custom_links": [
+      {
+        "label": "Portfolio",
+        "url": "https://example.com"
+      }
+    ]
+  },
+
+  "branding": {
+    "logo_url": "/static/uploads/logo.png",
+    "favicon_url": "/static/uploads/favicon.ico",
+    "primary_color": "#000000",
+    "secondary_color": "#666666",
+    "accent_color": "#ff6b6b",
+    "font_heading": "Playfair Display",
+    "font_body": "Open Sans",
+    "custom_css_url": "/static/custom.css"
+  },
+
+  "portfolio": {
+    "main_album_id": "uuid",
+    "show_exif_data": true,
+    "default_photo_layout": "masonry",
+    "enable_lightbox": true,
+    "show_photo_count": true
+  },
+
+  "navigation": {
+    "show_home": true,
+    "show_albums": true,
+    "show_blog": true,
+    "show_about": true,
+    "show_contact": true,
+    "custom_links": [
+      {
+        "label": "Shop",
+        "url": "/shop",
+        "order": 5
+      }
+    ]
+  },
+
+  "features": {
+    "enable_blog": true,
+    "enable_contact_form": true,
+    "enable_newsletter": false,
+    "enable_comments": false,
+    "enable_analytics": false
+  },
+
+  "seo": {
+    "meta_title": "Professional Photography | Photographer Name",
+    "meta_description": "...",
+    "meta_keywords": ["photography", "portrait", "wedding"],
+    "og_image": "/static/uploads/og-image.jpg",
+    "google_analytics_id": "",
+    "google_site_verification": "",
+    "robots_txt_allow": true
+  },
+
+  "contact": {
+    "show_email": true,
+    "show_phone": true,
+    "show_address": false,
+    "contact_form_email": "contact@example.com",
+    "inquiry_types": [
+      "Wedding Photography",
+      "Portrait Session",
+      "Commercial Work",
+      "Print Purchase",
+      "General Inquiry"
+    ]
+  },
+
+  "gallery_defaults": {
+    "default_visibility": "public",
+    "default_allow_downloads": false,
+    "watermark_downloads": false,
+    "watermark_url": "/static/uploads/watermark.png"
+  },
+
+  "admin": {
+    "items_per_page": 20,
+    "auto_save_drafts": true,
+    "show_storage_warnings": true
+  }
+}
+```
+
+**Notes**:
+- All fields optional except `site.title`
+- Extensible structure - easy to add new sections
+- Supports Markdown in bio and descriptions
+- Custom links allow for future expansion
+- Settings grouped logically for admin UI
+
+#### `albums.json`
+**Note**: This replaces both `galleries.json` and `client_galleries.json` - all albums are in one file.
+
+```json
+{
+  "albums": [
+    {
+      "id": "uuid",
+      "slug": "url-friendly-name",
+      "title": "Album Title",
+      "subtitle": "Optional subtitle displayed on cover",
+      "description": "Long-form description...",
+      "cover_photo_id": "uuid",
+      "visibility": "public|unlisted|password_protected",
+      "password_hash": "bcrypt-hash (only if password_protected)",
+      "expiration_date": "ISO8601 (optional, for client galleries)",
+      "allow_downloads": true,
+      "is_portfolio_album": false,
+      "order": 1,
+      "created_at": "ISO8601",
+      "updated_at": "ISO8601",
+      "photos": [
+        {
+          "id": "uuid",
+          "filename_original": "IMG_1234.jpg",
+          "url_original": "/static/uploads/originals/uuid.jpg",
+          "url_display": "/static/uploads/display/uuid.webp",
+          "url_thumbnail": "/static/uploads/thumbnails/uuid.webp",
+          "caption": "Optional caption...",
+          "alt_text": "Accessibility description",
+          "order": 1,
+          "width": 4000,
+          "height": 3000,
+          "file_size_original": 12345678,
+          "file_size_display": 234567,
+          "file_size_thumbnail": 45678,
+          "exif": {
+            "camera": "Canon EOS R5",
+            "lens": "RF 50mm f/1.2",
+            "iso": 400,
+            "aperture": "f/2.8",
+            "shutter_speed": "1/250",
+            "focal_length": "50mm",
+            "date_taken": "ISO8601"
+          },
+          "uploaded_at": "ISO8601"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Album Visibility Modes**:
+- `public`: Shows in public gallery list, accessible to everyone
+- `unlisted`: Not shown in gallery list, but accessible via direct URL
+- `password_protected`: Requires password to view (bcrypt hash stored)
+
+#### `blog_posts.json`
+```json
+{
+  "posts": [
+    {
+      "id": "uuid",
+      "slug": "url-friendly-title",
+      "title": "Blog Post Title",
+      "excerpt": "Short summary...",
+      "content": "Full HTML content...",
+      "featured_image": "/static/uploads/...",
+      "author": "Photographer Name",
+      "published": true,
+      "published_at": "ISO8601",
+      "created_at": "ISO8601",
+      "updated_at": "ISO8601",
+      "tags": ["tag1", "tag2"]
+    }
+  ]
+}
+```
+
+### 2.2 Go Data Models
+- [ ] Create Go structs matching JSON schemas
+- [ ] Implement JSON marshal/unmarshal methods
+- [ ] Add validation logic
+- [ ] Create repository pattern for file I/O
+
+---
+
+## Phase 3: Frontend - Public Site (Week 3-5)
+
+**Global Site Configuration Usage**:
+The frontend loads `site_config.json` once on page load and uses it throughout the application for:
+- Page titles and meta tags (`site.title`, `seo.*`)
+- Navigation menu visibility (`navigation.*`)
+- Branding (colors, fonts, logo) (`branding.*`)
+- Social links in footer (`social.*`)
+- Contact information (`owner.*`, `contact.*`)
+- Feature toggles (`features.*`)
+- Portfolio settings (`portfolio.*`)
+
+All Lit components should accept settings as properties or access via a global config store.
+
+### 3.1 Landing Page / Portfolio
+**Main Portfolio Album Display**:
+- [ ] Hero section with cover photo from main portfolio album
+  - Full-screen cover image
+  - Album title and subtitle overlaid
+  - Site title from `site_config.site.title`
+- [ ] About section
+  - Owner name from `site_config.owner.name`
+  - Bio from `site_config.owner.bio` (render Markdown)
+  - Location from `site_config.owner.location`
+- [ ] Photo grid from main portfolio album
+  - Layout based on `site_config.portfolio.default_photo_layout`
+  - Click to open lightbox (if `site_config.portfolio.enable_lightbox`)
+- [ ] Contact section
+  - Email (if `site_config.contact.show_email`)
+  - Phone (if `site_config.contact.show_phone`)
+  - Social links from `site_config.social`
+- [ ] Responsive design (mobile-first)
+- [ ] Load data from `site_config.json` (for main portfolio album ID) and `albums.json`
+- [ ] Apply branding colors from `site_config.branding`
+
+### 3.2 Public Albums
+**Album Listing Page**:
+- [ ] Grid of album covers (only public albums)
+- [ ] Each card shows:
+  - Cover photo
+  - Album title
+  - Number of photos
+  - Click to view album
+- [ ] Responsive grid layout
+- [ ] Load data from `albums.json` (filter `visibility: "public"`)
+
+**Individual Album View**:
+- [ ] Full-screen cover photo section
+  - Cover photo fills viewport above fold
+  - Album title and subtitle overlaid on cover
+  - Scroll indicator
+- [ ] Album description section
+- [ ] Photo grid/masonry layout
+  - Display version thumbnails
+  - Lazy loading
+  - Click photo to open lightbox
+- [ ] Lightbox/full-screen viewer
+  - Display version shown (3840px 4K-optimized)
+  - Previous/next navigation
+  - Keyboard support (arrow keys, ESC)
+  - Touch gestures (swipe)
+  - Close button
+  - Photo counter (e.g., "5 of 24")
+  - Optional: Show EXIF data
+- [ ] Download options (if `allow_downloads: true`)
+  - Individual photo download button in lightbox
+  - "Download Album" button with quality selector
+- [ ] Load data from `albums.json` by slug
+
+### 3.3 Password-Protected & Unlisted Albums
+**Password Entry Page**:
+- [ ] Clean, minimal password form
+- [ ] Client-side bcrypt verification against stored hash
+- [ ] Error message for incorrect password
+- [ ] Success → redirect to album view
+- [ ] Store successful password in sessionStorage
+
+**Album View** (same as public, but with access control):
+- [ ] Check password/access in sessionStorage
+- [ ] Show expiration warning if near expiration date
+- [ ] Same photo grid and lightbox as public albums
+- [ ] Download functionality (if enabled)
+
+### 3.4 Blog Section
+- [ ] Blog listing page
+  - Post cards with excerpts
+  - Pagination
+  - Tag filtering
+- [ ] Individual blog post page
+  - Full content display
+  - Image support
+  - Related posts
+- [ ] Load data from `blog_posts.json`
+
+### 3.5 Lit Web Components
+Create reusable Lit components for the public site:
+
+#### Core Components
+- [ ] `<app-nav>` - Navigation menu component
+- [ ] `<app-footer>` - Footer component
+- [ ] `<photo-grid>` - Responsive image grid with masonry layout
+  - Property: `photos` (array of photo objects)
+  - Property: `layout` ("masonry" | "grid" | "justified")
+  - Event: `photo-click` - Emits photo object and index
+  - Lazy loading with Intersection Observer
+- [ ] `<photo-lightbox>` - Full-screen image viewer with navigation
+  - Property: `photos` (array of photo objects)
+  - Property: `currentIndex` (number)
+  - Property: `showExif` (boolean)
+  - Methods: `next()`, `prev()`, `close()`
+  - Keyboard support: arrow keys, ESC
+  - Touch gestures: swipe left/right
+  - Shows display version (3840px 4K-optimized WebP)
+- [ ] `<lazy-image>` - Image component with lazy loading
+  - Property: `src` (image URL)
+  - Property: `alt` (alt text)
+  - Property: `aspectRatio` (for proper placeholder)
+  - Progressive enhancement with blur placeholder
+- [ ] `<album-card>` - Album preview card for listings
+  - Property: `album` (album object)
+  - Shows cover photo, title, photo count
+  - Click → navigate to album
+- [ ] `<album-cover-hero>` - Full-screen cover photo section
+  - Property: `coverPhoto` (photo object)
+  - Property: `title` (string)
+  - Property: `subtitle` (string)
+  - Parallax scroll effect (optional)
+- [ ] `<download-menu>` - Download options dropdown
+  - Property: `allowDownloads` (boolean)
+  - Property: `photos` (array)
+  - Options: Original, Display, Thumbnail
+  - Single photo or whole album
+- [ ] `<password-form>` - Password entry form
+  - Property: `passwordHash` (bcrypt hash from JSON)
+  - Client-side bcrypt verification
+  - Event: `password-success`
+- [ ] `<blog-card>` - Blog post card for listings
+- [ ] `<loading-spinner>` - Loading state indicator
+
+#### Page-Level Components
+- [ ] `<portfolio-page>` - Landing page component
+  - Fetches main portfolio album
+  - Displays cover hero + photo grid
+- [ ] `<album-list-page>` - Public albums listing
+  - Fetches all public albums
+  - Grid of album cards
+- [ ] `<album-detail-page>` - Individual album view
+  - Fetches album by slug
+  - Cover hero + photo grid + lightbox
+  - Password protection check
+  - Download functionality
+- [ ] `<blog-list>` - Blog listing with filters
+- [ ] `<blog-post>` - Individual blog post view
+
+#### Component Features
+- [ ] Reactive state management with Lit reactive properties
+- [ ] Shadow DOM for style encapsulation
+- [ ] Event-driven communication between components
+- [ ] Keyboard navigation support
+- [ ] Touch gesture support for mobile
+- [ ] URL state management (e.g., lightbox photo index in URL)
+
+### 3.6 Download Functionality
+
+**User Experience**:
+Visitors can download photos if the album has `allow_downloads: true`.
+
+#### Single Photo Download
+- [ ] Download button in lightbox
+- [ ] Quality selector modal/dropdown:
+  - "Original" (full resolution, original format)
+  - "Display Quality" (3840px WebP, ~800KB-1.5MB - 4K optimized)
+  - "Thumbnail" (800px WebP, ~50-100KB)
+- [ ] Click → Browser download via `<a download>` attribute
+- [ ] Filename: `albumname-photonumber-quality.ext`
+
+#### Album Download
+- [ ] "Download Album" button visible on album page
+- [ ] Quality selector (same options as single photo)
+- [ ] Implementation approach:
+  - Browser's native multi-download capability
+  - Loop through photos, trigger download for each
+  - Show progress indicator
+  - Note: Modern browsers handle multiple downloads well
+  - Alternative: Could add ZIP generation on backend as future enhancement
+
+#### Technical Implementation
+- [ ] `downloadPhoto()` utility function
+  ```typescript
+  async function downloadPhoto(photoUrl: string, filename: string) {
+    const response = await fetch(photoUrl);
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  ```
+- [ ] `downloadAlbum()` utility function
+  - Takes array of photos and quality preference
+  - Shows progress dialog
+  - Downloads photos sequentially with small delay (avoid overwhelming browser)
+  - Handles errors gracefully
+
+### 3.7 TypeScript Utilities
+- [ ] JSON data fetching utilities with type safety
+- [ ] Type definitions for all JSON schemas (Album, Photo, BlogPost, SiteConfig)
+- [ ] Client-side routing (History API or simple hash routing)
+- [ ] Session storage utilities for password verification
+- [ ] URL query parameter handling
+- [ ] Date formatting utilities
+- [ ] Image URL helpers (thumbnails, display, original)
+- [ ] Download utilities (downloadPhoto, downloadAlbum)
+- [ ] bcrypt.js for client-side password verification
+
+---
+
+## Phase 4: Backend - Admin Server (Week 6-8)
+
+### 4.1 Core Server Setup
+- [ ] HTTP server with routing
+- [ ] Static file serving (for uploaded images)
+- [ ] CORS configuration
+- [ ] Logging middleware
+- [ ] Error handling
+
+### 4.2 Authentication & Authorization
+- [ ] Session-based authentication
+- [ ] Login page
+- [ ] Password hashing (bcrypt)
+- [ ] Session storage (in-memory or file-based)
+- [ ] Auth middleware
+- [ ] Logout functionality
+- [ ] CSRF protection
+
+### 4.3 JSON File Management Service
+- [ ] Atomic file read/write operations
+- [ ] File locking mechanism
+- [ ] Backup before write
+- [ ] Validation before saving
+- [ ] Rollback capability
+
+### 4.4 Image Processing Service
+
+**Philosophy**: Professional photography requires careful handling - preserve originals, generate optimized versions for web.
+
+#### Upload Pipeline
+- [ ] Multi-file upload handler (drag-drop or click-to-upload)
+- [ ] Progress tracking for batch uploads
+- [ ] Unique filename generation (UUID-based)
+- [ ] Concurrent processing (process multiple images in parallel)
+
+#### Image Processing Workflow
+When an image is uploaded, the backend creates three versions:
+
+1. **Original** (`/static/uploads/originals/`)
+   - [ ] Store untouched original file
+   - [ ] Preserve original filename in metadata
+   - [ ] No compression, no resizing
+
+2. **Display Version** (`/static/uploads/display/`)
+   - [ ] Target: 3840px on longest side (optimized for 4K displays)
+   - [ ] Format: WebP with quality 85
+   - [ ] Maintain aspect ratio
+   - [ ] Strip EXIF (privacy - except for display purposes)
+   - [ ] Target file size: ~800KB-1.5MB (acceptable for beautiful 4K viewing)
+
+3. **Thumbnail** (`/static/uploads/thumbnails/`)
+   - [ ] Target: 800px on longest side
+   - [ ] Format: WebP with quality 80
+   - [ ] Maintain aspect ratio
+   - [ ] Target file size: ~50-100KB
+
+#### EXIF Processing
+- [ ] Extract EXIF from original using Go library (e.g., `github.com/rwcarlsen/goexif`)
+- [ ] Parse camera, lens, ISO, aperture, shutter speed, focal length
+- [ ] Store in photo metadata (albums.json)
+- [ ] Extract date taken for sorting
+
+#### Storage Organization
+```
+/static/uploads/
+├── originals/
+│   └── <uuid>.<original-ext>  (e.g., abc123.jpg, def456.cr2)
+├── display/
+│   └── <uuid>.webp
+└── thumbnails/
+    └── <uuid>.webp
+```
+
+#### Image Libraries (Go)
+- [ ] `github.com/disintegration/imaging` - Image resizing and processing
+- [ ] `github.com/rwcarlsen/goexif` - EXIF extraction
+- [ ] Native `image/jpeg`, `image/png` support
+- [ ] WebP encoding support
+
+#### Future Enhancement: RAW Support
+- Consider adding RAW file support (CR2, NEF, ARW) with `dcraw` or similar
+- Generate JPEG from RAW for web versions
+
+### 4.5 Admin API Endpoints
+
+#### Album Management
+- `GET /api/admin/albums` - List all albums
+- `GET /api/admin/albums/:id` - Get album details
+- `POST /api/admin/albums` - Create new album
+- `PUT /api/admin/albums/:id` - Update album metadata (title, subtitle, visibility, etc.)
+- `DELETE /api/admin/albums/:id` - Delete album (and optionally photos)
+- `POST /api/admin/albums/:id/set-cover` - Set cover photo for album
+- `POST /api/admin/albums/:id/reorder` - Reorder photos in album
+
+#### Photo Upload & Management
+**Upload Workflow**:
+1. Admin selects/creates album
+2. Uploads photos to that album
+3. Backend processes: original → display → thumbnail
+4. Returns photo metadata
+
+Endpoints:
+- `POST /api/admin/albums/:id/photos/upload` - Upload photos to album (multipart form)
+  - Accepts multiple files
+  - Returns array of photo objects with IDs
+  - Processing happens asynchronously, returns immediately with status
+- `GET /api/admin/albums/:id/photos/upload-status/:batchId` - Check upload batch status
+- `PUT /api/admin/albums/:id/photos/:photoId` - Update photo metadata (caption, alt text, order)
+- `DELETE /api/admin/albums/:id/photos/:photoId` - Delete photo from album
+- `POST /api/admin/albums/:id/photos/reorder` - Reorder photos in album
+
+#### Password Management
+- `POST /api/admin/albums/:id/set-password` - Set or update password for album
+  - Body: `{ "password": "plaintext" }`
+  - Backend bcrypts and stores hash
+- `DELETE /api/admin/albums/:id/password` - Remove password protection
+
+#### Main Portfolio Album
+- `PUT /api/admin/config/main-portfolio-album` - Set which album is the main portfolio
+  - Body: `{ "album_id": "uuid" }`
+  - Updates `site_config.json`
+
+#### Blog Management
+- `GET /api/admin/blog` - List posts
+- `POST /api/admin/blog` - Create post
+- `PUT /api/admin/blog/:id` - Update post
+- `DELETE /api/admin/blog/:id` - Delete post
+- `POST /api/admin/blog/:id/publish` - Publish post
+- `POST /api/admin/blog/:id/unpublish` - Unpublish post
+
+#### Media Management
+- `POST /api/admin/upload` - Upload images
+- `GET /api/admin/media` - List uploaded media
+- `DELETE /api/admin/media/:id` - Delete media
+
+#### Site Configuration / Settings
+- `GET /api/admin/settings` - Get complete site configuration
+- `PUT /api/admin/settings` - Update entire site configuration
+- `PATCH /api/admin/settings/:section` - Update specific section (site, owner, social, branding, etc.)
+  - Examples:
+    - `PATCH /api/admin/settings/site` - Update site settings only
+    - `PATCH /api/admin/settings/branding` - Update branding only
+- `POST /api/admin/settings/upload-logo` - Upload logo image
+- `POST /api/admin/settings/upload-favicon` - Upload favicon
+- `POST /api/admin/settings/upload-watermark` - Upload watermark image
+- `GET /api/admin/settings/preview` - Preview current settings
+
+### 4.6 Admin UI (Server-Rendered HTML)
+
+#### Dashboard
+- [ ] Overview stats
+  - Total albums (public, unlisted, password-protected)
+  - Total photos
+  - Storage usage
+  - Recent uploads
+- [ ] Quick actions
+  - Create new album
+  - Upload to main portfolio
+  - Jump to blog
+
+#### Album Management Page
+**Main View** - Album List:
+- [ ] Grid/list view of all albums
+- [ ] Show album cover, title, visibility status
+- [ ] Filter by visibility (all, public, unlisted, password-protected)
+- [ ] Search by album name
+- [ ] "Create New Album" button
+- [ ] Quick actions: Edit, Delete, View Public URL
+
+**Album Editor** - Edit Single Album:
+- [ ] Album metadata form
+  - Title (required)
+  - Subtitle (optional)
+  - Description (rich text)
+  - Visibility dropdown (public, unlisted, password_protected)
+  - Password field (shown only if password_protected)
+  - Allow downloads toggle
+  - Expiration date (optional, datepicker)
+- [ ] Photo upload zone
+  - Drag-drop area
+  - Click to browse files
+  - Multi-file selection
+  - Upload progress bar with thumbnails
+  - Processing status indicator
+- [ ] Photo grid view
+  - Thumbnails of all photos in album
+  - Drag-drop reordering
+  - Click photo to edit caption/alt text
+  - "Set as Cover" button on each photo
+  - Delete photo button
+  - Current cover photo highlighted
+- [ ] Cover photo display
+  - Large preview of current cover
+  - "Select Cover Photo" flow
+- [ ] Save/Cancel buttons
+
+#### Main Portfolio Album Selector
+- [ ] Dropdown or modal to select which album is the main portfolio
+- [ ] Preview of selected album
+- [ ] "Set as Main Portfolio" button
+
+#### Blog Editor
+- [ ] Rich text editor (e.g., TinyMCE, Quill)
+- [ ] Preview mode
+- [ ] Publish/unpublish toggle
+- [ ] Featured image upload
+
+#### Settings Page
+**Comprehensive settings management with tabbed/sectioned interface**
+
+**Main Layout**:
+- [ ] Tabbed or sidebar navigation for different setting sections
+- [ ] "Save Changes" button (sticky at bottom or top)
+- [ ] "Reset to Default" option with confirmation
+- [ ] Unsaved changes warning
+- [ ] Real-time preview option (optional)
+
+**Section 1: General Settings**
+- [ ] Site title (required field)
+- [ ] Site tagline/subtitle
+- [ ] Site description (textarea)
+- [ ] Language dropdown
+- [ ] Timezone selector
+
+**Section 2: Owner Information**
+- [ ] Owner name
+- [ ] Bio (rich text editor with Markdown support)
+- [ ] Email address
+- [ ] Phone number
+- [ ] Location
+
+**Section 3: Social Media**
+- [ ] Input fields for each platform:
+  - Instagram, Facebook, Twitter, LinkedIn
+  - YouTube, Pinterest, TikTok
+- [ ] Add custom social link button
+  - Label input
+  - URL input
+  - Remove button for each custom link
+- [ ] Preview of how social links will appear
+
+**Section 4: Branding**
+- [ ] Logo upload
+  - Image preview
+  - Drag-drop or click to upload
+  - Recommended dimensions displayed
+- [ ] Favicon upload
+  - Preview
+  - Format requirements (ICO, PNG)
+- [ ] Color scheme
+  - Primary color picker
+  - Secondary color picker
+  - Accent color picker
+  - Preview of color scheme
+- [ ] Typography
+  - Heading font dropdown (Google Fonts)
+  - Body font dropdown (Google Fonts)
+  - Font preview
+- [ ] Custom CSS
+  - Upload custom CSS file (optional)
+  - Or paste CSS in textarea
+
+**Section 5: Portfolio Settings**
+- [ ] Main portfolio album selector
+  - Dropdown of all albums
+  - Preview of selected album
+- [ ] Default photo layout (masonry, grid, justified)
+- [ ] Show EXIF data toggle
+- [ ] Enable lightbox toggle
+- [ ] Show photo count toggle
+
+**Section 6: Navigation**
+- [ ] Toggle switches for each nav item:
+  - Show Home
+  - Show Albums
+  - Show Blog
+  - Show About
+  - Show Contact
+- [ ] Custom navigation links
+  - Add custom link button
+  - Label, URL, order inputs
+  - Drag-drop reordering
+- [ ] Preview of navigation menu
+
+**Section 7: Features**
+- [ ] Enable/disable toggles:
+  - Blog
+  - Contact form
+  - Newsletter signup (future)
+  - Comments (future)
+  - Analytics
+
+**Section 8: SEO & Analytics**
+- [ ] Meta title
+- [ ] Meta description
+- [ ] Meta keywords (tag input)
+- [ ] Open Graph image upload
+- [ ] Google Analytics ID
+- [ ] Google Site Verification code
+- [ ] Robots.txt settings
+  - Allow indexing toggle
+  - Custom robots.txt (textarea)
+
+**Section 9: Contact Settings**
+- [ ] Display options toggles:
+  - Show email
+  - Show phone
+  - Show address
+- [ ] Contact form recipient email
+- [ ] Inquiry types (tags input)
+  - Add/remove inquiry types
+  - Reorder via drag-drop
+
+**Section 10: Gallery Defaults**
+- [ ] Default visibility (public, unlisted, password_protected)
+- [ ] Default allow downloads toggle
+- [ ] Watermark settings
+  - Enable watermark on downloads
+  - Upload watermark image
+  - Watermark position (corner selector)
+  - Watermark opacity slider
+
+**Section 11: Admin Preferences**
+- [ ] Items per page (number input)
+- [ ] Auto-save drafts toggle
+- [ ] Show storage warnings toggle
+- [ ] Admin email notifications
+  - New comments (future)
+  - Contact form submissions
+  - Storage threshold alerts
+
+**Section 12: System & Maintenance**
+- [ ] Storage statistics
+  - Total storage used
+  - Storage by type (originals, display, thumbnails)
+  - Number of albums, photos
+  - Chart/visualization
+- [ ] Admin password change
+  - Current password
+  - New password
+  - Confirm password
+- [ ] Backup & Export
+  - Download all data as ZIP button
+  - Download site_config.json
+  - Export albums metadata
+  - Import configuration
+- [ ] System information (read-only)
+  - Version number
+  - Last updated timestamp
+  - Go version
+  - Total uptime
+
+**UI/UX Considerations**:
+- [ ] Form validation with inline error messages
+- [ ] Success notifications after save
+- [ ] Unsaved changes prompt before leaving page
+- [ ] Collapsible sections to reduce visual clutter
+- [ ] Search/filter for finding specific settings
+- [ ] Keyboard shortcuts (Cmd/Ctrl+S to save)
+- [ ] Mobile-responsive layout
+
+---
+
+## Phase 5: Integration & Build System (Week 9)
+
+### 5.1 Bazel Build Targets
+- [ ] `//frontend:dev_server` - Run frontend dev server
+- [ ] `//frontend:build` - Build frontend for production
+- [ ] `//backend:admin_server` - Build and run admin server
+- [ ] `//:deploy` - Build everything for deployment
+
+### 5.2 Development Workflow
+- [ ] Script to initialize data JSON files with defaults
+- [ ] Script to run both frontend and backend concurrently
+- [ ] Hot-reload configuration
+- [ ] Development environment documentation
+
+### 5.3 Testing Strategy
+
+**Philosophy**: Comprehensive testing at every level to ensure confidence in deployments.
+
+#### Testing Pyramid
+```
+        /\
+       /  \       E2E Tests (Few)
+      /____\
+     /      \     Integration Tests (Some)
+    /________\
+   /          \   Unit Tests (Many)
+  /____________\
+```
+
+---
+
+#### 5.3.1 Frontend Testing
+
+**Testing Framework**: Vitest + Web Test Runner
+- **Vitest**: Fast, Vite-native test runner for unit tests
+- **Web Test Runner** (@web/test-runner): Real browser testing for web components
+- **Testing Library**: @testing-library/dom for DOM testing utilities
+
+**Dependencies** (add to `frontend/package.json`):
+```json
+{
+  "devDependencies": {
+    "vitest": "^1.0.0",
+    "@vitest/ui": "^1.0.0",
+    "@web/test-runner": "^0.18.0",
+    "@open-wc/testing": "^4.0.0",
+    "@testing-library/dom": "^9.3.0",
+    "sinon": "^17.0.0"
+  }
+}
+```
+
+##### Unit Tests - Lit Components
+**Test each component in isolation**:
+
+- [ ] `app-nav.test.ts` - Navigation component
+  - Renders all navigation links
+  - Active state management
+  - Mobile menu toggle
+  - Accessibility (keyboard navigation)
+
+- [ ] `photo-grid.test.ts` - Photo grid component
+  - Renders photos in correct layout
+  - Lazy loading triggers correctly
+  - Click events emit photo-click
+  - Different layout modes (masonry, grid)
+  - Empty state handling
+
+- [ ] `photo-lightbox.test.ts` - Lightbox component
+  - Opens with correct photo
+  - Next/prev navigation works
+  - Keyboard controls (arrow keys, ESC)
+  - Close functionality
+  - Photo counter displays correctly
+  - EXIF data toggle
+
+- [ ] `lazy-image.test.ts` - Lazy image component
+  - Intersection observer triggers load
+  - Placeholder shown before load
+  - Alt text rendered correctly
+  - Error state handling
+
+- [ ] `album-card.test.ts` - Album card component
+  - Displays album data correctly
+  - Photo count shown
+  - Click navigation works
+
+- [ ] `album-cover-hero.test.ts` - Cover hero component
+  - Cover photo displayed
+  - Title and subtitle overlay
+  - Responsive sizing
+
+- [ ] `download-menu.test.ts` - Download menu component
+  - Shows when allowDownloads is true
+  - Hidden when allowDownloads is false
+  - Quality options displayed
+  - Download triggers correctly
+
+- [ ] `password-form.test.ts` - Password form component
+  - Form submission
+  - Bcrypt verification (mock)
+  - Error states
+  - Success event emitted
+
+##### Unit Tests - TypeScript Utilities
+
+- [ ] `api.test.ts` - Data fetching utilities
+  - Fetches JSON correctly
+  - Handles fetch errors
+  - Type safety validation
+
+- [ ] `router.test.ts` - Client-side routing
+  - Route parsing
+  - Navigation works
+  - Query parameters handled
+
+- [ ] `storage.test.ts` - Session storage utilities
+  - Stores and retrieves data
+  - Password storage/retrieval
+  - Clear functionality
+
+- [ ] `download.test.ts` - Download utilities
+  - downloadPhoto() creates download link
+  - downloadAlbum() handles multiple photos
+  - Filename generation correct
+  - Error handling
+
+##### Component Testing (Real Browser)
+**Use @web/test-runner for testing in actual browsers**:
+
+- [ ] Shadow DOM rendering
+- [ ] CSS encapsulation
+- [ ] Custom element registration
+- [ ] Event bubbling through shadow boundaries
+- [ ] Browser API integration (Intersection Observer)
+
+##### Bazel Integration (Frontend)
+```python
+# frontend/BUILD.bazel
+
+load("@npm//vitest:index.bzl", "vitest_test")
+
+vitest_test(
+    name = "unit_tests",
+    srcs = glob(["src/**/*.test.ts"]),
+    data = glob(["src/**/*.ts"]) + [
+        "package.json",
+        "vitest.config.ts",
+    ],
+)
+
+# Web Component Tests
+load("@npm//@web/test-runner:index.bzl", "web_test_runner_test")
+
+web_test_runner_test(
+    name = "component_tests",
+    srcs = glob(["src/components/**/*.test.ts"]),
+    data = glob(["src/components/**/*.ts"]),
+    browsers = ["chromium"],
+)
+```
+
+**Run tests**:
+```bash
+bazel test //frontend:unit_tests
+bazel test //frontend:component_tests
+bazel test //frontend:all  # Run all frontend tests
+```
+
+---
+
+#### 5.3.2 Backend Testing
+
+**Testing Framework**: Go standard library `testing` package + testify
+- **testing**: Built-in Go testing
+- **testify/assert**: Assertion library for cleaner test code
+- **testify/mock**: Mocking framework
+- **httptest**: HTTP testing utilities
+
+**Dependencies** (add to `backend/go.mod`):
+```go
+require (
+    github.com/stretchr/testify v1.8.4
+)
+```
+
+##### Unit Tests - Go Packages
+
+**Models** (`internal/models/`):
+- [ ] `album_test.go` - Album struct operations
+  - JSON marshal/unmarshal
+  - Validation logic
+  - Helper methods
+
+- [ ] `photo_test.go` - Photo struct operations
+  - JSON marshal/unmarshal
+  - EXIF data parsing
+  - Validation
+
+**Services** (`internal/services/`):
+- [ ] `album_service_test.go` - Album business logic
+  - Create album
+  - Update album
+  - Delete album
+  - Set cover photo
+  - Reorder photos
+  - Password operations (bcrypt)
+  - Mock file I/O
+
+- [ ] `photo_service_test.go` - Photo operations
+  - Add photo to album
+  - Update photo metadata
+  - Delete photo
+  - Reorder photos
+  - Mock file I/O
+
+- [ ] `image_processor_test.go` - Image processing
+  - Resize to display size (3840px)
+  - Generate thumbnail (800px)
+  - WebP conversion
+  - EXIF extraction
+  - Test with fixture images
+  - Quality settings
+
+- [ ] `file_manager_test.go` - File operations
+  - Atomic file writes
+  - File locking
+  - Backup creation
+  - Rollback on error
+  - Use temp directory for tests
+
+- [ ] `json_repository_test.go` - JSON file I/O
+  - Read albums.json
+  - Write albums.json
+  - Atomic operations
+  - Validation before save
+  - Mock filesystem
+
+**Handlers** (`internal/handlers/`):
+- [ ] `album_handler_test.go` - HTTP handlers
+  - GET /api/admin/albums
+  - POST /api/admin/albums
+  - PUT /api/admin/albums/:id
+  - DELETE /api/admin/albums/:id
+  - Use httptest.ResponseRecorder
+  - Mock service layer
+
+- [ ] `photo_handler_test.go` - Photo upload handlers
+  - POST /api/admin/albums/:id/photos/upload
+  - Multipart form parsing
+  - File validation
+  - Mock image processing
+  - Error responses
+
+- [ ] `auth_handler_test.go` - Authentication
+  - Login flow
+  - Session creation
+  - Auth middleware
+  - Unauthorized responses
+
+##### Integration Tests
+
+**Full Stack Tests** (`backend/tests/integration/`):
+- [ ] `album_lifecycle_test.go`
+  - Create album → Upload photos → Set cover → Update → Delete
+  - Uses real file system (temp directory)
+  - Uses real image processing
+  - Validates JSON files
+
+- [ ] `image_processing_integration_test.go`
+  - Upload real image files
+  - Verify all three versions created
+  - Check file sizes
+  - Validate EXIF extraction
+  - Verify WebP conversion
+
+- [ ] `json_persistence_test.go`
+  - Concurrent writes to albums.json
+  - File locking works correctly
+  - Backup and rollback
+  - Data integrity
+
+##### Bazel Integration (Backend)
+```python
+# backend/BUILD.bazel
+
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+# Unit tests for each package
+go_test(
+    name = "models_test",
+    srcs = glob(["internal/models/*_test.go"]),
+    embed = [":models"],
+    deps = [
+        "@com_github_stretchr_testify//assert:go_default_library",
+    ],
+)
+
+go_test(
+    name = "services_test",
+    srcs = glob(["internal/services/*_test.go"]),
+    embed = [":services"],
+    data = glob(["testdata/**"]),  # Test fixture images
+    deps = [
+        "@com_github_stretchr_testify//assert:go_default_library",
+        "@com_github_stretchr_testify//mock:go_default_library",
+    ],
+)
+
+go_test(
+    name = "handlers_test",
+    srcs = glob(["internal/handlers/*_test.go"]),
+    embed = [":handlers"],
+    deps = [
+        "@com_github_stretchr_testify//assert:go_default_library",
+    ],
+)
+
+# Integration tests
+go_test(
+    name = "integration_test",
+    srcs = glob(["tests/integration/*_test.go"]),
+    data = glob(["testdata/**"]),
+    tags = ["integration"],
+    deps = [
+        "//backend/internal/models",
+        "//backend/internal/services",
+        "//backend/internal/handlers",
+        "@com_github_stretchr_testify//assert:go_default_library",
+    ],
+)
+```
+
+**Run tests**:
+```bash
+bazel test //backend/...                    # All backend tests
+bazel test //backend:models_test            # Just models
+bazel test //backend:services_test          # Just services
+bazel test //backend:integration_test       # Integration tests
+bazel test --test_tag_filters=integration   # All integration tests
+```
+
+---
+
+#### 5.3.3 End-to-End Testing
+
+**Testing Framework**: Playwright
+- Full browser automation
+- Test real user workflows
+- Cross-browser testing (Chromium, Firefox, WebKit)
+
+**Dependencies** (add to root or frontend):
+```json
+{
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}
+```
+
+##### E2E Test Scenarios
+
+**Public Site E2E** (`e2e/public/`):
+- [ ] `landing-page.spec.ts`
+  - Loads main portfolio album
+  - Displays cover hero
+  - Shows photo grid
+  - Click photo opens lightbox
+  - Lightbox navigation works
+
+- [ ] `album-browsing.spec.ts`
+  - Navigate to albums page
+  - See list of public albums
+  - Click album card
+  - View album with cover
+  - Browse photos
+  - Lightbox functionality
+
+- [ ] `password-protected-album.spec.ts`
+  - Navigate to password-protected album
+  - See password form
+  - Enter incorrect password → error
+  - Enter correct password → access granted
+  - View album photos
+  - Session persists on refresh
+
+- [ ] `downloads.spec.ts`
+  - Open album with downloads enabled
+  - Click download button
+  - Select quality
+  - Download initiates
+  - Download album triggers multiple downloads
+
+**Admin E2E** (`e2e/admin/`):
+- [ ] `auth.spec.ts`
+  - Login page loads
+  - Invalid credentials rejected
+  - Valid credentials grant access
+  - Session persists
+  - Logout works
+
+- [ ] `album-management.spec.ts`
+  - Create new album
+  - Edit album metadata
+  - Upload photos (drag-drop)
+  - Set cover photo
+  - Reorder photos (drag-drop)
+  - Delete photo
+  - Delete album
+
+- [ ] `password-management.spec.ts`
+  - Set album to password-protected
+  - Enter password
+  - Verify stored in albums.json
+  - Remove password protection
+
+- [ ] `photo-upload.spec.ts`
+  - Select album
+  - Upload multiple photos
+  - See upload progress
+  - Wait for processing
+  - Verify all versions created
+  - Check EXIF data displayed
+
+##### Bazel Integration (E2E)
+```python
+# e2e/BUILD.bazel
+
+load("@npm//@playwright/test:index.bzl", "playwright_test")
+
+playwright_test(
+    name = "e2e_public",
+    srcs = glob(["public/**/*.spec.ts"]),
+    data = [
+        "//frontend:build",
+        "//backend:admin_server",
+        "//data:test_fixtures",
+    ],
+    tags = ["e2e"],
+)
+
+playwright_test(
+    name = "e2e_admin",
+    srcs = glob(["admin/**/*.spec.ts"]),
+    data = [
+        "//frontend:build",
+        "//backend:admin_server",
+        "//data:test_fixtures",
+    ],
+    tags = ["e2e"],
+)
+```
+
+**Run tests**:
+```bash
+bazel test //e2e:e2e_public
+bazel test //e2e:e2e_admin
+bazel test --test_tag_filters=e2e  # All E2E tests
+```
+
+---
+
+#### 5.3.4 Test Data & Fixtures
+
+**Test Fixtures Directory** (`testdata/`):
+```
+testdata/
+├── images/
+│   ├── test-photo-1.jpg (4000x3000)
+│   ├── test-photo-2.jpg (3000x4000)
+│   └── test-photo-small.jpg (800x600)
+├── json/
+│   ├── albums-fixture.json
+│   ├── blog-posts-fixture.json
+│   └── site-config-fixture.json
+└── scenarios/
+    ├── empty-album.json
+    ├── public-album.json
+    └── password-album.json
+```
+
+- [ ] Create realistic test images with EXIF data
+- [ ] Generate fixture JSON files
+- [ ] Version control test data
+- [ ] Document fixture usage
+
+---
+
+#### 5.3.5 Continuous Integration
+
+**Test Execution Strategy**:
+
+##### Pre-commit Hook
+```bash
+# Run fast unit tests only
+bazel test //frontend:unit_tests //backend:models_test //backend:services_test
+```
+
+##### Pull Request CI
+```bash
+# Run all tests except E2E
+bazel test //... --test_tag_filters=-e2e
+```
+
+##### Nightly CI
+```bash
+# Run everything including E2E
+bazel test //... --test_output=all
+```
+
+##### Coverage Reports
+```bash
+# Frontend coverage
+bazel coverage //frontend:unit_tests
+
+# Backend coverage
+bazel coverage //backend/...
+```
+
+**Coverage Targets**:
+- Frontend: > 80% coverage
+- Backend: > 85% coverage
+- Critical paths (auth, image processing, file I/O): > 95%
+
+---
+
+#### 5.3.6 Test Organization in Repository
+
+**Updated Repository Structure**:
+```
+/
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── photo-grid.ts
+│   │   │   └── photo-grid.test.ts
+│   │   └── utils/
+│   │       ├── api.ts
+│   │       └── api.test.ts
+│   ├── vitest.config.ts
+│   └── BUILD.bazel
+├── backend/
+│   ├── internal/
+│   │   ├── models/
+│   │   │   ├── album.go
+│   │   │   └── album_test.go
+│   │   ├── services/
+│   │   │   ├── album_service.go
+│   │   │   └── album_service_test.go
+│   │   └── handlers/
+│   │       ├── album_handler.go
+│   │       └── album_handler_test.go
+│   ├── tests/
+│   │   └── integration/
+│   │       └── album_lifecycle_test.go
+│   └── BUILD.bazel
+├── e2e/
+│   ├── public/
+│   │   └── album-browsing.spec.ts
+│   ├── admin/
+│   │   └── album-management.spec.ts
+│   ├── playwright.config.ts
+│   └── BUILD.bazel
+├── testdata/
+│   ├── images/
+│   ├── json/
+│   └── BUILD.bazel
+└── .github/
+    └── workflows/
+        └── tests.yml
+```
+
+---
+
+#### 5.3.7 Test Commands Summary
+
+**Development workflow**:
+```bash
+# Run all tests
+bazel test //...
+
+# Run specific test suites
+bazel test //frontend:unit_tests
+bazel test //backend:services_test
+bazel test //e2e:e2e_public
+
+# Run tests with coverage
+bazel coverage //frontend:unit_tests
+bazel coverage //backend/...
+
+# Watch mode (development)
+cd frontend && npm run test:watch
+cd backend && go test ./... -watch
+
+# Run only integration tests
+bazel test --test_tag_filters=integration //...
+
+# Run only unit tests (fast)
+bazel test --test_tag_filters=-integration,-e2e //...
+
+# Verbose test output
+bazel test //... --test_output=all
+
+# Run specific test file
+bazel test //frontend:unit_tests --test_filter=photo-grid
+```
+
+---
+
+#### 5.3.8 Testing Checklist
+
+Before merging any PR:
+- [ ] All unit tests pass
+- [ ] All integration tests pass (if code touches integration points)
+- [ ] New code has test coverage
+- [ ] E2E tests pass for affected workflows
+- [ ] No flaky tests introduced
+- [ ] Test coverage maintained or improved
+- [ ] Tests run in Bazel successfully
+
+---
+
+## Phase 6: Optimization & Polish (Week 10)
+
+### 6.1 Performance Optimization
+- [ ] Image lazy loading
+- [ ] Progressive image loading
+- [ ] CSS minification
+- [ ] JS bundling and minification
+- [ ] WebP image format support
+- [ ] Caching headers configuration
+- [ ] Service worker for offline support (optional)
+
+### 6.2 SEO Optimization
+- [ ] Meta tags for all pages
+- [ ] Open Graph tags
+- [ ] Sitemap.xml generation
+- [ ] Robots.txt
+- [ ] Structured data (JSON-LD)
+- [ ] Semantic HTML
+
+### 6.3 Accessibility
+- [ ] ARIA labels
+- [ ] Keyboard navigation
+- [ ] Screen reader testing
+- [ ] Color contrast compliance
+- [ ] Alt text for all images
+
+### 6.4 Security
+- [ ] Input validation and sanitization
+- [ ] CSRF protection
+- [ ] XSS prevention
+- [ ] Secure session management
+- [ ] HTTPS enforcement
+- [ ] Content Security Policy headers
+- [ ] Rate limiting on admin endpoints
+
+---
+
+## Phase 7: Deployment & Documentation (Week 11)
+
+**Philosophy**: Separate code from data, support multiple deployment methods, protect user content during upgrades.
+
+### 7.1 Code vs Data Separation
+
+**Critical Principle**: User data NEVER committed to the code repository.
+
+#### Directory Structure
+```
+Production Deployment:
+/var/www/photography-site/
+├── app/                          # Code (from git repo)
+│   ├── frontend/                 # Built static assets
+│   ├── backend/                  # Go binary
+│   └── deployment/               # Config templates
+└── data/                         # User data (NOT in git)
+    ├── config/
+    │   ├── site_config.json
+    │   └── .env
+    ├── content/
+    │   ├── albums.json
+    │   └── blog_posts.json
+    └── uploads/
+        ├── originals/
+        ├── display/
+        └── thumbnails/
+```
+
+#### .gitignore Strategy
+```gitignore
+# User data - NEVER commit
+/data/*.json
+!/data/.gitkeep
+!/data/schema/               # Schema docs OK
+!/data/examples/             # Example data OK
+
+# Uploaded images - NEVER commit
+/static/uploads/*
+!/static/uploads/.gitkeep
+!/static/uploads/README.md   # Instructions OK
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Build artifacts
+/frontend/dist/
+/backend/build/
+bazel-*
+
+# Backups
+/backups/*.zip
+/backups/*.tar.gz
+```
+
+#### Example Data (Committed for Reference)
+```
+/data/
+├── .gitkeep
+├── examples/                 # Committed - reference only
+│   ├── site_config.example.json
+│   ├── albums.example.json
+│   └── blog_posts.example.json
+├── schema/                   # Committed - documentation
+│   ├── site_config.schema.json
+│   ├── albums.schema.json
+│   └── blog_posts.schema.json
+└── README.md                 # Committed - instructions
+```
+
+---
+
+### 7.2 Primary Deployment: Apache + Reverse Proxy
+
+**Recommended Setup**: Static site served by Apache, Go backend behind Apache reverse proxy.
+
+#### 7.2.1 Apache Configuration Templates
+
+**File**: `deployment/apache/site.conf.template`
+```apache
+<VirtualHost *:80>
+    ServerName ${DOMAIN}
+    ServerAlias www.${DOMAIN}
+
+    # Redirect to HTTPS
+    Redirect permanent / https://${DOMAIN}/
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName ${DOMAIN}
+    ServerAlias www.${DOMAIN}
+
+    # SSL Configuration
+    SSLEngine on
+    SSLCertificateFile ${SSL_CERT_PATH}
+    SSLCertificateKeyFile ${SSL_KEY_PATH}
+    SSLCertificateChainFile ${SSL_CHAIN_PATH}
+
+    # Security Headers
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;"
+
+    # Document Root - Static Site
+    DocumentRoot ${SITE_ROOT}/app/frontend/dist
+
+    <Directory ${SITE_ROOT}/app/frontend/dist>
+        Options -Indexes +FollowSymLinks
+        AllowOverride None
+        Require all granted
+
+        # SPA routing - send all requests to index.html
+        FallbackResource /index.html
+    </Directory>
+
+    # Serve uploaded images from data directory
+    Alias /static/uploads ${SITE_ROOT}/data/uploads
+    <Directory ${SITE_ROOT}/data/uploads>
+        Options -Indexes
+        Require all granted
+
+        # Cache uploaded images for 1 year
+        <IfModule mod_expires.c>
+            ExpiresActive On
+            ExpiresDefault "access plus 1 year"
+        </IfModule>
+
+        # Prevent execution of scripts
+        <FilesMatch "\.(php|py|pl|sh|cgi)$">
+            Require all denied
+        </FilesMatch>
+    </Directory>
+
+    # Admin API - Reverse Proxy to Go Backend
+    ProxyPreserveHost On
+    ProxyPass /api http://localhost:${BACKEND_PORT}/api
+    ProxyPassReverse /api http://localhost:${BACKEND_PORT}/api
+
+    # WebSocket support (if needed in future)
+    # ProxyPass /ws ws://localhost:${BACKEND_PORT}/ws
+    # ProxyPassReverse /ws ws://localhost:${BACKEND_PORT}/ws
+
+    # Admin UI - Reverse Proxy to Go Backend
+    ProxyPass /admin http://localhost:${BACKEND_PORT}/admin
+    ProxyPassReverse /admin http://localhost:${BACKEND_PORT}/admin
+
+    # Logging
+    ErrorLog ${APACHE_LOG_DIR}/${DOMAIN}-error.log
+    CustomLog ${APACHE_LOG_DIR}/${DOMAIN}-access.log combined
+
+    # Compression
+    <IfModule mod_deflate.c>
+        AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+    </IfModule>
+
+    # Browser Caching
+    <IfModule mod_expires.c>
+        ExpiresActive On
+
+        # Static assets - cache for 1 year
+        ExpiresByType image/webp "access plus 1 year"
+        ExpiresByType image/jpeg "access plus 1 year"
+        ExpiresByType image/png "access plus 1 year"
+        ExpiresByType text/css "access plus 1 year"
+        ExpiresByType application/javascript "access plus 1 year"
+        ExpiresByType font/woff2 "access plus 1 year"
+
+        # HTML - no cache
+        ExpiresByType text/html "access plus 0 seconds"
+
+        # JSON data - 5 minutes
+        ExpiresByType application/json "access plus 5 minutes"
+    </IfModule>
+</VirtualHost>
+```
+
+**File**: `deployment/apache/README.md`
+```markdown
+# Apache Configuration
+
+## Prerequisites
+```bash
+sudo a2enmod ssl proxy proxy_http headers expires deflate rewrite
+```
+
+## Setup
+1. Copy template: `cp site.conf.template site.conf`
+2. Replace variables:
+   - ${DOMAIN}
+   - ${SITE_ROOT}
+   - ${BACKEND_PORT}
+   - ${SSL_CERT_PATH}, ${SSL_KEY_PATH}, ${SSL_CHAIN_PATH}
+3. Install: `sudo cp site.conf /etc/apache2/sites-available/photography-site.conf`
+4. Enable: `sudo a2ensite photography-site.conf`
+5. Reload: `sudo systemctl reload apache2`
+```
+
+#### 7.2.2 Systemd Service for Go Backend
+
+**File**: `deployment/systemd/photography-admin.service.template`
+```ini
+[Unit]
+Description=Photography Site Admin Backend
+After=network.target
+
+[Service]
+Type=simple
+User=${SERVICE_USER}
+Group=${SERVICE_GROUP}
+WorkingDirectory=${SITE_ROOT}/app/backend
+ExecStart=${SITE_ROOT}/app/backend/admin_server
+Restart=on-failure
+RestartSec=5s
+
+# Environment
+Environment="DATA_DIR=${SITE_ROOT}/data/content"
+Environment="UPLOADS_DIR=${SITE_ROOT}/data/uploads"
+Environment="CONFIG_FILE=${SITE_ROOT}/data/config/site_config.json"
+Environment="PORT=${BACKEND_PORT}"
+EnvironmentFile=${SITE_ROOT}/data/config/.env
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=${SITE_ROOT}/data
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=photography-admin
+
+[Install]
+WantedBy=multi-user.target
+```
+
+---
+
+### 7.3 Bazel Deploy Command
+
+#### 7.3.1 Deploy Configuration
+
+**File**: `deployment/deploy.yaml`
+```yaml
+# Deployment configuration
+# Copy to deploy.local.yaml and customize
+
+deployment:
+  # Deployment target
+  target: "user@example.com"
+  site_root: "/var/www/photography-site"
+
+  # Backend
+  backend_port: 8080
+  service_user: "www-data"
+  service_group: "www-data"
+
+  # Apache
+  domain: "photos.example.com"
+  apache_config_path: "/etc/apache2/sites-available/photography-site.conf"
+
+  # SSL (Let's Encrypt paths)
+  ssl_cert: "/etc/letsencrypt/live/${domain}/fullchain.pem"
+  ssl_key: "/etc/letsencrypt/live/${domain}/privkey.pem"
+  ssl_chain: "/etc/letsencrypt/live/${domain}/chain.pem"
+
+  # Data preservation
+  backup_before_deploy: true
+  backup_dir: "/var/backups/photography-site"
+```
+
+#### 7.3.2 Deploy Script
+
+**File**: `scripts/deploy.sh`
+```bash
+#!/bin/bash
+set -e
+
+# Load configuration
+CONFIG_FILE="${1:-deployment/deploy.local.yaml}"
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Error: Config file not found: $CONFIG_FILE"
+    echo "Copy deployment/deploy.yaml to deployment/deploy.local.yaml and customize"
+    exit 1
+fi
+
+# Parse YAML (simple version - use yq in production)
+eval $(grep -v '^#' "$CONFIG_FILE" | sed 's/: /=/g' | sed 's/ //g')
+
+echo "=== Photography Site Deployment ==="
+echo "Target: $target"
+echo "Site Root: $site_root"
+echo ""
+
+# 1. Build frontend
+echo "Building frontend..."
+bazel build //frontend:prod_build
+
+# 2. Build backend
+echo "Building backend..."
+bazel build //backend:admin_server
+
+# 3. Create deployment package
+echo "Creating deployment package..."
+DEPLOY_DIR="bazel-bin/deploy"
+mkdir -p "$DEPLOY_DIR"
+
+# Copy frontend build
+cp -r bazel-bin/frontend/dist "$DEPLOY_DIR/frontend"
+
+# Copy backend binary
+cp bazel-bin/backend/admin_server "$DEPLOY_DIR/backend/"
+
+# Copy deployment configs
+cp -r deployment "$DEPLOY_DIR/"
+
+# Create tarball
+tar -czf deploy.tar.gz -C "$DEPLOY_DIR" .
+
+# 4. Backup current data on target
+if [ "$backup_before_deploy" = "true" ]; then
+    echo "Backing up current data..."
+    ssh "$target" "
+        mkdir -p $backup_dir
+        sudo tar -czf $backup_dir/backup-\$(date +%Y%m%d-%H%M%S).tar.gz \
+            -C $site_root/data .
+    "
+fi
+
+# 5. Upload deployment package
+echo "Uploading deployment package..."
+scp deploy.tar.gz "$target:/tmp/"
+
+# 6. Deploy on target
+echo "Deploying..."
+ssh "$target" "
+    set -e
+
+    # Stop backend service
+    sudo systemctl stop photography-admin || true
+
+    # Extract new code
+    sudo mkdir -p $site_root/app
+    sudo tar -xzf /tmp/deploy.tar.gz -C $site_root/app
+
+    # Fix permissions
+    sudo chown -R $service_user:$service_group $site_root/app
+    sudo chmod +x $site_root/app/backend/admin_server
+
+    # Ensure data directories exist
+    sudo mkdir -p $site_root/data/{config,content,uploads/{originals,display,thumbnails}}
+    sudo chown -R $service_user:$service_group $site_root/data
+
+    # Initialize data files if they don't exist
+    if [ ! -f $site_root/data/content/albums.json ]; then
+        echo '{"albums":[]}' | sudo tee $site_root/data/content/albums.json
+        echo '{"posts":[]}' | sudo tee $site_root/data/content/blog_posts.json
+        sudo cp $site_root/app/deployment/examples/site_config.example.json \
+                $site_root/data/config/site_config.json
+    fi
+
+    # Update systemd service
+    sudo cp $site_root/app/deployment/systemd/photography-admin.service \
+            /etc/systemd/system/photography-admin.service
+    sudo systemctl daemon-reload
+
+    # Update Apache config (if changed)
+    # Note: Manual review recommended for Apache config changes
+    echo 'Apache config template available at: $site_root/app/deployment/apache/site.conf.template'
+
+    # Start backend service
+    sudo systemctl start photography-admin
+    sudo systemctl enable photography-admin
+
+    # Reload Apache
+    sudo systemctl reload apache2
+
+    # Cleanup
+    rm /tmp/deploy.tar.gz
+
+    echo 'Deployment complete!'
+"
+
+echo ""
+echo "=== Deployment Complete ==="
+echo "Check status: ssh $target 'sudo systemctl status photography-admin'"
+echo "View logs: ssh $target 'sudo journalctl -u photography-admin -f'"
+```
+
+#### 7.3.3 Bazel Deploy Target
+
+**File**: `BUILD.bazel`
+```python
+# Root BUILD.bazel
+
+sh_binary(
+    name = "deploy",
+    srcs = ["scripts/deploy.sh"],
+    data = [
+        "//frontend:prod_build",
+        "//backend:admin_server",
+        "//deployment:configs",
+    ],
+)
+
+# Quick deployment (assumes deploy.local.yaml exists)
+sh_binary(
+    name = "deploy_quick",
+    srcs = ["scripts/deploy.sh"],
+    args = ["deployment/deploy.local.yaml"],
+    data = [
+        "//frontend:prod_build",
+        "//backend:admin_server",
+    ],
+)
+```
+
+**Usage**:
+```bash
+# First time setup
+cp deployment/deploy.yaml deployment/deploy.local.yaml
+# Edit deploy.local.yaml with your settings
+
+# Deploy
+bazel run //:deploy
+```
+
+---
+
+### 7.4 Data Migration System
+
+**Philosophy**: Treat data like a database - use migrations for schema changes.
+
+#### 7.4.1 Migration Structure
+
+**File**: `backend/internal/migrations/migration.go`
+```go
+package migrations
+
+type Migration struct {
+    Version     int
+    Description string
+    Up          func() error
+    Down        func() error
+}
+
+var Migrations = []Migration{
+    {
+        Version:     1,
+        Description: "Initial schema",
+        Up:          migrate_v1_up,
+        Down:        migrate_v1_down,
+    },
+    {
+        Version:     2,
+        Description: "Add watermark settings to site_config",
+        Up:          migrate_v2_up,
+        Down:        migrate_v2_down,
+    },
+    // Add new migrations here
+}
+```
+
+#### 7.4.2 Migration Tracking
+
+**File**: `data/schema_version.json` (in data directory, gitignored)
+```json
+{
+  "current_version": 2,
+  "applied_migrations": [1, 2],
+  "last_migration_date": "2025-10-18T10:30:00Z"
+}
+```
+
+#### 7.4.3 Migration Runner
+
+**Backend startup sequence**:
+1. Check `schema_version.json`
+2. Compare with available migrations
+3. Run pending migrations in order
+4. Update `schema_version.json`
+5. Create backup before each migration
+
+**File**: `backend/cmd/admin/main.go`
+```go
+func main() {
+    // Check and run migrations
+    currentVersion := migrations.GetCurrentVersion()
+    targetVersion := migrations.LatestVersion()
+
+    if currentVersion < targetVersion {
+        log.Printf("Migrations needed: v%d -> v%d", currentVersion, targetVersion)
+
+        // Backup before migration
+        if err := createBackup(); err != nil {
+            log.Fatal("Failed to create backup:", err)
+        }
+
+        // Run migrations
+        if err := migrations.RunMigrations(currentVersion, targetVersion); err != nil {
+            log.Fatal("Migration failed:", err)
+        }
+
+        log.Printf("Migrations complete: now at v%d", targetVersion)
+    }
+
+    // Start server
+    startServer()
+}
+```
+
+#### 7.4.4 Migration Example
+
+**Adding a new field to site_config.json**:
+```go
+func migrate_v2_up() error {
+    // Read current site_config.json
+    config, err := readSiteConfig()
+    if err != nil {
+        return err
+    }
+
+    // Add new field with default value
+    if config.GalleryDefaults == nil {
+        config.GalleryDefaults = &GalleryDefaults{}
+    }
+    if config.GalleryDefaults.WatermarkURL == "" {
+        config.GalleryDefaults.WatermarkURL = ""
+        config.GalleryDefaults.WatermarkDownloads = false
+    }
+
+    // Write back
+    return writeSiteConfig(config)
+}
+
+func migrate_v2_down() error {
+    // Reverse the migration (remove the field)
+    config, err := readSiteConfig()
+    if err != nil {
+        return err
+    }
+
+    // Remove the field
+    if config.GalleryDefaults != nil {
+        config.GalleryDefaults.WatermarkURL = ""
+        config.GalleryDefaults.WatermarkDownloads = false
+    }
+
+    return writeSiteConfig(config)
+}
+```
+
+---
+
+### 7.5 Alternative Deployment Methods
+
+#### 7.5.1 Docker Deployment
+
+**File**: `deployment/docker/Dockerfile`
+```dockerfile
+FROM golang:1.21-alpine AS backend-builder
+WORKDIR /app
+COPY backend/ .
+RUN go build -o admin_server cmd/admin/main.go
+
+FROM node:20-alpine AS frontend-builder
+WORKDIR /app
+COPY frontend/ .
+RUN npm install && npm run build
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /app
+
+# Copy built artifacts
+COPY --from=backend-builder /app/admin_server /app/
+COPY --from=frontend-builder /app/dist /app/frontend/
+
+# Data volume
+VOLUME ["/data"]
+
+EXPOSE 8080
+
+CMD ["/app/admin_server"]
+```
+
+**File**: `deployment/docker/docker-compose.yml`
+```yaml
+version: '3.8'
+
+services:
+  photography-site:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data:rw
+    environment:
+      - DATA_DIR=/data/content
+      - UPLOADS_DIR=/data/uploads
+      - CONFIG_FILE=/data/config/site_config.json
+    restart: unless-stopped
+
+  apache:
+    image: httpd:2.4-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./apache.conf:/usr/local/apache2/conf/httpd.conf:ro
+      - ./data/uploads:/var/www/uploads:ro
+      - ./frontend/dist:/var/www/html:ro
+    depends_on:
+      - photography-site
+    restart: unless-stopped
+```
+
+#### 7.5.2 Static Hosting (Netlify/Vercel) + Backend Elsewhere
+
+For users who want frontend on CDN:
+- Frontend: Deploy to Netlify/Vercel
+- Backend: Deploy to VPS or cloud provider
+- Configure CORS on backend to allow frontend domain
+
+---
+
+### 7.6 Deployment Checklist
+
+**Pre-deployment**:
+- [ ] Test deployment in staging environment
+- [ ] Backup current data
+- [ ] Review migration scripts
+- [ ] Update version number
+- [ ] Test rollback procedure
+
+**Deployment**:
+- [ ] Run `bazel test //...` (all tests pass)
+- [ ] Build production artifacts
+- [ ] Run deployment script
+- [ ] Verify migrations applied
+- [ ] Check service status
+- [ ] Test critical paths (login, upload, view albums)
+
+**Post-deployment**:
+- [ ] Monitor logs for errors
+- [ ] Check storage usage
+- [ ] Verify backups created
+- [ ] Test rollback if needed
+- [ ] Update documentation if needed
+
+---
+
+### 7.7 Rollback Procedure
+
+**If deployment fails**:
+```bash
+# 1. Stop new service
+ssh $target "sudo systemctl stop photography-admin"
+
+# 2. Restore previous version
+ssh $target "
+    cd $site_root
+    sudo rm -rf app.new
+    sudo mv app app.new
+    sudo mv app.backup app
+"
+
+# 3. Restore data if corrupted
+ssh $target "
+    cd $site_root
+    sudo tar -xzf /var/backups/photography-site/backup-TIMESTAMP.tar.gz -C data/
+"
+
+# 4. Start service
+ssh $target "sudo systemctl start photography-admin"
+```
+
+---
+
+### 7.8 Documentation
+
+- [ ] Deployment Guide (`docs/DEPLOYMENT.md`)
+  - Apache setup
+  - SSL certificate setup (Let's Encrypt)
+  - Firewall configuration
+  - DNS configuration
+- [ ] Operations Manual (`docs/OPERATIONS.md`)
+  - Backup procedures
+  - Restore procedures
+  - Monitoring setup
+  - Log rotation
+- [ ] Migration Guide (`docs/MIGRATIONS.md`)
+  - How to write migrations
+  - Testing migrations
+  - Rollback procedures
+- [ ] Troubleshooting Guide (`docs/TROUBLESHOOTING.md`)
+  - Common issues
+  - Log locations
+  - Debug mode
+- [ ] API Documentation (`docs/API.md`)
+  - All endpoints
+  - Request/response formats
+  - Authentication
+- [ ] User Guide (`docs/USER_GUIDE.md`)
+  - Admin interface walkthrough
+  - Creating albums
+  - Uploading photos
+  - Managing settings
+
+---
+
+## Future Enhancements (Post-Launch)
+
+### Phase 8: Advanced Features
+- [ ] Image gallery sorting/filtering on frontend
+- [ ] Search functionality for blog
+- [ ] Comments system for blog posts
+- [ ] Newsletter subscription integration
+- [ ] Analytics integration (privacy-focused)
+- [ ] Multiple admin users with roles
+- [ ] Version control for content (git-based?)
+- [ ] Automated image optimization pipeline
+- [ ] Client gallery download as ZIP
+- [ ] Watermarking for client galleries
+- [ ] Print shop integration
+- [ ] Multi-language support
+
+### Phase 9: Developer Experience
+- [ ] CLI tool for common operations
+- [ ] Migration scripts for data schema changes
+- [ ] Monitoring and logging
+- [ ] Automated backups
+- [ ] CI/CD pipeline
+- [ ] Automated testing in CI
+
+---
+
+## Risk Mitigation
+
+### File Locking & Concurrency
+**Risk**: Multiple simultaneous admin operations corrupting JSON files.
+**Mitigation**:
+- Implement file locking
+- Atomic write operations (write to temp, then rename)
+- Backup before modification
+
+### Data Loss
+**Risk**: Accidental deletion or corruption of JSON files.
+**Mitigation**:
+- Automated backups before each modification
+- Git-based versioning of data directory
+- Export functionality
+
+### Image Storage Growth
+**Risk**: Storage fills up with uploaded images.
+**Mitigation**:
+- Image optimization on upload
+- Storage monitoring
+- Cleanup utilities for unused images
+
+### Security
+**Risk**: Unauthorized access to admin panel or client galleries.
+**Mitigation**:
+- Strong authentication
+- Rate limiting
+- Regular security audits
+- HTTPS enforcement
+
+### Performance at Scale
+**Risk**: Large JSON files becoming slow to parse.
+**Mitigation**:
+- Pagination in admin interface
+- Lazy loading on frontend
+- Consider splitting large files if needed
+- Monitor file sizes
+
+---
+
+## Success Metrics
+
+### Performance
+- [ ] Public pages load in < 2 seconds (3G connection)
+- [ ] Lighthouse score > 90
+- [ ] Images optimized (< 200KB per image)
+
+### Functionality
+- [ ] All CRUD operations working for all content types
+- [ ] Image upload and processing reliable
+- [ ] Client gallery access control working
+- [ ] Blog editor fully functional
+
+### Developer Experience
+- [ ] Local development environment runs with single command
+- [ ] Build completes in < 2 minutes
+- [ ] Clear documentation for all processes
+
+### User Experience
+- [ ] Admin panel intuitive and easy to use
+- [ ] Public site responsive on all devices
+- [ ] Fast page transitions
+- [ ] Accessible (WCAG 2.1 AA compliant)
+
+---
+
+## Timeline Summary
+
+| Phase | Duration | Key Deliverables |
+|-------|----------|------------------|
+| 1. Setup | 1-2 weeks | Bazel workspace, repo structure |
+| 2. Data Model | 1 week | JSON schemas, Go models |
+| 3. Frontend | 3 weeks | All public-facing pages |
+| 4. Backend | 3 weeks | Admin server and UI |
+| 5. Integration | 1 week | Build system, testing |
+| 6. Polish | 1 week | Performance, SEO, accessibility |
+| 7. Deployment | 1 week | Deployment, documentation |
+
+**Total Estimated Time**: 10-11 weeks for MVP
+
+---
+
+## Next Steps
+
+1. **Get approval** on this implementation plan
+2. **Set up development environment** (Bazel, Go, Node.js)
+3. **Create initial Bazel workspace** and repository structure
+4. **Begin Phase 1** - Project setup and infrastructure
+5. **Establish development workflow** and conventions
+
+---
+
+## Notes & Decisions Log
+
+*This section will be updated as implementation progresses with key decisions, changes to the plan, and lessons learned.*
+
+- **2025-10-18**: Initial implementation plan created
+
+- **2025-10-18**: Selected **Lit** as the frontend framework
+  - **Rationale**:
+    - Tiny bundle size (~5KB) ensures fast page loads
+    - Native web components are future-proof and framework-agnostic
+    - Excellent TypeScript support out of the box
+    - Perfect fit for component-based photo gallery UIs
+    - No hydration overhead, works seamlessly with static HTML
+    - Shadow DOM provides natural style encapsulation
+  - **Vite** chosen as build tool for fast dev experience with HMR
+  - Components will be organized by functionality (core components vs page-level components)
+
+- **2025-10-18**: Refined **Album-Centric Photo Management** approach
+  - **Unified album model**: Single `albums.json` file for all albums (public, unlisted, password-protected)
+  - **Album visibility modes**:
+    - `public`: Listed and accessible to everyone
+    - `unlisted`: Direct URL access only, not in listings
+    - `password_protected`: Requires bcrypt password (client-side verification)
+  - **Main Portfolio Album**: One special album designated as the portfolio for landing page
+  - **Cover photo**: Each album has a selectable cover photo displayed full-screen at top
+  - **Three-tier image storage**:
+    1. **Original**: Untouched source files (any format, any resolution)
+    2. **Display**: 3840px WebP @ quality 85 (~800KB-1.5MB) for beautiful 4K viewing
+    3. **Thumbnail**: 800px WebP @ quality 80 (~50-100KB) for grids
+  - **Download functionality**:
+    - Per-album setting: `allow_downloads`
+    - Users can choose quality: Original, Display, or Thumbnail
+    - Single photo or whole album (sequential browser downloads)
+  - **EXIF data**: Extracted and stored in JSON, stripped from web versions for privacy
+  - **Upload workflow**:
+    1. Select/create album
+    2. Drag-drop or click to upload photos
+    3. Backend processes all three versions + EXIF extraction
+    4. Photos appear in album
+  - **Admin workflow prioritizes photographer needs**:
+    - Batch upload with progress tracking
+    - Drag-drop photo reordering
+    - Quick cover photo selection
+    - Easy visibility toggle and password management
+
+- **2025-10-18**: Established **Comprehensive Testing Strategy**
+  - **Testing pyramid approach**: Many unit tests, some integration tests, few E2E tests
+  - **Frontend testing**:
+    - **Vitest** for fast unit tests of TypeScript utilities
+    - **@web/test-runner** for real browser testing of Lit web components
+    - Tests for Shadow DOM, CSS encapsulation, browser APIs
+    - Every component and utility has corresponding `.test.ts` file
+  - **Backend testing**:
+    - Go standard library `testing` package with **testify** for assertions
+    - Unit tests for models, services, handlers (with mocking)
+    - Integration tests for full workflows (album lifecycle, image processing)
+    - Real filesystem and image processing in integration tests
+  - **E2E testing**:
+    - **Playwright** for full browser automation
+    - Public site workflows (browsing, lightbox, downloads, passwords)
+    - Admin workflows (auth, album management, photo upload)
+  - **Bazel integration**:
+    - All tests run via Bazel targets
+    - Tags for filtering (unit, integration, e2e)
+    - Coverage reporting support
+    - Pre-commit hooks for fast tests, CI for full suite
+  - **Coverage targets**: Frontend >80%, Backend >85%, Critical paths >95%
+  - **Test fixtures**: Dedicated `testdata/` directory with images and JSON fixtures
+
+- **2025-10-18**: Implemented **Developer Experience & Code Quality** tooling
+  - **Pre-commit hooks** via [pre-commit.com](https://pre-commit.com/):
+    - Runs on every commit automatically
+    - Multi-language support: TypeScript, Go, Bazel, Shell, Markdown
+    - Secrets detection with `detect-secrets`
+    - File checks: large files, merge conflicts, JSON/YAML validity
+    - Prevents commits to main/master branches
+  - **TypeScript tooling**:
+    - **ESLint** with TypeScript parser and Lit plugin
+    - **Prettier** for consistent formatting (100 char line width, single quotes)
+    - Strict TypeScript config (noUnusedLocals, noUnusedParameters, etc.)
+  - **Go tooling**:
+    - **golangci-lint** with 15+ linters (gofmt, govet, staticcheck, gosec, etc.)
+    - Automatic import organization with goimports
+    - Security checks with gosec
+  - **Bazel tooling**:
+    - **Buildifier** for BUILD file formatting and linting
+  - **VS Code integration**:
+    - Format on save for all languages
+    - Recommended extensions (ESLint, Prettier, Go, Bazel, Lit, Vitest, Playwright)
+    - Debug configurations for frontend, backend, and full stack
+    - Proper file associations for Bazel files
+  - **Secrets management**:
+    - `.env.example` template (committed)
+    - `.env` files gitignored
+    - `detect-secrets` baseline for false positive management
+    - Private keys and credentials automatically blocked
+  - **Commit conventions**:
+    - Conventional Commits format enforced via commitlint
+    - Types: feat, fix, docs, style, refactor, test, chore, perf, ci, build
+  - **EditorConfig**: Consistent indentation across editors (2 spaces for TS, tabs for Go)
+  - **Developer workflow**: One-command setup, automatic checks on commit, manual override available
+
+- **2025-10-18**: Designed **Production Deployment Strategy**
+  - **Code vs Data Separation**:
+    - User data NEVER committed to git repository
+    - Code in `/app`, data in `/data` (separate directories)
+    - Comprehensive `.gitignore` prevents accidental data commits
+    - Example data and schemas committed for reference only
+  - **Primary deployment: Apache + Reverse Proxy**:
+    - Static site served directly by Apache (blazing fast)
+    - Go backend runs as systemd service on port 8080
+    - Apache reverse proxies `/api` and `/admin` to backend
+    - Full Apache config template with security headers, caching, compression
+    - Systemd service template with security hardening
+  - **Bazel deploy command**:
+    - `bazel run //:deploy` - One command deployment
+    - Configurable via `deployment/deploy.local.yaml` (gitignored)
+    - Builds frontend and backend, creates tarball, deploys via SSH
+    - Automatic backup before deployment
+    - Preserves existing data during upgrades
+    - Initializes empty data files on first deploy
+  - **Data migration system**:
+    - Database-style migrations for JSON schema changes
+    - Tracked in `schema_version.json`
+    - Automatic migration on backend startup
+    - Up/down migrations for rollback capability
+    - Automatic backup before each migration
+  - **Rollback procedure**: Quick restoration of previous version and data
+  - **Alternative deployments**: Docker Compose, static hosting + VPS backend
+  - **Security**: SSL/TLS enforcement, security headers, systemd hardening, upload directory protections
