@@ -1296,11 +1296,117 @@ Before requesting review:
 }
 ```
 
-### 2.2 Go Data Models
+### 2.2 Analytics Database (SQLite)
+
+**Philosophy**: Track analytics without impacting static site performance. All tracking is asynchronous and gracefully degrades if unavailable.
+
+**File**: `data/analytics.db` (SQLite database, gitignored)
+
+#### Schema Design
+
+```sql
+-- Album views
+CREATE TABLE album_views (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    album_id TEXT NOT NULL,
+    album_slug TEXT NOT NULL,
+    viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    referrer TEXT,
+    user_agent TEXT,
+    ip_hash TEXT  -- Hashed IP for privacy
+);
+
+CREATE INDEX idx_album_views_album_id ON album_views(album_id);
+CREATE INDEX idx_album_views_date ON album_views(viewed_at);
+
+-- Photo views (within lightbox)
+CREATE TABLE photo_views (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    photo_id TEXT NOT NULL,
+    album_id TEXT NOT NULL,
+    viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    referrer TEXT,
+    user_agent TEXT,
+    ip_hash TEXT
+);
+
+CREATE INDEX idx_photo_views_photo_id ON photo_views(photo_id);
+CREATE INDEX idx_photo_views_album_id ON photo_views(album_id);
+CREATE INDEX idx_photo_views_date ON photo_views(viewed_at);
+
+-- Photo downloads
+CREATE TABLE photo_downloads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    photo_id TEXT NOT NULL,
+    album_id TEXT NOT NULL,
+    quality TEXT NOT NULL,  -- 'original', 'display', 'thumbnail'
+    downloaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    user_agent TEXT,
+    ip_hash TEXT
+);
+
+CREATE INDEX idx_photo_downloads_photo_id ON photo_downloads(photo_id);
+CREATE INDEX idx_photo_downloads_album_id ON photo_downloads(album_id);
+CREATE INDEX idx_photo_downloads_date ON photo_downloads(downloaded_at);
+
+-- Album downloads
+CREATE TABLE album_downloads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    album_id TEXT NOT NULL,
+    quality TEXT NOT NULL,
+    photo_count INTEGER NOT NULL,
+    downloaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    user_agent TEXT,
+    ip_hash TEXT
+);
+
+CREATE INDEX idx_album_downloads_album_id ON album_downloads(album_id);
+CREATE INDEX idx_album_downloads_date ON album_downloads(downloaded_at);
+
+-- Page views (landing, blog posts, etc.)
+CREATE TABLE page_views (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    page_path TEXT NOT NULL,
+    page_title TEXT,
+    viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    referrer TEXT,
+    user_agent TEXT,
+    ip_hash TEXT
+);
+
+CREATE INDEX idx_page_views_path ON page_views(page_path);
+CREATE INDEX idx_page_views_date ON page_views(viewed_at);
+
+-- Aggregated daily stats (for performance)
+CREATE TABLE daily_stats (
+    date DATE PRIMARY KEY,
+    total_page_views INTEGER DEFAULT 0,
+    total_album_views INTEGER DEFAULT 0,
+    total_photo_views INTEGER DEFAULT 0,
+    total_downloads INTEGER DEFAULT 0,
+    unique_visitors INTEGER DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### Privacy Considerations
+- **IP hashing**: Store `sha256(ip + salt)` instead of raw IP
+- **No personal data**: No cookies, no user tracking beyond session
+- **Aggregation**: Daily stats for long-term storage
+- **Retention**: Raw events kept for 90 days, aggregates forever
+- **GDPR-friendly**: No PII stored
+
+#### Go Libraries
+- [ ] `github.com/mattn/go-sqlite3` - SQLite driver
+- [ ] Built-in `database/sql` for queries
+
+### 2.3 Go Data Models
 - [ ] Create Go structs matching JSON schemas
 - [ ] Implement JSON marshal/unmarshal methods
 - [ ] Add validation logic
 - [ ] Create repository pattern for file I/O
+- [ ] Create SQLite repository for analytics
+- [ ] Add migration for analytics schema
 
 ---
 
@@ -1510,7 +1616,182 @@ Visitors can download photos if the album has `allow_downloads: true`.
   - Downloads photos sequentially with small delay (avoid overwhelming browser)
   - Handles errors gracefully
 
-### 3.7 TypeScript Utilities
+### 3.7 Analytics Tracking (Frontend)
+
+**Critical Requirements**:
+- ✅ **Completely asynchronous** - Never blocks page rendering
+- ✅ **Gracefully degrades** - If API unavailable, silently fails
+- ✅ **No user impact** - Invisible to user if tracking fails
+- ✅ **Works with static-only** - Site functions perfectly without backend
+
+#### Analytics Utility (`frontend/src/utils/analytics.ts`)
+
+```typescript
+/**
+ * Analytics tracking utility
+ * - All calls are fire-and-forget
+ * - No error handling visible to user
+ * - Configurable API endpoint
+ */
+
+interface AnalyticsConfig {
+  enabled: boolean;
+  apiEndpoint: string;
+}
+
+class Analytics {
+  private config: AnalyticsConfig = {
+    enabled: true,
+    apiEndpoint: '/api/analytics'
+  };
+
+  /**
+   * Track album view
+   * Called when album page loads
+   */
+  trackAlbumView(albumId: string, albumSlug: string): void {
+    this.track('album-view', { album_id: albumId, album_slug: albumSlug });
+  }
+
+  /**
+   * Track photo view in lightbox
+   * Called when photo opened in lightbox
+   */
+  trackPhotoView(photoId: string, albumId: string): void {
+    this.track('photo-view', { photo_id: photoId, album_id: albumId });
+  }
+
+  /**
+   * Track photo download
+   * Called when download initiated
+   */
+  trackPhotoDownload(photoId: string, albumId: string, quality: string): void {
+    this.track('photo-download', {
+      photo_id: photoId,
+      album_id: albumId,
+      quality: quality
+    });
+  }
+
+  /**
+   * Track album download
+   * Called when album download initiated
+   */
+  trackAlbumDownload(albumId: string, quality: string, photoCount: number): void {
+    this.track('album-download', {
+      album_id: albumId,
+      quality: quality,
+      photo_count: photoCount
+    });
+  }
+
+  /**
+   * Track page view
+   * Called on route change
+   */
+  trackPageView(pagePath: string, pageTitle: string): void {
+    this.track('page-view', { page_path: pagePath, page_title: pageTitle });
+  }
+
+  /**
+   * Generic track function - fire and forget
+   * Uses navigator.sendBeacon if available, falls back to fetch
+   */
+  private track(event: string, data: Record<string, any>): void {
+    if (!this.config.enabled) return;
+
+    const payload = {
+      event,
+      data,
+      timestamp: new Date().toISOString(),
+      referrer: document.referrer,
+      user_agent: navigator.userAgent
+    };
+
+    const url = `${this.config.apiEndpoint}/${event}`;
+
+    // Use sendBeacon if available (doesn't block page unload)
+    if (navigator.sendBeacon) {
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      navigator.sendBeacon(url, blob);
+    } else {
+      // Fallback to fetch (fire and forget, no await)
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true
+      }).catch(() => {
+        // Silently fail - do not log or show errors
+      });
+    }
+  }
+
+  /**
+   * Disable tracking (for pure static deployments)
+   */
+  disable(): void {
+    this.config.enabled = false;
+  }
+}
+
+// Export singleton
+export const analytics = new Analytics();
+```
+
+#### Integration in Components
+
+```typescript
+// In album-detail-page.ts
+import { analytics } from '../utils/analytics';
+
+class AlbumDetailPage extends LitElement {
+  connectedCallback() {
+    super.connectedCallback();
+    // Track album view
+    analytics.trackAlbumView(this.albumId, this.albumSlug);
+  }
+}
+
+// In photo-lightbox.ts
+class PhotoLightbox extends LitElement {
+  private onPhotoChange(photoId: string) {
+    // Track photo view in lightbox
+    analytics.trackPhotoView(photoId, this.albumId);
+  }
+}
+
+// In download utility
+async function downloadPhoto(photoId: string, albumId: string, quality: string, url: string) {
+  // Track download
+  analytics.trackPhotoDownload(photoId, albumId, quality);
+
+  // Proceed with download
+  const response = await fetch(url);
+  // ... rest of download logic
+}
+```
+
+#### Configuration
+
+Tracking can be disabled via site_config.json:
+```json
+{
+  "features": {
+    "enable_analytics": true
+  }
+}
+```
+
+Load config and disable if needed:
+```typescript
+const config = await loadSiteConfig();
+if (!config.features.enable_analytics) {
+  analytics.disable();
+}
+```
+
+### 3.8 TypeScript Utilities
 - [ ] JSON data fetching utilities with type safety
 - [ ] Type definitions for all JSON schemas (Album, Photo, BlogPost, SiteConfig)
 - [ ] Client-side routing (History API or simple hash routing)
@@ -1519,6 +1800,7 @@ Visitors can download photos if the album has `allow_downloads: true`.
 - [ ] Date formatting utilities
 - [ ] Image URL helpers (thumbnails, display, original)
 - [ ] Download utilities (downloadPhoto, downloadAlbum)
+- [ ] **Analytics tracking utility** (fire-and-forget, graceful degradation)
 - [ ] bcrypt.js for client-side password verification
 
 ---
@@ -1670,6 +1952,44 @@ Endpoints:
 - `POST /api/admin/settings/upload-watermark` - Upload watermark image
 - `GET /api/admin/settings/preview` - Preview current settings
 
+#### Analytics Tracking (Public, No Auth Required)
+**Public endpoints** - accessible from static site, no authentication:
+- `POST /api/analytics/album-view` - Track album view
+- `POST /api/analytics/photo-view` - Track photo view in lightbox
+- `POST /api/analytics/photo-download` - Track photo download
+- `POST /api/analytics/album-download` - Track album download
+- `POST /api/analytics/page-view` - Track general page view
+
+**Request format** (all endpoints):
+```json
+{
+  "event": "album-view",
+  "data": {
+    "album_id": "uuid",
+    "album_slug": "wedding-2024"
+  },
+  "timestamp": "ISO8601",
+  "referrer": "...",
+  "user_agent": "..."
+}
+```
+
+**Response**: `202 Accepted` (fire and forget, no response body needed)
+
+**Admin analytics endpoints** (auth required):
+- `GET /api/admin/analytics/overview` - Dashboard overview stats
+  - Total views, downloads, unique visitors (last 7/30/90 days)
+- `GET /api/admin/analytics/albums` - Album-specific stats
+  - Views and downloads per album, sortable
+  - Query params: `?days=30&sort=views&order=desc`
+- `GET /api/admin/analytics/photos` - Photo-specific stats
+  - Most viewed/downloaded photos
+  - Query params: `?album_id=uuid&days=30`
+- `GET /api/admin/analytics/referrers` - Top referrers
+- `GET /api/admin/analytics/timeline` - Time-series data for charts
+  - Daily/weekly/monthly aggregates
+  - Query params: `?period=daily&days=30`
+
 ### 4.6 Admin UI (Server-Rendered HTML)
 
 #### Dashboard
@@ -1678,10 +1998,19 @@ Endpoints:
   - Total photos
   - Storage usage
   - Recent uploads
+  - **Analytics summary** (last 7 days):
+    - Total page views
+    - Total album views
+    - Total downloads
+    - Trending albums (most viewed)
 - [ ] Quick actions
   - Create new album
   - Upload to main portfolio
   - Jump to blog
+  - View full analytics
+- [ ] Charts/visualizations
+  - Views over time (sparkline/mini chart)
+  - Top 5 albums by views
 
 #### Album Management Page
 **Main View** - Album List:
