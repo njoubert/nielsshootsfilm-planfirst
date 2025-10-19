@@ -21,10 +21,11 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 **Must Have (MVP)**:
 1. ✅ **Phase 1**: Setup (Bazel, repo structure, pre-commit hooks)
 2. ✅ **Phase 2**: Data Model (albums.json, site_config.json schemas)
-3. ✅ **Phase 3**: Frontend (portfolio page, album viewing, password protection)
-4. ✅ **Phase 4**: Backend (album CRUD, photo upload, admin auth)
-5. ✅ **Phase 5**: Testing (pre-commit hooks, manual E2E checklist)
-6. ⏩ **Phase 7**: Deployment (get it live!)
+3. **Phase 2.5**: Dark/Light Mode Theme System (system detection, manual toggle, per-album overrides)
+4. ✅ **Phase 3**: Frontend (portfolio page, album viewing, password protection)
+5. ✅ **Phase 4**: Backend (album CRUD, photo upload, admin auth)
+6. ✅ **Phase 5**: Testing (pre-commit hooks, manual E2E checklist)
+7. ⏩ **Phase 7**: Deployment (get it live!)
 
 **Nice to Have (Phase 8 - Advanced Features)**:
 - Blog functionality
@@ -405,7 +406,24 @@ git commit -m "feat: your change"
     "accent_color": "#ff6b6b",
     "font_heading": "Playfair Display",
     "font_body": "Open Sans",
-    "custom_css_url": "/static/custom.css"
+    "custom_css_url": "/static/custom.css",
+    "theme": {
+      "mode": "system",
+      "light": {
+        "background": "#ffffff",
+        "surface": "#f5f5f5",
+        "text_primary": "#000000",
+        "text_secondary": "#666666",
+        "border": "#e0e0e0"
+      },
+      "dark": {
+        "background": "#0a0a0a",
+        "surface": "#1a1a1a",
+        "text_primary": "#ffffff",
+        "text_secondary": "#999999",
+        "border": "#333333"
+      }
+    }
   },
 
   "portfolio": {
@@ -504,6 +522,7 @@ git commit -m "feat: your change"
       "allow_downloads": true,
       "is_portfolio_album": false,
       "order": 1,
+      "theme_override": "system|light|dark",
       "created_at": "ISO8601",
       "updated_at": "ISO8601",
       "photos": [
@@ -611,7 +630,10 @@ Create minimal valid JSON files:
   "branding": {
     "primary_color": "#000000",
     "secondary_color": "#666666",
-    "accent_color": "#ff6b6b"
+    "accent_color": "#ff6b6b",
+    "theme": {
+      "mode": "system"
+    }
   },
   "portfolio": {
     "show_exif_data": true,
@@ -728,6 +750,812 @@ func main() {
 
 ---
 
+## Phase 2.5: Dark Mode & Light Mode Theme System
+
+### Overview
+
+The website supports both dark mode and light mode with the following features:
+- **System preference detection**: Automatically follows the user's OS/browser theme setting using `prefers-color-scheme` media query
+- **Manual override**: Users can explicitly choose light or dark mode via a theme toggle button
+- **Persistent preference**: User's manual theme choice is saved in localStorage
+- **Per-album override**: Individual albums can force light or dark mode regardless of site-wide settings
+- **Smooth transitions**: Theme changes animate smoothly without jarring color flashes
+- **Accessible**: Theme toggle is keyboard accessible and announces changes to screen readers
+
+### Theme Configuration
+
+#### Site-Wide Theme Settings (`site_config.json`)
+
+The `branding.theme` object controls the site-wide theme behavior:
+
+```json
+"theme": {
+  "mode": "system|light|dark",
+  "light": {
+    "background": "#ffffff",
+    "surface": "#f5f5f5",
+    "text_primary": "#000000",
+    "text_secondary": "#666666",
+    "border": "#e0e0e0"
+  },
+  "dark": {
+    "background": "#0a0a0a",
+    "surface": "#1a1a1a",
+    "text_primary": "#ffffff",
+    "text_secondary": "#999999",
+    "border": "#333333"
+  }
+}
+```
+
+**Fields**:
+- `mode`: Default theme mode
+  - `"system"` (default): Follow OS/browser preference
+  - `"light"`: Force light mode for all users
+  - `"dark"`: Force dark mode for all users
+- `light`: Color palette for light mode
+  - `background`: Main page background color
+  - `surface`: Card/component background color
+  - `text_primary`: Primary text color (high contrast)
+  - `text_secondary`: Secondary text color (medium contrast)
+  - `border`: Border and divider color
+- `dark`: Color palette for dark mode (same structure as light)
+
+**Notes**:
+- The `primary_color`, `secondary_color`, and `accent_color` fields remain in `branding` for backwards compatibility
+- These accent colors are used across both light and dark themes
+- Theme colors complement the accent colors
+
+#### Per-Album Theme Override
+
+Albums can override the site-wide theme setting using the `theme_override` field:
+
+```json
+{
+  "id": "uuid",
+  "title": "Night Photography",
+  "theme_override": "dark",
+  ...
+}
+```
+
+**Values**:
+- `"system"` (default): Use site-wide theme setting
+- `"light"`: Force light mode for this album only
+- `"dark"`: Force dark mode for this album only
+
+**Use Cases**:
+- Dark photography albums look better with dark backgrounds
+- Bright, airy wedding photos look better with light backgrounds
+- Product photography may require specific background contrast
+
+### Frontend Implementation
+
+#### CSS Custom Properties
+
+All theme colors are exposed as CSS custom properties (CSS variables) for consistent theming:
+
+```css
+:root {
+  /* Accent colors (consistent across themes) */
+  --color-primary: #000000;
+  --color-secondary: #666666;
+  --color-accent: #ff6b6b;
+  
+  /* Light theme colors (default) */
+  --color-background: #ffffff;
+  --color-surface: #f5f5f5;
+  --color-text-primary: #000000;
+  --color-text-secondary: #666666;
+  --color-border: #e0e0e0;
+  
+  /* Transitions */
+  --theme-transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+:root[data-theme="dark"] {
+  /* Dark theme colors */
+  --color-background: #0a0a0a;
+  --color-surface: #1a1a1a;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #999999;
+  --color-border: #333333;
+}
+
+/* Automatic system preference detection */
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] {
+    --color-background: #0a0a0a;
+    --color-surface: #1a1a1a;
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #999999;
+    --color-border: #333333;
+  }
+}
+```
+
+**Implementation Notes**:
+- Set `data-theme` attribute on `<html>` or `:root` element
+- All components use CSS custom properties instead of hardcoded colors
+- Transitions apply to theme changes for smooth visual updates
+- Shadow DOM components inherit CSS custom properties from the document root
+
+#### Theme Manager Utility
+
+**File**: `frontend/src/utils/theme-manager.ts`
+
+```typescript
+export type ThemeMode = 'system' | 'light' | 'dark';
+
+export class ThemeManager {
+  private static STORAGE_KEY = 'theme-preference';
+  private currentMode: ThemeMode = 'system';
+  private systemPreference: 'light' | 'dark' = 'light';
+  
+  constructor() {
+    this.detectSystemPreference();
+    this.loadUserPreference();
+    this.applyTheme();
+    this.watchSystemChanges();
+  }
+  
+  /**
+   * Detect system color scheme preference
+   */
+  private detectSystemPreference(): void {
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      this.systemPreference = 'dark';
+    } else {
+      this.systemPreference = 'light';
+    }
+  }
+  
+  /**
+   * Load user's saved theme preference from localStorage
+   */
+  private loadUserPreference(): void {
+    const saved = localStorage.getItem(ThemeManager.STORAGE_KEY);
+    if (saved === 'light' || saved === 'dark' || saved === 'system') {
+      this.currentMode = saved;
+    }
+  }
+  
+  /**
+   * Watch for system theme changes
+   */
+  private watchSystemChanges(): void {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      this.systemPreference = e.matches ? 'dark' : 'light';
+      if (this.currentMode === 'system') {
+        this.applyTheme();
+      }
+    });
+  }
+  
+  /**
+   * Apply the current theme to the document
+   */
+  private applyTheme(): void {
+    const effectiveTheme = this.getEffectiveTheme();
+    document.documentElement.setAttribute('data-theme', this.currentMode);
+    document.documentElement.setAttribute('data-effective-theme', effectiveTheme);
+  }
+  
+  /**
+   * Get the effective theme (resolves 'system' to 'light' or 'dark')
+   */
+  public getEffectiveTheme(): 'light' | 'dark' {
+    if (this.currentMode === 'system') {
+      return this.systemPreference;
+    }
+    return this.currentMode;
+  }
+  
+  /**
+   * Set theme mode
+   */
+  public setTheme(mode: ThemeMode): void {
+    this.currentMode = mode;
+    localStorage.setItem(ThemeManager.STORAGE_KEY, mode);
+    this.applyTheme();
+    this.dispatchThemeChange();
+  }
+  
+  /**
+   * Toggle between light and dark mode
+   */
+  public toggleTheme(): void {
+    const effective = this.getEffectiveTheme();
+    const newMode = effective === 'light' ? 'dark' : 'light';
+    this.setTheme(newMode);
+  }
+  
+  /**
+   * Get current theme mode
+   */
+  public getTheme(): ThemeMode {
+    return this.currentMode;
+  }
+  
+  /**
+   * Apply per-album theme override
+   */
+  public applyAlbumOverride(override?: ThemeMode): void {
+    if (override && override !== 'system') {
+      document.documentElement.setAttribute('data-theme', override);
+      document.documentElement.setAttribute('data-effective-theme', override);
+    } else {
+      this.applyTheme();
+    }
+  }
+  
+  /**
+   * Dispatch theme change event for components to react
+   */
+  private dispatchThemeChange(): void {
+    window.dispatchEvent(new CustomEvent('theme-changed', {
+      detail: {
+        mode: this.currentMode,
+        effective: this.getEffectiveTheme()
+      }
+    }));
+  }
+}
+
+// Global singleton instance
+export const themeManager = new ThemeManager();
+```
+
+#### Theme Toggle Component
+
+**File**: `frontend/src/components/core/theme-toggle.ts`
+
+```typescript
+import { LitElement, html, css } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import { themeManager, ThemeMode } from '../../utils/theme-manager.js';
+
+/**
+ * Theme toggle button component
+ * Displays current theme and allows switching between light/dark/system
+ */
+@customElement('theme-toggle')
+export class ThemeToggle extends LitElement {
+  @state()
+  private currentTheme: ThemeMode = 'system';
+  
+  @state()
+  private effectiveTheme: 'light' | 'dark' = 'light';
+  
+  static styles = css`
+    :host {
+      display: inline-block;
+    }
+    
+    .toggle-button {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--theme-transition);
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--color-text-primary);
+    }
+    
+    .toggle-button:hover {
+      background: var(--color-background);
+      border-color: var(--color-accent);
+    }
+    
+    .toggle-button:focus {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+    
+    .icon {
+      width: 20px;
+      height: 20px;
+      fill: var(--color-text-primary);
+    }
+    
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+  `;
+  
+  connectedCallback() {
+    super.connectedCallback();
+    this.currentTheme = themeManager.getTheme();
+    this.effectiveTheme = themeManager.getEffectiveTheme();
+    
+    window.addEventListener('theme-changed', this.handleThemeChange);
+  }
+  
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('theme-changed', this.handleThemeChange);
+  }
+  
+  private handleThemeChange = (event: Event) => {
+    const customEvent = event as CustomEvent;
+    this.currentTheme = customEvent.detail.mode;
+    this.effectiveTheme = customEvent.detail.effective;
+  };
+  
+  private handleClick() {
+    themeManager.toggleTheme();
+  }
+  
+  private getIcon() {
+    if (this.currentTheme === 'system') {
+      return this.effectiveTheme === 'dark' ? this.moonIcon() : this.sunIcon();
+    }
+    return this.currentTheme === 'dark' ? this.moonIcon() : this.sunIcon();
+  }
+  
+  private getLabel() {
+    if (this.currentTheme === 'system') {
+      return `System (${this.effectiveTheme})`;
+    }
+    return this.currentTheme === 'dark' ? 'Dark' : 'Light';
+  }
+  
+  private sunIcon() {
+    return html`
+      <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
+        <path d="M12 1v3m0 16v3M23 12h-3M4 12H1m18.364-7.364l-2.121 2.121M6.757 17.243l-2.121 2.121m12.728 0l-2.121-2.121M6.757 6.757L4.636 4.636" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    `;
+  }
+  
+  private moonIcon() {
+    return html`
+      <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+  }
+  
+  render() {
+    return html`
+      <button
+        class="toggle-button"
+        @click=${this.handleClick}
+        aria-label="Toggle theme"
+        title="Toggle between light and dark mode"
+      >
+        ${this.getIcon()}
+        <span class="visually-hidden">${this.getLabel()}</span>
+      </button>
+    `;
+  }
+}
+```
+
+#### Integration with Site
+
+**File**: `frontend/src/main.ts`
+
+```typescript
+import { themeManager } from './utils/theme-manager.js';
+import './components/core/theme-toggle.js';
+
+// Initialize theme as early as possible to prevent flash
+themeManager.setTheme(themeManager.getTheme());
+
+// Load site config and apply theme colors
+async function initializeSite() {
+  const response = await fetch('/data/site_config.json');
+  const config = await response.json();
+  
+  // Apply theme colors from config
+  applyThemeColors(config.branding);
+}
+
+function applyThemeColors(branding: any) {
+  const root = document.documentElement;
+  
+  // Apply accent colors
+  root.style.setProperty('--color-primary', branding.primary_color);
+  root.style.setProperty('--color-secondary', branding.secondary_color);
+  root.style.setProperty('--color-accent', branding.accent_color);
+  
+  // Apply light theme colors
+  if (branding.theme?.light) {
+    const light = branding.theme.light;
+    root.style.setProperty('--color-background-light', light.background);
+    root.style.setProperty('--color-surface-light', light.surface);
+    root.style.setProperty('--color-text-primary-light', light.text_primary);
+    root.style.setProperty('--color-text-secondary-light', light.text_secondary);
+    root.style.setProperty('--color-border-light', light.border);
+  }
+  
+  // Apply dark theme colors
+  if (branding.theme?.dark) {
+    const dark = branding.theme.dark;
+    root.style.setProperty('--color-background-dark', dark.background);
+    root.style.setProperty('--color-surface-dark', dark.surface);
+    root.style.setProperty('--color-text-primary-dark', dark.text_primary);
+    root.style.setProperty('--color-text-secondary-dark', dark.text_secondary);
+    root.style.setProperty('--color-border-dark', dark.border);
+  }
+}
+
+initializeSite();
+```
+
+#### Per-Album Theme Application
+
+**File**: `frontend/src/pages/album-detail-page.ts`
+
+```typescript
+import { themeManager } from '../utils/theme-manager.js';
+
+export class AlbumDetailPage extends LitElement {
+  @property({ type: Object })
+  album?: Album;
+  
+  async loadAlbum(slug: string) {
+    const response = await fetch('/data/albums.json');
+    const data = await response.json();
+    this.album = data.albums.find((a: Album) => a.slug === slug);
+    
+    // Apply album-specific theme override
+    if (this.album?.theme_override) {
+      themeManager.applyAlbumOverride(this.album.theme_override);
+    }
+  }
+  
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    // Reset to site-wide theme when leaving album
+    themeManager.applyAlbumOverride(undefined);
+  }
+}
+```
+
+### Testing Requirements
+
+#### Unit Tests
+- [ ] ThemeManager detects system preference correctly
+- [ ] ThemeManager saves and loads user preference from localStorage
+- [ ] ThemeManager responds to system preference changes
+- [ ] ThemeManager applies album overrides correctly
+- [ ] ThemeToggle component renders correct icon and label
+- [ ] ThemeToggle component toggles theme on click
+
+#### Integration Tests
+- [ ] Theme persists across page navigations
+- [ ] Theme applies to all components and pages
+- [ ] Per-album theme override works correctly
+- [ ] Theme resets when leaving album with override
+- [ ] System preference detection works in real browsers
+
+#### E2E Tests
+- [ ] User can toggle theme manually
+- [ ] Theme preference persists after page reload
+- [ ] Album with dark theme override displays correctly
+- [ ] Album with light theme override displays correctly
+- [ ] Theme toggle is keyboard accessible
+- [ ] Theme changes are announced to screen readers
+
+### Admin Interface
+
+The admin interface includes theme configuration controls in the Branding section.
+
+#### Theme Configuration UI
+
+**Section: Branding → Theme Settings**
+
+```typescript
+// Admin component for theme configuration
+@customElement('theme-settings-editor')
+export class ThemeSettingsEditor extends LitElement {
+  @property({ type: Object })
+  theme?: ThemeConfig;
+  
+  render() {
+    return html`
+      <section class="theme-settings">
+        <h3>Default Theme Mode</h3>
+        <select @change=${this.handleModeChange}>
+          <option value="system" ?selected=${this.theme?.mode === 'system'}>
+            Follow System (Recommended)
+          </option>
+          <option value="light" ?selected=${this.theme?.mode === 'light'}>
+            Always Light
+          </option>
+          <option value="dark" ?selected=${this.theme?.mode === 'dark'}>
+            Always Dark
+          </option>
+        </select>
+        
+        <h3>Light Theme Colors</h3>
+        <div class="color-inputs">
+          <label>
+            Background
+            <input type="color" .value=${this.theme?.light?.background} 
+                   @input=${(e) => this.updateColor('light', 'background', e)} />
+          </label>
+          <label>
+            Surface
+            <input type="color" .value=${this.theme?.light?.surface}
+                   @input=${(e) => this.updateColor('light', 'surface', e)} />
+          </label>
+          <label>
+            Primary Text
+            <input type="color" .value=${this.theme?.light?.text_primary}
+                   @input=${(e) => this.updateColor('light', 'text_primary', e)} />
+          </label>
+          <label>
+            Secondary Text
+            <input type="color" .value=${this.theme?.light?.text_secondary}
+                   @input=${(e) => this.updateColor('light', 'text_secondary', e)} />
+          </label>
+          <label>
+            Border
+            <input type="color" .value=${this.theme?.light?.border}
+                   @input=${(e) => this.updateColor('light', 'border', e)} />
+          </label>
+        </div>
+        
+        <h3>Dark Theme Colors</h3>
+        <div class="color-inputs">
+          <label>
+            Background
+            <input type="color" .value=${this.theme?.dark?.background}
+                   @input=${(e) => this.updateColor('dark', 'background', e)} />
+          </label>
+          <label>
+            Surface
+            <input type="color" .value=${this.theme?.dark?.surface}
+                   @input=${(e) => this.updateColor('dark', 'surface', e)} />
+          </label>
+          <label>
+            Primary Text
+            <input type="color" .value=${this.theme?.dark?.text_primary}
+                   @input=${(e) => this.updateColor('dark', 'text_primary', e)} />
+          </label>
+          <label>
+            Secondary Text
+            <input type="color" .value=${this.theme?.dark?.text_secondary}
+                   @input=${(e) => this.updateColor('dark', 'text_secondary', e)} />
+          </label>
+          <label>
+            Border
+            <input type="color" .value=${this.theme?.dark?.border}
+                   @input=${(e) => this.updateColor('dark', 'border', e)} />
+          </label>
+        </div>
+        
+        <div class="preview">
+          <h3>Preview</h3>
+          <div class="preview-light">
+            <p>Light mode preview</p>
+          </div>
+          <div class="preview-dark">
+            <p>Dark mode preview</p>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+}
+```
+
+#### Album Theme Override UI
+
+In the album edit form, add a theme override selector:
+
+```typescript
+render() {
+  return html`
+    <form>
+      <!-- Other album fields -->
+      
+      <label>
+        Theme Override
+        <select name="theme_override">
+          <option value="system">Follow Site Theme (Default)</option>
+          <option value="light">Always Light Mode</option>
+          <option value="dark">Always Dark Mode</option>
+        </select>
+        <small>
+          Force this album to always display in light or dark mode.
+          Useful for albums where specific background colors enhance the photos.
+        </small>
+      </label>
+    </form>
+  `;
+}
+```
+
+### Backend Support
+
+#### Go Data Models
+
+**File**: `backend/internal/models/site_config.go`
+
+```go
+type ThemeColors struct {
+    Background    string `json:"background"`
+    Surface       string `json:"surface"`
+    TextPrimary   string `json:"text_primary"`
+    TextSecondary string `json:"text_secondary"`
+    Border        string `json:"border"`
+}
+
+type Theme struct {
+    Mode  string       `json:"mode"` // "system", "light", or "dark"
+    Light ThemeColors  `json:"light"`
+    Dark  ThemeColors  `json:"dark"`
+}
+
+type Branding struct {
+    LogoURL       string  `json:"logo_url,omitempty"`
+    FaviconURL    string  `json:"favicon_url,omitempty"`
+    PrimaryColor  string  `json:"primary_color"`
+    SecondaryColor string `json:"secondary_color"`
+    AccentColor   string  `json:"accent_color"`
+    FontHeading   string  `json:"font_heading,omitempty"`
+    FontBody      string  `json:"font_body,omitempty"`
+    CustomCSSURL  string  `json:"custom_css_url,omitempty"`
+    Theme         Theme   `json:"theme"`
+}
+```
+
+**File**: `backend/internal/models/album.go`
+
+```go
+type Album struct {
+    ID            string    `json:"id"`
+    Slug          string    `json:"slug"`
+    Title         string    `json:"title"`
+    // ... other fields ...
+    ThemeOverride string    `json:"theme_override,omitempty"` // "system", "light", or "dark"
+    CreatedAt     time.Time `json:"created_at"`
+    UpdatedAt     time.Time `json:"updated_at"`
+    Photos        []Photo   `json:"photos"`
+}
+```
+
+#### Validation
+
+Add validation for theme configuration:
+
+```go
+func (t *Theme) Validate() error {
+    validModes := map[string]bool{"system": true, "light": true, "dark": true}
+    if !validModes[t.Mode] {
+        return fmt.Errorf("invalid theme mode: %s (must be system, light, or dark)", t.Mode)
+    }
+    
+    // Validate color formats (hex colors)
+    if err := validateHexColor(t.Light.Background); err != nil {
+        return fmt.Errorf("invalid light background color: %w", err)
+    }
+    // ... validate other colors
+    
+    return nil
+}
+
+func validateHexColor(color string) error {
+    matched, _ := regexp.MatchString(`^#[0-9A-Fa-f]{6}$`, color)
+    if !matched {
+        return fmt.Errorf("invalid hex color: %s", color)
+    }
+    return nil
+}
+```
+
+### Deployment Considerations
+
+#### Default Theme Colors
+
+Provide sensible defaults in the bootstrap process:
+
+```bash
+# In scripts/bootstrap.sh, create site_config.json with theme defaults
+cat > data/site_config.json <<EOF
+{
+  "branding": {
+    "primary_color": "#000000",
+    "secondary_color": "#666666",
+    "accent_color": "#ff6b6b",
+    "theme": {
+      "mode": "system",
+      "light": {
+        "background": "#ffffff",
+        "surface": "#f5f5f5",
+        "text_primary": "#000000",
+        "text_secondary": "#666666",
+        "border": "#e0e0e0"
+      },
+      "dark": {
+        "background": "#0a0a0a",
+        "surface": "#1a1a1a",
+        "text_primary": "#ffffff",
+        "text_secondary": "#999999",
+        "border": "#333333"
+      }
+    }
+  }
+}
+EOF
+```
+
+#### Migration for Existing Sites
+
+For sites upgrading from a version without theme support, add a migration:
+
+**File**: `backend/internal/migrations/005_add_theme_support.go`
+
+```go
+func Migration005AddThemeSupport(config *SiteConfig) error {
+    // Add default theme configuration if it doesn't exist
+    if config.Branding.Theme.Mode == "" {
+        config.Branding.Theme = Theme{
+            Mode: "system",
+            Light: ThemeColors{
+                Background:    "#ffffff",
+                Surface:       "#f5f5f5",
+                TextPrimary:   "#000000",
+                TextSecondary: "#666666",
+                Border:        "#e0e0e0",
+            },
+            Dark: ThemeColors{
+                Background:    "#0a0a0a",
+                Surface:       "#1a1a1a",
+                TextPrimary:   "#ffffff",
+                TextSecondary: "#999999",
+                Border:        "#333333",
+            },
+        }
+    }
+    return nil
+}
+```
+
+### Checklist
+
+- [ ] Add theme configuration to `site_config.json` schema
+- [ ] Add `theme_override` field to album schema
+- [ ] Create ThemeManager utility class
+- [ ] Create ThemeToggle web component
+- [ ] Implement CSS custom properties for theming
+- [ ] Add system preference detection with `prefers-color-scheme`
+- [ ] Implement localStorage persistence for user preference
+- [ ] Add per-album theme override support
+- [ ] Create admin UI for theme configuration
+- [ ] Create admin UI for album theme override
+- [ ] Add Go data models for theme configuration
+- [ ] Add theme validation in backend
+- [ ] Add default theme colors to bootstrap script
+- [ ] Create migration for existing sites
+- [ ] Write unit tests for ThemeManager
+- [ ] Write unit tests for ThemeToggle component
+- [ ] Write E2E tests for theme switching
+- [ ] Update documentation with theme configuration guide
+- [ ] Add accessibility features (ARIA labels, keyboard support)
+- [ ] Test theme transitions for smoothness
+- [ ] Verify theme works with all components (lightbox, nav, footer, etc.)
+
+---
+
 ## Phase 3: Frontend - Public Site (Week 3-5)
 
 **Global Site Configuration Usage**:
@@ -735,12 +1563,16 @@ The frontend loads `site_config.json` once on page load and uses it throughout t
 - Page titles and meta tags (`site.title`, `seo.*`)
 - Navigation menu visibility (`navigation.*`)
 - Branding (colors, fonts, logo) (`branding.*`)
+- Theme configuration (dark/light mode) (`branding.theme.*`)
 - Social links in footer (`social.*`)
 - Contact information (`owner.*`, `contact.*`)
 - Feature toggles (`features.*`)
 - Portfolio settings (`portfolio.*`)
 
 All Lit components should accept settings as properties or access via a global config store.
+
+**Theme System Integration**:
+The theme system (dark/light mode) is initialized early in the page load process to prevent color flashing. See Phase 2.5 for complete theme implementation details.
 
 ### 3.1 Landing Page / Portfolio
 **Main Portfolio Album Display**:
@@ -831,6 +1663,11 @@ Create reusable Lit components for the public site:
 #### Core Components
 - [ ] `<app-nav>` - Navigation menu component
 - [ ] `<app-footer>` - Footer component
+- [ ] `<theme-toggle>` - Theme switcher button (see Phase 2.5)
+  - Displays current theme mode (light/dark/system)
+  - Toggles between light and dark mode
+  - Keyboard accessible with proper ARIA labels
+  - Shows appropriate icon (sun/moon) based on current theme
 - [ ] `<photo-grid>` - Responsive image grid with masonry layout
   - Property: `photos` (array of photo objects)
   - Property: `layout` ("masonry" | "grid" | "justified")
@@ -2414,6 +3251,7 @@ Endpoints:
   - Visibility dropdown (public, unlisted, password_protected)
   - Password field (shown only if password_protected)
   - Allow downloads toggle
+  - Theme override selector (System/Light/Dark) - see Phase 2.5
   - Expiration date (optional, datepicker)
 - [ ] Photo upload zone
   - Drag-drop area
@@ -2491,6 +3329,12 @@ Endpoints:
   - Secondary color picker
   - Accent color picker
   - Preview of color scheme
+- [ ] Theme settings (see Phase 2.5 for complete implementation)
+  - Default theme mode selector (System/Light/Dark)
+  - Light theme color customization (background, surface, text, border)
+  - Dark theme color customization (background, surface, text, border)
+  - Live preview of both light and dark themes
+  - Explanation of how system theme detection works
 - [ ] Typography
   - Heading font dropdown (Google Fonts)
   - Body font dropdown (Google Fonts)
@@ -2804,6 +3648,7 @@ Already configured in Phase 1.5:
 **Frontend** (`frontend/src/utils/`):
 - [ ] `api.test.ts` - Data fetching and error handling
 - [ ] `router.test.ts` - URL routing logic
+- [ ] `theme-manager.test.ts` - Theme detection, switching, and persistence (see Phase 2.5)
 
 **Backend** (`backend/internal/`):
 - [ ] `models/album_test.go` - Album validation logic
@@ -2831,6 +3676,11 @@ Test these key workflows manually before each release:
 - [ ] Password-protected album requires password
 - [ ] Correct password grants access
 - [ ] Mobile responsive design works
+- [ ] Theme toggle switches between light and dark mode
+- [ ] Theme preference persists after page reload
+- [ ] System theme detection works correctly
+- [ ] Per-album theme override applies correctly
+- [ ] Theme colors render properly in all components
 
 **Admin**:
 - [ ] Login with credentials
