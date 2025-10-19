@@ -43,26 +43,22 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 
 ### Simplified Workflow
 
-```bash
-# 1. Setup (one-time)
-git clone repo && cd repo
-brew install pre-commit && pre-commit install
-cd frontend && npm install
-cd ../backend && go mod download
-./scripts/bootstrap.sh  # Creates data files, sets admin password
+**Setup steps**:
+1. Clone repo and install pre-commit
+2. Install frontend and backend dependencies
+3. Run bootstrap script to create data files and set admin password
 
-# 2. Daily development
-cd frontend && npm run dev          # Terminal 1: Frontend (localhost:5173)
-cd backend && go run cmd/admin/main.go  # Terminal 2: Backend (localhost:8080)
+**Daily development**:
+- Run frontend dev server (Terminal 1)
+- Run backend admin server (Terminal 2)
 
-# 3. Before committing (pre-commit hooks run automatically)
-git add . && git commit -m "feat: your change"
+**Before committing**:
+- Pre-commit hooks run automatically
 
-# 4. Deploy
-./scripts/build-release.sh v1.0.0
-scp release/*.tar.gz user@server:/tmp/
-ssh user@server './deploy.sh'
-```
+**Deploy**:
+- Build release
+- Copy to server
+- Run deployment script
 
 ### What to Skip Initially
 
@@ -308,11 +304,8 @@ Add to `frontend/package.json`:
 ### 1.5.1 Essential Tooling
 
 **Pre-commit Framework** - Automated quality checks on commit
-```bash
-# Install and setup
-brew install pre-commit  # or: pip install pre-commit
-pre-commit install
-```
+
+**Installation**: Install pre-commit using brew or pip, then run installation command in repo
 
 **What it does**:
 - Formats code (Prettier for TS/JS, gofmt for Go)
@@ -325,23 +318,17 @@ pre-commit install
 
 ### 1.5.2 Quick Start Workflow
 
-```bash
-# First-time setup
-git clone <repo>
-cd project
-brew install pre-commit
-pre-commit install
-cd frontend && npm install
-cd ../backend && go mod download
+**First-time setup**:
+- Clone repo and navigate to project directory
+- Install pre-commit
+- Install frontend and backend dependencies
 
-# Daily development
-cd frontend && npm run dev      # Terminal 1
-cd backend && go run cmd/admin/main.go  # Terminal 2
+**Daily development**:
+- Run frontend dev server in Terminal 1
+- Run backend admin server in Terminal 2
 
-# Before committing (pre-commit hooks run automatically)
-git add .
-git commit -m "feat: your change"
-```
+**Before committing**:
+- Pre-commit hooks run automatically on git commit
 
 ### 1.5.3 Checklist
 
@@ -672,91 +659,19 @@ Create minimal valid JSON files:
 
 #### Bootstrap Script
 
-Create `scripts/bootstrap.sh`:
-```bash
-#!/bin/bash
-set -e
+Create `scripts/bootstrap.sh` that:
+- Creates directory structure (data/, static/uploads/ with subdirectories)
+- Creates empty data files (albums.json, site_config.json) if they don't exist
+- Creates .gitkeep files for upload directories
+- Prompts for admin username and password
+- Generates bcrypt hash for password
+- Creates admin_config.json with credentials
 
-echo "Bootstrapping photography site..."
-
-# Create directory structure
-mkdir -p data
-mkdir -p static/uploads/{originals,display,thumbnails}
-
-# Create empty data files if they don't exist
-if [ ! -f data/albums.json ]; then
-    echo '{"albums":[]}' > data/albums.json
-    echo "✓ Created data/albums.json"
-fi
-
-if [ ! -f data/site_config.json ]; then
-    cp scripts/templates/site_config.template.json data/site_config.json
-    echo "✓ Created data/site_config.json"
-fi
-
-# Create .gitkeep files
-touch static/uploads/originals/.gitkeep
-touch static/uploads/display/.gitkeep
-touch static/uploads/thumbnails/.gitkeep
-
-# Generate admin password hash
-echo ""
-echo "=== Admin Setup ==="
-read -p "Enter admin username (default: admin): " ADMIN_USER
-ADMIN_USER=${ADMIN_USER:-admin}
-
-read -sp "Enter admin password: " ADMIN_PASSWORD
-echo ""
-
-# Generate bcrypt hash (requires bcrypt command or Go helper)
-HASH=$(go run scripts/hash_password.go "$ADMIN_PASSWORD")
-
-# Create admin config
-cat > data/admin_config.json <<EOF
-{
-  "username": "$ADMIN_USER",
-  "password_hash": "$HASH",
-  "created_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-}
-EOF
-
-echo "✓ Created admin credentials"
-echo ""
-echo "Bootstrap complete! You can now:"
-echo "  1. Run the frontend: cd frontend && npm run dev"
-echo "  2. Run the backend: cd backend && go run cmd/admin/main.go"
-echo "  3. Access admin at: http://localhost:8080/admin"
-```
+The script should output success messages and instructions for running frontend and backend servers.
 
 #### Password Hasher Utility
 
-Create `scripts/hash_password.go`:
-```go
-// Simple utility to generate bcrypt hashes for passwords
-package main
-
-import (
-	"fmt"
-	"os"
-	"golang.org/x/crypto/bcrypt"
-)
-
-func main() {
-	if len(os.Args) != 2 {
-		fmt.Fprintln(os.Stderr, "Usage: hash_password <password>")
-		os.Exit(1)
-	}
-
-	password := os.Args[1]
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error:", err)
-		os.Exit(1)
-	}
-
-	fmt.Print(string(hash))
-}
-```
+Create `scripts/hash_password.go` - a utility to generate bcrypt hashes for passwords.
 
 #### Checklist
 - [ ] Create `data/` directory structure
@@ -1001,193 +916,12 @@ Create reusable Lit components for the public site:
 
 **Error Types**:
 
-```go
-// backend/internal/errors/errors.go
-package errors
-
-import (
-    "fmt"
-    "net/http"
-)
-
-type AppError struct {
-    // Internal details (logged, not sent to client)
-    Err        error  // Underlying error
-    StackTrace string // Stack trace for debugging
-    Context    map[string]interface{} // Additional context
-
-    // Public details (can be sent to client)
-    Code       string // Error code (e.g., "ALBUM_NOT_FOUND")
-    Message    string // User-friendly message
-    HTTPStatus int    // HTTP status code
-}
-
-func (e *AppError) Error() string {
-    if e.Err != nil {
-        return e.Err.Error()
-    }
-    return e.Message
-}
-
-// Error constructors
-func NotFound(resource, id string) *AppError {
-    return &AppError{
-        Code:       "NOT_FOUND",
-        Message:    fmt.Sprintf("%s not found", resource),
-        HTTPStatus: http.StatusNotFound,
-        Context:    map[string]interface{}{"resource": resource, "id": id},
-    }
-}
-
-func InvalidInput(field, reason string) *AppError {
-    return &AppError{
-        Code:       "INVALID_INPUT",
-        Message:    fmt.Sprintf("Invalid %s: %s", field, reason),
-        HTTPStatus: http.StatusBadRequest,
-        Context:    map[string]interface{}{"field": field, "reason": reason},
-    }
-}
-
-func Unauthorized(reason string) *AppError {
-    return &AppError{
-        Code:       "UNAUTHORIZED",
-        Message:    "Authentication required",
-        HTTPStatus: http.StatusUnauthorized,
-        Context:    map[string]interface{}{"reason": reason},
-    }
-}
-
-func Forbidden(reason string) *AppError {
-    return &AppError{
-        Code:       "FORBIDDEN",
-        Message:    "Access denied",
-        HTTPStatus: http.StatusForbidden,
-        Context:    map[string]interface{}{"reason": reason},
-    }
-}
-
-func Internal(err error, context string) *AppError {
-    return &AppError{
-        Err:        err,
-        Code:       "INTERNAL_ERROR",
-        Message:    "An internal error occurred",
-        HTTPStatus: http.StatusInternalServerError,
-        Context:    map[string]interface{}{"context": context},
-    }
-}
-
-func Conflict(resource, reason string) *AppError {
-    return &AppError{
-        Code:       "CONFLICT",
-        Message:    fmt.Sprintf("Conflict: %s", reason),
-        HTTPStatus: http.StatusConflict,
-        Context:    map[string]interface{}{"resource": resource, "reason": reason},
-    }
-}
-```
 
 **Error Handler Middleware**:
 
-```go
-// backend/internal/middleware/errors.go
-func ErrorHandler(devMode bool) func(http.Handler) http.Handler {
-    return func(next http.Handler) http.Handler {
-        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-            // Wrap response writer to capture errors
-            wrapped := &errorResponseWriter{ResponseWriter: w, request: r}
-
-            // Recover from panics
-            defer func() {
-                if err := recover(); err != nil {
-                    stack := string(debug.Stack())
-
-                    logger := GetLogger(r.Context())
-                    logger.Error("panic recovered",
-                        "error", err,
-                        "stack", stack,
-                        "path", r.URL.Path,
-                        "method", r.Method,
-                    )
-
-                    appErr := &errors.Internal(
-                        fmt.Errorf("panic: %v", err),
-                        "panic recovered",
-                    )
-                    wrapped.writeError(appErr, devMode)
-                }
-            }()
-
-            next.ServeHTTP(wrapped, r)
-        })
-    }
-}
-
-type errorResponseWriter struct {
-    http.ResponseWriter
-    request *http.Request
-}
-
-func (w *errorResponseWriter) writeError(err *errors.AppError, devMode bool) {
-    logger := GetLogger(w.request.Context())
-
-    // Log full error details
-    logger.Error("request error",
-        "code", err.Code,
-        "status", err.HTTPStatus,
-        "message", err.Message,
-        "underlying_error", err.Err,
-        "context", err.Context,
-        "path", w.request.URL.Path,
-        "method", w.request.Method,
-    )
-
-    // Prepare client response
-    response := map[string]interface{}{
-        "error": map[string]interface{}{
-            "code":    err.Code,
-            "message": err.Message,
-        },
-    }
-
-    // Include additional details in dev mode
-    if devMode && err.Err != nil {
-        response["error"].(map[string]interface{})["details"] = err.Err.Error()
-        response["error"].(map[string]interface{})["context"] = err.Context
-    }
-
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(err.HTTPStatus)
-    json.NewEncoder(w).Encode(response)
-}
-```
 
 **Usage in Handlers**:
 
-```go
-func (h *AlbumHandler) GetAlbum(w http.ResponseWriter, r *http.Request) {
-    albumID := chi.URLParam(r, "id")
-
-    album, err := h.service.GetAlbum(albumID)
-    if err != nil {
-        // Return structured error
-        if errors.Is(err, ErrAlbumNotFound) {
-            writeError(w, r, errors.NotFound("album", albumID))
-            return
-        }
-        writeError(w, r, errors.Internal(err, "failed to get album"))
-        return
-    }
-
-    json.NewEncoder(w).Encode(album)
-}
-
-// Helper function
-func writeError(w http.ResponseWriter, r *http.Request, err *errors.AppError) {
-    // Error handler middleware will catch this
-    // But we can also handle it directly here
-    w.(*errorResponseWriter).writeError(err, isDevMode())
-}
-```
 
 #### 4.1.2 Logging Strategy
 
@@ -1202,203 +936,18 @@ func writeError(w http.ResponseWriter, r *http.Request, err *errors.AppError) {
 
 **Logger Configuration**:
 
-```go
-// backend/internal/logger/logger.go
-package logger
-
-import (
-    "context"
-    "log/slog"
-    "os"
-)
-
-type Config struct {
-    Level      string // debug, info, warn, error
-    Format     string // json, text
-    Output     string // stdout, file path
-    AddSource  bool   // Include source file/line
-}
-
-func New(cfg Config) *slog.Logger {
-    // Parse level
-    var level slog.Level
-    switch cfg.Level {
-    case "debug":
-        level = slog.LevelDebug
-    case "info":
-        level = slog.LevelInfo
-    case "warn":
-        level = slog.LevelWarn
-    case "error":
-        level = slog.LevelError
-    default:
-        level = slog.LevelInfo
-    }
-
-    // Choose handler
-    var handler slog.Handler
-    opts := &slog.HandlerOptions{
-        Level:     level,
-        AddSource: cfg.AddSource,
-    }
-
-    if cfg.Format == "json" {
-        handler = slog.NewJSONHandler(os.Stdout, opts)
-    } else {
-        handler = slog.NewTextHandler(os.Stdout, opts)
-    }
-
-    return slog.New(handler)
-}
-```
 
 **Request Logging Middleware**:
 
-```go
-// backend/internal/middleware/logging.go
-func RequestLogger(logger *slog.Logger) func(http.Handler) http.Handler {
-    return func(next http.Handler) http.Handler {
-        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-            start := time.Now()
-
-            // Generate request ID
-            requestID := generateRequestID()
-
-            // Add request ID to context
-            ctx := context.WithValue(r.Context(), "request_id", requestID)
-
-            // Add logger with request context to context
-            reqLogger := logger.With(
-                "request_id", requestID,
-                "method", r.Method,
-                "path", r.URL.Path,
-                "ip", hashIP(r.RemoteAddr), // Hash IP for privacy
-                "user_agent", r.UserAgent(),
-            )
-            ctx = context.WithValue(ctx, "logger", reqLogger)
-
-            // Wrap response writer to capture status
-            wrapped := &responseWriter{ResponseWriter: w, statusCode: 200}
-
-            // Log request start
-            reqLogger.Info("request started")
-
-            // Process request
-            next.ServeHTTP(wrapped, r.WithContext(ctx))
-
-            // Log request completion
-            duration := time.Since(start)
-            reqLogger.Info("request completed",
-                "status", wrapped.statusCode,
-                "duration_ms", duration.Milliseconds(),
-                "bytes", wrapped.bytesWritten,
-            )
-        })
-    }
-}
-
-type responseWriter struct {
-    http.ResponseWriter
-    statusCode   int
-    bytesWritten int
-}
-
-func (w *responseWriter) WriteHeader(statusCode int) {
-    w.statusCode = statusCode
-    w.ResponseWriter.WriteHeader(statusCode)
-}
-
-func (w *responseWriter) Write(b []byte) (int, error) {
-    n, err := w.ResponseWriter.Write(b)
-    w.bytesWritten += n
-    return n, err
-}
-
-// Helper to get logger from context
-func GetLogger(ctx context.Context) *slog.Logger {
-    if logger, ok := ctx.Value("logger").(*slog.Logger); ok {
-        return logger
-    }
-    return slog.Default()
-}
-
-// Hash IP for privacy (store hash, not full IP)
-func hashIP(ip string) string {
-    h := sha256.Sum256([]byte(ip))
-    return base64.StdEncoding.EncodeToString(h[:8]) // First 8 bytes
-}
-
-func generateRequestID() string {
-    b := make([]byte, 16)
-    rand.Read(b)
-    return fmt.Sprintf("%x", b)
-}
-```
 
 **Application Logging Examples**:
 
-```go
-// In handlers or services
-logger := GetLogger(r.Context())
-
-// Info level
-logger.Info("album created",
-    "album_id", album.ID,
-    "title", album.Title,
-    "photo_count", len(album.Photos),
-)
-
-// Warning level
-logger.Warn("disk space low",
-    "available_gb", availableGB,
-    "threshold_gb", thresholdGB,
-)
-
-// Error level
-logger.Error("failed to process image",
-    "photo_id", photoID,
-    "error", err,
-)
-
-// Debug level (only in dev)
-logger.Debug("cache hit",
-    "key", cacheKey,
-    "ttl_seconds", ttl,
-)
-```
 
 **Log Rotation Configuration**:
 
-```go
-// Use lumberjack for log rotation
-import "gopkg.in/natefinch/lumberjack.v2"
-
-func setupFileLogger(path string) *slog.Logger {
-    logFile := &lumberjack.Logger{
-        Filename:   path,
-        MaxSize:    100, // MB
-        MaxBackups: 5,
-        MaxAge:     30, // days
-        Compress:   true,
-    }
-
-    handler := slog.NewJSONHandler(logFile, &slog.HandlerOptions{
-        Level: slog.LevelInfo,
-    })
-
-    return slog.New(handler)
-}
-```
 
 **Environment Configuration**:
 
-```bash
-# .env
-LOG_LEVEL=info          # debug, info, warn, error
-LOG_FORMAT=json         # json, text
-LOG_OUTPUT=/var/log/photoadmin/app.log  # or stdout
-LOG_ADD_SOURCE=false    # Include source file/line in production
-```
 
 **What to Log**:
 
@@ -1422,107 +971,14 @@ LOG_ADD_SOURCE=false    # Include source file/line in production
 
 **Global Error Handler**:
 
-```typescript
-// frontend/src/utils/errors.ts
-interface APIError {
-    code: string;
-    message: string;
-    details?: string;
-}
-
-class ErrorHandler {
-    async handleResponse(response: Response): Promise<any> {
-        if (response.ok) {
-            return response.json();
-        }
-
-        // Handle error responses
-        let error: APIError;
-        try {
-            const body = await response.json();
-            error = body.error;
-        } catch {
-            error = {
-                code: 'NETWORK_ERROR',
-                message: 'An error occurred. Please try again.'
-            };
-        }
-
-        // Handle specific error codes
-        switch (error.code) {
-            case 'UNAUTHORIZED':
-                // Redirect to login
-                window.location.href = '/admin/login';
-                break;
-
-            case 'FORBIDDEN':
-                showNotification('Access denied', 'error');
-                break;
-
-            case 'NOT_FOUND':
-                showNotification('Resource not found', 'error');
-                break;
-
-            case 'INVALID_INPUT':
-                // Show field-specific error
-                showNotification(error.message, 'error');
-                break;
-
-            default:
-                showNotification(
-                    error.message || 'An unexpected error occurred',
-                    'error'
-                );
-        }
-
-        throw error;
-    }
-}
-
-// Usage
-const errorHandler = new ErrorHandler();
-
-async function fetchAlbums() {
-    try {
-        const response = await fetch('/api/admin/albums');
-        return await errorHandler.handleResponse(response);
-    } catch (error) {
-        // Error already handled and displayed
-        console.error('Failed to fetch albums:', error);
-    }
-}
-```
 
 **Toast/Notification System**:
 
-```typescript
-// Show user-friendly notifications
-function showNotification(message: string, type: 'success' | 'error' | 'warning' | 'info') {
-    // Implementation using native browser notifications or custom UI
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-
-    setTimeout(() => toast.remove(), 5000);
-}
-```
 
 #### 4.1.4 Monitoring and Alerting (Defer to Phase 8)
 
 **Metrics Endpoint** (Optional):
 
-```go
-// GET /api/metrics (Prometheus format)
-func MetricsHandler(w http.ResponseWriter, r *http.Request) {
-    // Expose basic metrics
-    // - Request count by path and status
-    // - Request duration histogram
-    // - Active sessions
-    // - Disk usage
-    // - Image processing queue size
-}
-```
 
 **Implementation Checklist**:
 - [ ] AppError type with internal/public fields
@@ -1560,40 +1016,13 @@ func MetricsHandler(w http.ResponseWriter, r *http.Request) {
 #### 4.2.2 Session Management
 
 **Session Storage** (`backend/internal/session/storage.go`):
-```go
-type Session struct {
-    ID        string    `json:"id"`
-    Username  string    `json:"username"`
-    CreatedAt time.Time `json:"created_at"`
-    ExpiresAt time.Time `json:"expires_at"`
-    IPAddress string    `json:"ip_address"`
-    UserAgent string    `json:"user_agent"`
-}
-
-type SessionStore interface {
-    Create(username, ipAddress, userAgent string) (*Session, error)
-    Get(sessionID string) (*Session, error)
-    Delete(sessionID string) error
-    Cleanup() error // Remove expired sessions
-}
-```
 
 **Implementation Options**:
 
 1. **File-Based Sessions** (Recommended for simplicity):
-   ```go
-   // Store sessions in data/sessions/{session-id}.json
-   // Encrypted with SESSION_SECRET from environment
-   // Automatic cleanup on server start and periodically
-   ```
-
+   
 2. **In-Memory with Persistence**:
-   ```go
-   // Keep sessions in memory map with RW mutex
-   // Persist to file periodically for server restarts
-   // Cleanup expired sessions every hour
-   ```
-
+   
 **Session Configuration**:
 - Session duration: 24 hours (configurable)
 - Extend session on activity: Yes
@@ -1616,317 +1045,40 @@ type SessionStore interface {
 ```
 
 **Login Handler** (`backend/internal/handlers/auth.go`):
-```go
-func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-    var req struct {
-        Username string `json:"username"`
-        Password string `json:"password"`
-    }
-
-    json.NewDecoder(r.Body).Decode(&req)
-
-    // Verify credentials
-    if !h.verifyCredentials(req.Username, req.Password) {
-        // Add rate limiting here
-        http.Error(w, "Invalid credentials", http.StatusUnauthorized)
-        return
-    }
-
-    // Create session
-    session, err := h.sessions.Create(
-        req.Username,
-        getIPAddress(r),
-        r.UserAgent(),
-    )
-    if err != nil {
-        http.Error(w, "Session creation failed", http.StatusInternalServerError)
-        return
-    }
-
-    // Set session cookie
-    http.SetCookie(w, &http.Cookie{
-        Name:     "photoadmin_session",
-        Value:    session.ID,
-        Path:     "/admin",
-        HttpOnly: true,
-        Secure:   h.config.Production,
-        SameSite: http.SameSiteStrictMode,
-        Expires:  session.ExpiresAt,
-    })
-
-    // Generate CSRF token
-    csrfToken := h.generateCSRFToken(session.ID)
-
-    json.NewEncoder(w).Encode(map[string]string{
-        "status": "success",
-        "csrf_token": csrfToken,
-    })
-}
-```
 
 **Logout Handler**:
-```go
-func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-    cookie, err := r.Cookie("photoadmin_session")
-    if err == nil {
-        h.sessions.Delete(cookie.Value)
-    }
-
-    // Clear cookie
-    http.SetCookie(w, &http.Cookie{
-        Name:     "photoadmin_session",
-        Value:    "",
-        Path:     "/admin",
-        MaxAge:   -1,
-        HttpOnly: true,
-    })
-
-    w.WriteHeader(http.StatusOK)
-}
-```
 
 #### 4.2.4 Authentication Middleware
 
 **Auth Middleware** (`backend/internal/middleware/auth.go`):
-```go
-func RequireAuth(sessions SessionStore) func(http.Handler) http.Handler {
-    return func(next http.Handler) http.Handler {
-        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-            // Get session cookie
-            cookie, err := r.Cookie("photoadmin_session")
-            if err != nil {
-                http.Error(w, "Unauthorized", http.StatusUnauthorized)
-                return
-            }
-
-            // Validate session
-            session, err := sessions.Get(cookie.Value)
-            if err != nil || session.ExpiresAt.Before(time.Now()) {
-                http.Error(w, "Session expired", http.StatusUnauthorized)
-                return
-            }
-
-            // Optional: Verify IP and User-Agent match
-            if session.IPAddress != getIPAddress(r) {
-                // Log suspicious activity
-                http.Error(w, "Session invalid", http.StatusUnauthorized)
-                return
-            }
-
-            // Add session to context
-            ctx := context.WithValue(r.Context(), "session", session)
-            next.ServeHTTP(w, r.WithContext(ctx))
-        })
-    }
-}
-```
 
 **Usage**:
-```go
-// Apply to all admin routes
-adminRouter := chi.NewRouter()
-adminRouter.Use(RequireAuth(sessionStore))
-adminRouter.Post("/api/admin/albums", albumHandler.Create)
-adminRouter.Put("/api/admin/albums/{id}", albumHandler.Update)
-// ... all other admin endpoints
-```
 
 #### 4.2.5 CSRF Protection
 
 **CSRF Token Generation**:
-```go
-// Generate CSRF token = HMAC(session_id, csrf_secret)
-func generateCSRFToken(sessionID string, secret []byte) string {
-    h := hmac.New(sha256.New, secret)
-    h.Write([]byte(sessionID))
-    return base64.StdEncoding.EncodeToString(h.Sum(nil))
-}
-
-func validateCSRFToken(sessionID, token string, secret []byte) bool {
-    expected := generateCSRFToken(sessionID, secret)
-    return hmac.Equal([]byte(expected), []byte(token))
-}
-```
 
 **CSRF Middleware**:
-```go
-func CSRFProtection(secret []byte) func(http.Handler) http.Handler {
-    return func(next http.Handler) http.Handler {
-        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-            // Only check on state-changing methods
-            if r.Method == "GET" || r.Method == "HEAD" || r.Method == "OPTIONS" {
-                next.ServeHTTP(w, r)
-                return
-            }
-
-            // Get CSRF token from header
-            token := r.Header.Get("X-CSRF-Token")
-            if token == "" {
-                http.Error(w, "CSRF token missing", http.StatusForbidden)
-                return
-            }
-
-            // Get session
-            session := r.Context().Value("session").(*Session)
-
-            // Validate token
-            if !validateCSRFToken(session.ID, token, secret) {
-                http.Error(w, "CSRF token invalid", http.StatusForbidden)
-                return
-            }
-
-            next.ServeHTTP(w, r)
-        })
-    }
-}
-```
 
 **Frontend Usage**:
-```typescript
-// Store CSRF token from login response
-let csrfToken = '';
-
-async function login(username: string, password: string) {
-    const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-    });
-    const data = await response.json();
-    csrfToken = data.csrf_token;
-}
-
-// Include in all admin API calls
-async function updateAlbum(albumId: string, data: any) {
-    await fetch(`/api/admin/albums/${albumId}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfToken
-        },
-        body: JSON.stringify(data)
-    });
-}
-```
 
 #### 4.2.6 Password Management
 
 **Initial Setup**:
-```bash
-# On first run, generate admin password hash
-go run cmd/admin-setup/main.go
-
-# Prompts for password, outputs hash to add to .env:
-# ADMIN_PASSWORD_HASH=\$2a\$10\$...
-```
 
 **Environment Variables**:
-```bash
-# .env
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD_HASH=\$2a\$10\$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
-
-# Session encryption
-SESSION_SECRET=<64-char-hex-string>
-CSRF_SECRET=<64-char-hex-string>
-
-# Generate with:
-# openssl rand -hex 32
-```
 
 **Password Verification**:
-```go
-func verifyPassword(password, hash string) bool {
-    err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-    return err == nil
-}
-```
 
 **Password Change Endpoint**:
-```go
-// POST /api/admin/auth/change-password
-func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
-    var req struct {
-        CurrentPassword string `json:"current_password"`
-        NewPassword     string `json:"new_password"`
-    }
-    json.NewDecoder(r.Body).Decode(&req)
-
-    // Verify current password
-    if !h.verifyPassword(req.CurrentPassword, h.config.PasswordHash) {
-        http.Error(w, "Current password incorrect", http.StatusUnauthorized)
-        return
-    }
-
-    // Validate new password (min 12 chars, complexity requirements)
-    if len(req.NewPassword) < 12 {
-        http.Error(w, "Password too short", http.StatusBadRequest)
-        return
-    }
-
-    // Hash new password
-    hash, _ := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
-
-    // Update .env file (or prompt to update manually)
-    fmt.Fprintf(w, "New password hash:\nADMIN_PASSWORD_HASH=%s\n", hash)
-}
-```
 
 #### 4.2.7 Rate Limiting
 
 **Login Rate Limiting**:
-```go
-// Prevent brute force attacks
-// Max 5 login attempts per IP per 15 minutes
-
-type RateLimiter struct {
-    attempts map[string][]time.Time
-    mu       sync.Mutex
-}
-
-func (rl *RateLimiter) AllowLogin(ip string) bool {
-    rl.mu.Lock()
-    defer rl.mu.Unlock()
-
-    now := time.Now()
-    cutoff := now.Add(-15 * time.Minute)
-
-    // Clean old attempts
-    recent := []time.Time{}
-    for _, t := range rl.attempts[ip] {
-        if t.After(cutoff) {
-            recent = append(recent, t)
-        }
-    }
-
-    rl.attempts[ip] = recent
-
-    // Check limit
-    if len(recent) >= 5 {
-        return false
-    }
-
-    // Record attempt
-    rl.attempts[ip] = append(recent, now)
-    return true
-}
-```
 
 #### 4.2.8 Security Headers
 
 **Add security headers to all admin responses**:
-```go
-func SecurityHeaders(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        w.Header().Set("X-Content-Type-Options", "nosniff")
-        w.Header().Set("X-Frame-Options", "DENY")
-        w.Header().Set("X-XSS-Protection", "1; mode=block")
-        w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
-        w.Header().Set("Content-Security-Policy", "default-src 'self'")
-        next.ServeHTTP(w, r)
-    })
-}
-```
 
 #### 4.2.9 Implementation Checklist
 
@@ -2007,244 +1159,22 @@ func SecurityHeaders(next http.Handler) http.Handler {
 - Strip special characters that could cause filesystem issues
 
 **Configuration** (`.env` or `site_config.json`):
-```go
-type UploadConfig struct {
-    MaxFileSizeMB      int    `json:"max_file_size_mb"`      // Default: 50
-    MaxBatchSizeMB     int    `json:"max_batch_size_mb"`     // Default: 500
-    MaxFilesPerBatch   int    `json:"max_files_per_batch"`   // Default: 50
-    MinDimensionPx     int    `json:"min_dimension_px"`      // Default: 800
-    MaxDimensionPx     int    `json:"max_dimension_px"`      // Default: 12000
-    AllowedFormats     []string `json:"allowed_formats"`     // Default: ["jpeg", "png", "webp", "heic"]
-    EnableRAWSupport   bool   `json:"enable_raw_support"`    // Default: false
-}
-```
 
 #### 4.4.2 Upload Validation Pipeline
 
 **Step 1: Pre-Upload Validation (Frontend)**:
-```typescript
-// Check before upload starts
-function validateFileBeforeUpload(file: File): ValidationError | null {
-    // Check file size
-    const maxSize = 50 * 1024 * 1024; // 50MB
-    if (file.size > maxSize) {
-        return { field: 'size', message: `File too large: ${formatBytes(file.size)}. Max: 50MB` };
-    }
-
-    // Check file type (preliminary)
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
-    if (!allowedTypes.includes(file.type) && !file.type.startsWith('image/')) {
-        return { field: 'type', message: 'Invalid file type. Please upload an image.' };
-    }
-
-    // Check filename
-    if (file.name.includes('../') || file.name.includes('..\\')) {
-        return { field: 'name', message: 'Invalid filename.' };
-    }
-
-    return null;
-}
-
-function validateBatch(files: File[]): ValidationError | null {
-    if (files.length > 50) {
-        return { field: 'count', message: `Too many files. Max: 50. Selected: ${files.length}` };
-    }
-
-    const totalSize = files.reduce((sum, f) => sum + f.size, 0);
-    const maxBatchSize = 500 * 1024 * 1024; // 500MB
-    if (totalSize > maxBatchSize) {
-        return { field: 'batch_size', message: `Batch too large: ${formatBytes(totalSize)}. Max: 500MB` };
-    }
-
-    return null;
-}
-```
 
 **Step 2: Backend Upload Validation**:
-```go
-// backend/internal/handlers/upload.go
-func (h *UploadHandler) ValidateUpload(r *http.Request) error {
-    // Parse multipart form with size limit
-    err := r.ParseMultipartForm(h.config.MaxBatchSizeMB << 20) // Convert MB to bytes
-    if err != nil {
-        return fmt.Errorf("batch size exceeds limit: %w", err)
-    }
-
-    files := r.MultipartForm.File["photos"]
-
-    // Validate batch count
-    if len(files) > h.config.MaxFilesPerBatch {
-        return fmt.Errorf("too many files: %d (max: %d)", len(files), h.config.MaxFilesPerBatch)
-    }
-
-    // Validate each file
-    for _, fileHeader := range files {
-        if err := h.validateSingleFile(fileHeader); err != nil {
-            return err
-        }
-    }
-
-    return nil
-}
-
-func (h *UploadHandler) validateSingleFile(fileHeader *multipart.FileHeader) error {
-    // Check size
-    maxBytes := int64(h.config.MaxFileSizeMB << 20)
-    if fileHeader.Size > maxBytes {
-        return fmt.Errorf("file %s too large: %d bytes (max: %d)",
-            fileHeader.Filename, fileHeader.Size, maxBytes)
-    }
-
-    // Open file to validate content
-    file, err := fileHeader.Open()
-    if err != nil {
-        return err
-    }
-    defer file.Close()
-
-    // Read first 512 bytes for content type detection
-    buffer := make([]byte, 512)
-    _, err = file.Read(buffer)
-    if err != nil {
-        return err
-    }
-
-    // Detect content type via magic bytes
-    contentType := http.DetectContentType(buffer)
-    if !h.isAllowedContentType(contentType) {
-        return fmt.Errorf("invalid content type: %s", contentType)
-    }
-
-    // Reset file pointer for further processing
-    file.Seek(0, 0)
-
-    // Decode image to validate it's actually an image and get dimensions
-    img, format, err := image.Decode(file)
-    if err != nil {
-        return fmt.Errorf("invalid image file: %w", err)
-    }
-
-    // Validate dimensions
-    bounds := img.Bounds()
-    width := bounds.Dx()
-    height := bounds.Dy()
-
-    minDim := min(width, height)
-    maxDim := max(width, height)
-
-    if minDim < h.config.MinDimensionPx {
-        return fmt.Errorf("image too small: %dx%d (min: %dpx on shortest side)",
-            width, height, h.config.MinDimensionPx)
-    }
-
-    if maxDim > h.config.MaxDimensionPx {
-        return fmt.Errorf("image too large: %dx%d (max: %dpx on longest side)",
-            width, height, h.config.MaxDimensionPx)
-    }
-
-    return nil
-}
-
-func (h *UploadHandler) isAllowedContentType(contentType string) bool {
-    allowed := []string{
-        "image/jpeg",
-        "image/png",
-        "image/webp",
-        "image/heic",
-    }
-
-    for _, allowed := range allowed {
-        if contentType == allowed {
-            return true
-        }
-    }
-
-    return false
-}
-```
 
 **Step 3: Error Handling and User Feedback**:
-```go
-// Return detailed validation errors to frontend
-type UploadError struct {
-    Filename string `json:"filename"`
-    Error    string `json:"error"`
-    Field    string `json:"field"` // size, type, dimensions, etc.
-}
-
-type UploadResponse struct {
-    Success    []PhotoMetadata `json:"success"`    // Successfully uploaded photos
-    Failed     []UploadError   `json:"failed"`     // Failed uploads with reasons
-    TotalCount int            `json:"total_count"`
-}
-```
 
 **Frontend Error Display**:
-```typescript
-// Show validation errors in upload dialog
-function displayUploadResults(response: UploadResponse) {
-    if (response.success.length > 0) {
-        showNotification(`Successfully uploaded ${response.success.length} photos`, 'success');
-    }
-
-    if (response.failed.length > 0) {
-        // Show detailed error list
-        const errorList = response.failed.map(err =>
-            `${err.filename}: ${err.error}`
-        ).join('\n');
-
-        showErrorDialog(
-            `${response.failed.length} files failed to upload`,
-            errorList
-        );
-    }
-}
-```
 
 #### 4.4.3 Disk Space Management
 
 **Check Available Space Before Upload**:
-```go
-func (h *UploadHandler) checkDiskSpace(requiredBytes int64) error {
-    var stat syscall.Statfs_t
-    syscall.Statfs(h.config.UploadPath, &stat)
-
-    availableBytes := stat.Bavail * uint64(stat.Bsize)
-
-    // Require 3x the upload size (original + display + thumbnail)
-    // Plus 20% buffer for safety
-    requiredWithBuffer := uint64(requiredBytes) * 3 * 120 / 100
-
-    if availableBytes < requiredWithBuffer {
-        return fmt.Errorf("insufficient disk space: %d bytes available, %d required",
-            availableBytes, requiredWithBuffer)
-    }
-
-    return nil
-}
-```
 
 **Disk Space Warning in Admin UI**:
-```typescript
-// Show disk space warning in dashboard
-interface DiskSpaceInfo {
-    total_gb: number;
-    used_gb: number;
-    available_gb: number;
-    percent_used: number;
-}
-
-// GET /api/admin/system/disk-space
-async function checkDiskSpace(): Promise<DiskSpaceInfo> {
-    const response = await fetch('/api/admin/system/disk-space');
-    return response.json();
-}
-
-// Display warning if > 85% full
-if (diskSpace.percent_used > 85) {
-    showWarning(`Disk space low: ${diskSpace.available_gb}GB remaining`);
-}
-```
 
 #### 4.4.4 Upload Pipeline
 - [ ] Multi-file upload handler (drag-drop or click-to-upload)
@@ -2726,69 +1656,6 @@ Timeline Chart
   - Manual refresh button
 
 **API Endpoints Used**:
-```typescript
-// Overview stats
-GET /api/admin/analytics/overview?period=7d
-Response: {
-  total_views: 12345,
-  total_downloads: 1234,
-  unique_visitors: 3456,
-  period: "7d"
-}
-
-// Album performance
-GET /api/admin/analytics/albums?period=7d&sort=views&order=desc
-Response: {
-  albums: [
-    {
-      album_id: "uuid",
-      album_name: "Portfolio",
-      album_slug: "portfolio",
-      views: 8234,
-      downloads: 456,
-      download_rate: 0.055
-    }
-  ]
-}
-
-// Photo performance
-GET /api/admin/analytics/photos?limit=10&sort=views&order=desc
-Response: {
-  photos: [
-    {
-      photo_id: "uuid",
-      album_id: "uuid",
-      album_name: "Portfolio",
-      filename: "sunset.jpg",
-      thumbnail_url: "/data/photos/...",
-      views: 1234,
-      downloads: 123
-    }
-  ]
-}
-
-// Referrer stats
-GET /api/admin/analytics/referrers?period=7d
-Response: {
-  referrers: [
-    { source: "Direct", views: 5678, percentage: 46 },
-    { source: "google.com", views: 3456, percentage: 28 }
-  ]
-}
-
-// Timeline data
-GET /api/admin/analytics/timeline?period=7d&metric=views
-Response: {
-  timeline: [
-    { date: "2024-01-01", views: 234, downloads: 23 },
-    { date: "2024-01-02", views: 345, downloads: 34 }
-  ]
-}
-
-// Export
-GET /api/admin/analytics/export?period=7d&format=csv
-Response: CSV file download
-```
 
 **Implementation Notes**:
 - Analytics data is read from SQLite database (Phase 2.2)
@@ -2851,13 +1718,6 @@ Already configured in Phase 1.5:
 - [ ] `services/auth_service_test.go` - Password verification
 
 **Test Framework Setup**:
-```bash
-# Frontend
-cd frontend && npm install --save-dev vitest
-
-# Backend (uses built-in go test)
-# No additional dependencies needed
-```
 
 #### 5.3.3 Manual E2E Test Checklist
 
@@ -3051,169 +1911,26 @@ WantedBy=multi-user.target
 ```
 
 **Enable systemd timer**:
-```bash
-sudo systemctl enable photography-backup.timer
-sudo systemctl start photography-backup.timer
-
-# Check timer status
-sudo systemctl list-timers photography-backup.timer
-
-# Run backup manually
-sudo systemctl start photography-backup.service
-```
 
 #### 7.4.5 Restore Procedure
 
 **File**: `scripts/restore.sh`
-```bash
-#!/bin/bash
-set -euo pipefail
-
-# Usage: ./restore.sh <backup-date>
-# Example: ./restore.sh 20240115-030000
-
-if [ $# -lt 1 ]; then
-    echo "Usage: $0 <backup-date>"
-    echo "Available backups:"
-    ls -1 /var/backups/photography-site/daily/data-*.tar.gz | sed 's/.*data-\(.*\)\.tar\.gz/\1/'
-    exit 1
-fi
-
-BACKUP_DATE=$1
-SITE_ROOT="${SITE_ROOT:-/var/www/photography-site}"
-BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/photography-site}"
-
-# Find backup files
-DATA_BACKUP="$BACKUP_ROOT/daily/data-${BACKUP_DATE}.tar.gz"
-PHOTO_BACKUP="$BACKUP_ROOT/daily/photos-${BACKUP_DATE}.tar.gz"
-
-# Validate backups exist
-if [ ! -f "$DATA_BACKUP" ]; then
-    echo "Error: Data backup not found: $DATA_BACKUP"
-    exit 1
-fi
-
-echo "Found backups:"
-echo "  Data: $DATA_BACKUP"
-if [ -f "$PHOTO_BACKUP" ]; then
-    echo "  Photos: $PHOTO_BACKUP"
-else
-    echo "  Photos: (not found, will skip)"
-fi
-
-read -p "Restore these backups? This will OVERWRITE current data. (yes/no): " confirm
-if [ "$confirm" != "yes" ]; then
-    echo "Restore cancelled."
-    exit 0
-fi
-
-# Stop backend service
-echo "Stopping backend service..."
-sudo systemctl stop photography-admin
-
-# Backup current state before restore (just in case)
-echo "Creating safety backup of current state..."
-SAFETY_BACKUP="/tmp/photography-pre-restore-$(date +%Y%m%d-%H%M%S).tar.gz"
-tar -czf "$SAFETY_BACKUP" -C "$SITE_ROOT/data" .
-echo "Safety backup created: $SAFETY_BACKUP"
-
-# Restore data files
-echo "Restoring data files..."
-sudo tar -xzf "$DATA_BACKUP" -C "$SITE_ROOT/data"
-
-# Restore photos (if available)
-if [ -f "$PHOTO_BACKUP" ]; then
-    echo "Restoring photos..."
-    sudo mkdir -p "$SITE_ROOT/data/uploads/originals"
-    sudo tar -xzf "$PHOTO_BACKUP" -C "$SITE_ROOT/data/uploads/originals"
-
-    # Regenerate display and thumbnail versions
-    echo "Regenerating display and thumbnail versions..."
-    # Call backend API to regenerate (implement this endpoint)
-    # curl -X POST http://localhost:8080/api/admin/photos/regenerate-all
-fi
-
-# Fix permissions
-echo "Fixing permissions..."
-sudo chown -R www-data:www-data "$SITE_ROOT/data"
-
-# Start backend service
-echo "Starting backend service..."
-sudo systemctl start photography-admin
-
-echo "Restore complete!"
-echo "Safety backup available at: $SAFETY_BACKUP"
-```
 
 #### 7.4.6 Backup Monitoring
 
 **Health Check for Backups**:
 
 Add to backend API:
-```go
-// GET /api/admin/system/backup-status
-func BackupStatus(w http.ResponseWriter, r *http.Request) {
-    backupRoot := os.Getenv("BACKUP_ROOT")
-
-    // Check latest backup age
-    latestBackup := findLatestBackup(backupRoot + "/daily")
-    age := time.Since(latestBackup.ModTime)
-
-    status := map[string]interface{}{
-        "latest_backup": latestBackup.Name,
-        "age_hours": age.Hours(),
-        "healthy": age.Hours() < 36, // Warn if > 36 hours old
-        "backup_count": countBackups(backupRoot),
-        "total_size_gb": calculateTotalSize(backupRoot),
-    }
-
-    json.NewEncoder(w).Encode(status)
-}
-```
 
 **Admin Dashboard Widget**:
-```typescript
-// Show backup status in admin dashboard
-interface BackupStatus {
-    latest_backup: string;
-    age_hours: number;
-    healthy: boolean;
-    backup_count: number;
-    total_size_gb: number;
-}
-
-// Display warning if backup is stale
-if (backupStatus.age_hours > 36) {
-    showWarning(`Last backup was ${Math.round(backupStatus.age_hours)} hours ago`);
-}
-```
 
 #### 7.4.7 Remote Backup Options
 
 **Option 1: rclone to any cloud storage**
-```bash
-# Install rclone
-curl https://rclone.org/install.sh | sudo bash
-
-# Configure remote (interactive)
-rclone config
-
-# Add to backup script
-rclone sync /var/backups/photography-site remote:backups/photography-site
-```
 
 **Option 2: AWS S3**
-```bash
-# Using AWS CLI
-aws s3 sync /var/backups/photography-site s3://my-bucket/photography-backups/ \
-    --storage-class STANDARD_IA
-```
 
 **Option 3: Backblaze B2**
-```bash
-# Using B2 CLI
-b2 sync /var/backups/photography-site b2://my-bucket/photography-backups/
-```
 
 #### 7.4.8 Implementation Checklist
 
@@ -3239,32 +1956,6 @@ b2 sync /var/backups/photography-site b2://my-bucket/photography-backups/
 #### 7.4.1 Migration Structure
 
 **File**: `backend/internal/migrations/migration.go`
-```go
-package migrations
-
-type Migration struct {
-    Version     int
-    Description string
-    Up          func() error
-    Down        func() error
-}
-
-var Migrations = []Migration{
-    {
-        Version:     1,
-        Description: "Initial schema",
-        Up:          migrate_v1_up,
-        Down:        migrate_v1_down,
-    },
-    {
-        Version:     2,
-        Description: "Add watermark settings to site_config",
-        Up:          migrate_v2_up,
-        Down:        migrate_v2_down,
-    },
-    // Add new migrations here
-}
-```
 
 #### 7.4.2 Migration Tracking
 
@@ -3287,73 +1978,10 @@ var Migrations = []Migration{
 5. Create backup before each migration
 
 **File**: `backend/cmd/admin/main.go`
-```go
-func main() {
-    // Check and run migrations
-    currentVersion := migrations.GetCurrentVersion()
-    targetVersion := migrations.LatestVersion()
-
-    if currentVersion < targetVersion {
-        log.Printf("Migrations needed: v%d -> v%d", currentVersion, targetVersion)
-
-        // Backup before migration
-        if err := createBackup(); err != nil {
-            log.Fatal("Failed to create backup:", err)
-        }
-
-        // Run migrations
-        if err := migrations.RunMigrations(currentVersion, targetVersion); err != nil {
-            log.Fatal("Migration failed:", err)
-        }
-
-        log.Printf("Migrations complete: now at v%d", targetVersion)
-    }
-
-    // Start server
-    startServer()
-}
-```
 
 #### 7.4.4 Migration Example
 
 **Adding a new field to site_config.json**:
-```go
-func migrate_v2_up() error {
-    // Read current site_config.json
-    config, err := readSiteConfig()
-    if err != nil {
-        return err
-    }
-
-    // Add new field with default value
-    if config.GalleryDefaults == nil {
-        config.GalleryDefaults = &GalleryDefaults{}
-    }
-    if config.GalleryDefaults.WatermarkURL == "" {
-        config.GalleryDefaults.WatermarkURL = ""
-        config.GalleryDefaults.WatermarkDownloads = false
-    }
-
-    // Write back
-    return writeSiteConfig(config)
-}
-
-func migrate_v2_down() error {
-    // Reverse the migration (remove the field)
-    config, err := readSiteConfig()
-    if err != nil {
-        return err
-    }
-
-    // Remove the field
-    if config.GalleryDefaults != nil {
-        config.GalleryDefaults.WatermarkURL = ""
-        config.GalleryDefaults.WatermarkDownloads = false
-    }
-
-    return writeSiteConfig(config)
-}
-```
 
 ---
 
@@ -3458,27 +2086,6 @@ For users who want frontend on CDN:
 ### 7.7 Rollback Procedure
 
 **If deployment fails**:
-```bash
-# 1. Stop new service
-ssh $target "sudo systemctl stop photography-admin"
-
-# 2. Restore previous version
-ssh $target "
-    cd $site_root
-    sudo rm -rf app.new
-    sudo mv app app.new
-    sudo mv app.backup app
-"
-
-# 3. Restore data if corrupted
-ssh $target "
-    cd $site_root
-    sudo tar -xzf /var/backups/photography-site/backup-TIMESTAMP.tar.gz -C data/
-"
-
-# 4. Start service
-ssh $target "sudo systemctl start photography-admin"
-```
 
 ---
 
@@ -3490,72 +2097,19 @@ ssh $target "sudo systemctl start photography-admin"
 
 Before creating a release, ensure all quality gates pass locally:
 
-```bash
-# 1. Run pre-commit hooks on all files
-pre-commit run --all-files
-
-# 2. Run full test suite
-bazel test //... --test_output=errors
-
-# 3. Run E2E tests manually
-cd e2e && npm run test:e2e
-
-# 4. Check for security vulnerabilities
-cd frontend && npm audit
-cd ../backend && go list -json -m all | docker run --rm -i sonatypecommunity/nancy:latest sleuth
-
-# 5. Verify build artifacts
-bazel build //...
-cd frontend && npm run build
-cd ../backend && go build ./cmd/admin/main.go
-```
 
 #### 7.8.2 Manual Release Process
 
 **Creating a new release**:
 
 1. **Update version number**:
-   ```bash
-   # Update package.json, go.mod, or version file
-   vim frontend/package.json  # Update version
-   vim backend/cmd/admin/main.go  # Update const Version
-   git add .
-   git commit -m "chore: bump version to v1.2.3"
-   ```
-
+   
 2. **Run pre-release checklist** (see 7.8.1 above)
 
 3. **Create and push tag**:
-   ```bash
-   git tag -a v1.2.3 -m "Release v1.2.3"
-   git push origin v1.2.3
-   git push origin main
-   ```
-
+   
 4. **Build release artifacts**:
-   ```bash
-   # Frontend
-   cd frontend
-   npm ci
-   npm run build
-   cd ..
-
-   # Backend
-   cd backend
-   go build -ldflags="-X main.Version=v1.2.3" -o ../dist/admin_server cmd/admin/main.go
-   cd ..
-
-   # Create deployment package
-   mkdir -p release
-   tar -czf release/photography-site-v1.2.3.tar.gz \
-     -C dist . \
-     --exclude='*.map'
-
-   # Generate checksums
-   cd release
-   sha256sum *.tar.gz > checksums.txt
-   ```
-
+   
 5. **Create GitHub release manually**:
    - Go to GitHub → Releases → Draft a new release
    - Choose tag v1.2.3
@@ -3565,107 +2119,18 @@ cd ../backend && go build ./cmd/admin/main.go
 
 #### 7.8.3 Manual Deployment Process
 
-```bash
-# 1. Download release artifact from GitHub
-wget https://github.com/user/repo/releases/download/v1.2.3/photography-site-v1.2.3.tar.gz
-
-# 2. Verify checksum
-sha256sum -c checksums.txt
-
-# 3. Upload to server
-scp photography-site-v1.2.3.tar.gz user@server:/tmp/
-
-# 4. Deploy on server
-ssh user@server << 'EOF'
-  set -e
-  cd /var/www/photography-site
-
-  # Stop service
-  sudo systemctl stop photography-admin
-
-  # Backup current version
-  sudo mv app app.backup.$(date +%Y%m%d_%H%M%S) || true
-
-  # Extract new version
-  sudo mkdir -p app
-  sudo tar -xzf /tmp/photography-site-v1.2.3.tar.gz -C app/
-
-  # Set permissions
-  sudo chown -R www-data:www-data app/
-
-  # Start service
-  sudo systemctl start photography-admin
-
-  # Verify service started
-  sleep 5
-  sudo systemctl status photography-admin
-
-  echo "Deployment complete!"
-EOF
-
-# 5. Verify deployment
-curl -f https://your-domain.com/api/health || echo "Health check failed!"
-
-# 6. Rollback if needed
-# ssh user@server 'sudo systemctl stop photography-admin && sudo rm -rf app && sudo mv app.backup.TIMESTAMP app && sudo systemctl start photography-admin'
-```
 
 #### 7.8.4 Development Workflow
 
 **Daily development**:
-```bash
-# Pre-commit hooks run automatically on git commit
-git add .
-git commit -m "feat: add new feature"  # Pre-commit hooks run here
-
-# If hooks fail, fix issues and retry
-git add .
-git commit -m "feat: add new feature"
-```
 
 **Before pushing to main**:
-```bash
-# Run full test suite manually
-bazel test //...
-
-# Or run specific test suites
-bazel test //frontend:all_tests
-bazel test //backend:all_tests
-bazel test //e2e:all_tests
-```
 
 #### 7.8.5 Dependency Management
 
 **Frontend dependencies**:
-```bash
-# Check for outdated packages
-cd frontend
-npm outdated
-
-# Update dependencies (review changes carefully)
-npm update
-
-# Or update specific package
-npm install lit@latest
-
-# Audit for security vulnerabilities
-npm audit
-npm audit fix
-```
 
 **Backend dependencies**:
-```bash
-# Check for outdated modules
-cd backend
-go list -u -m all
-
-# Update dependencies
-go get -u ./...
-go mod tidy
-
-# Check for vulnerabilities
-go list -json -m all | nancy sleuth
-```
 
 #### 7.8.6 Implementation Checklist
 
