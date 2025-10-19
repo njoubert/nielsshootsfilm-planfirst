@@ -21,10 +21,11 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 **Must Have (MVP)**:
 1. ✅ **Phase 1**: Setup (Bazel, repo structure, pre-commit hooks)
 2. ✅ **Phase 2**: Data Model (albums.json, site_config.json schemas)
-3. ✅ **Phase 3**: Frontend (portfolio page, album viewing, password protection)
-4. ✅ **Phase 4**: Backend (album CRUD, photo upload, admin auth)
-5. ✅ **Phase 5**: Testing (pre-commit hooks, manual E2E checklist)
-6. ⏩ **Phase 7**: Deployment (get it live!)
+3. **Phase 2.5**: Dark/Light Mode Theme System (system detection, manual toggle, per-album overrides)
+4. ✅ **Phase 3**: Frontend (portfolio page, album viewing, password protection)
+5. ✅ **Phase 4**: Backend (album CRUD, photo upload, admin auth)
+6. ✅ **Phase 5**: Testing (pre-commit hooks, manual E2E checklist)
+7. ⏩ **Phase 7**: Deployment (get it live!)
 
 **Nice to Have (Phase 8 - Advanced Features)**:
 - Blog functionality
@@ -406,7 +407,24 @@ git commit -m "feat: your change"
     "accent_color": "#ff6b6b",
     "font_heading": "Playfair Display",
     "font_body": "Open Sans",
-    "custom_css_url": "/static/custom.css"
+    "custom_css_url": "/static/custom.css",
+    "theme": {
+      "mode": "system",
+      "light": {
+        "background": "#ffffff",
+        "surface": "#f5f5f5",
+        "text_primary": "#000000",
+        "text_secondary": "#666666",
+        "border": "#e0e0e0"
+      },
+      "dark": {
+        "background": "#0a0a0a",
+        "surface": "#1a1a1a",
+        "text_primary": "#ffffff",
+        "text_secondary": "#999999",
+        "border": "#333333"
+      }
+    }
   },
 
   "portfolio": {
@@ -505,6 +523,7 @@ git commit -m "feat: your change"
       "allow_downloads": true,
       "is_portfolio_album": false,
       "order": 1,
+      "theme_override": "system|light|dark",
       "created_at": "ISO8601",
       "updated_at": "ISO8601",
       "photos": [
@@ -617,7 +636,24 @@ Create minimal valid JSON files:
   "branding": {
     "primary_color": "#000000",
     "secondary_color": "#666666",
-    "accent_color": "#ff6b6b"
+    "accent_color": "#ff6b6b",
+    "theme": {
+      "mode": "system",
+      "light": {
+        "background": "#ffffff",
+        "surface": "#f5f5f5",
+        "text_primary": "#000000",
+        "text_secondary": "#666666",
+        "border": "#e0e0e0"
+      },
+      "dark": {
+        "background": "#0a0a0a",
+        "surface": "#1a1a1a",
+        "text_primary": "#ffffff",
+        "text_secondary": "#999999",
+        "border": "#333333"
+      }
+    }
   },
   "portfolio": {
     "show_exif_data": true,
@@ -734,6 +770,291 @@ func main() {
 
 ---
 
+## Phase 2.5: Dark Mode & Light Mode Theme System
+
+### Overview
+
+The website supports both dark mode and light mode with the following features:
+- **System preference detection**: Automatically follows the user's OS/browser theme setting using `prefers-color-scheme` media query
+- **Manual override**: Users can explicitly choose light or dark mode via a theme toggle button
+- **Persistent preference**: User's manual theme choice is saved in localStorage
+- **Per-album override**: Individual albums can force light or dark mode regardless of site-wide settings
+- **Smooth transitions**: Theme changes animate smoothly without jarring color flashes
+- **Accessible**: Theme toggle is keyboard accessible and announces changes to screen readers
+
+### Theme Configuration
+
+#### Site-Wide Theme Settings (`site_config.json`)
+
+The `branding.theme` object controls the site-wide theme behavior:
+
+```json
+"theme": {
+  "mode": "system|light|dark",
+  "light": {
+    "background": "#ffffff",
+    "surface": "#f5f5f5",
+    "text_primary": "#000000",
+    "text_secondary": "#666666",
+    "border": "#e0e0e0"
+  },
+  "dark": {
+    "background": "#0a0a0a",
+    "surface": "#1a1a1a",
+    "text_primary": "#ffffff",
+    "text_secondary": "#999999",
+    "border": "#333333"
+  }
+}
+```
+
+**Fields**:
+- `mode`: Default theme mode
+  - `"system"` (default): Follow OS/browser preference
+  - `"light"`: Force light mode for all users
+  - `"dark"`: Force dark mode for all users
+- `light`: Color palette for light mode
+  - `background`: Main page background color
+  - `surface`: Card/component background color
+  - `text_primary`: Primary text color (high contrast)
+  - `text_secondary`: Secondary text color (medium contrast)
+  - `border`: Border and divider color
+- `dark`: Color palette for dark mode (same structure as light)
+
+**Notes**:
+- The `primary_color`, `secondary_color`, and `accent_color` fields remain in `branding` for backwards compatibility
+- These accent colors are used across both light and dark themes
+- Theme colors complement the accent colors
+
+#### Per-Album Theme Override
+
+Albums can override the site-wide theme setting using the `theme_override` field:
+
+```json
+{
+  "id": "uuid",
+  "title": "Night Photography",
+  "theme_override": "dark",
+  ...
+}
+```
+
+**Values**:
+- `"system"` (default): Use site-wide theme setting
+- `"light"`: Force light mode for this album only
+- `"dark"`: Force dark mode for this album only
+
+**Use Cases**:
+- Dark photography albums look better with dark backgrounds
+- Bright, airy wedding photos look better with light backgrounds
+- Product photography may require specific background contrast
+
+### Frontend Implementation
+
+#### CSS Custom Properties
+
+- [ ] Define CSS custom properties (CSS variables) for all theme colors
+  - Accent colors (primary, secondary, accent) - consistent across themes
+  - Theme-specific colors (background, surface, text-primary, text-secondary, border)
+  - Set `data-theme` attribute on root element to switch themes
+  - Use `@media (prefers-color-scheme: dark)` for system preference detection
+  - Apply smooth transitions for theme changes
+
+**Implementation approach**:
+- All components use CSS custom properties instead of hardcoded colors
+- Shadow DOM components inherit CSS custom properties from document root
+- Theme colors loaded dynamically from `site_config.json`
+
+#### Theme Manager Utility
+
+**File**: `frontend/src/utils/theme-manager.ts`
+
+- [ ] Create ThemeManager class as singleton
+- [ ] Detect system color scheme using `window.matchMedia('(prefers-color-scheme: dark)')`
+- [ ] Load user's saved preference from localStorage
+- [ ] Apply theme by setting `data-theme` attribute on document root
+- [ ] Watch for system preference changes and react accordingly
+- [ ] Provide methods:
+  - `getTheme()` - Get current theme mode
+  - `setTheme(mode)` - Set theme and save to localStorage
+  - `toggleTheme()` - Toggle between light and dark
+  - `getEffectiveTheme()` - Resolve 'system' to actual light/dark value
+  - `applyAlbumOverride(override)` - Apply per-album theme
+- [ ] Dispatch 'theme-changed' event for components to react
+- [ ] Initialize automatically on page load
+
+#### Theme Toggle Component
+
+**File**: `frontend/src/components/core/theme-toggle.ts`
+
+- [ ] Create Lit web component `<theme-toggle>`
+- [ ] Display current theme icon (sun for light, moon for dark)
+- [ ] Toggle theme on click
+- [ ] Update icon when theme changes
+- [ ] Accessibility features:
+  - Keyboard accessible (button element)
+  - ARIA labels for screen readers
+  - Focus outline styling
+  - Descriptive title attribute
+- [ ] Responsive design for mobile and desktop
+- [ ] Listen to 'theme-changed' event to update UI
+
+#### Integration with Site
+
+**File**: `frontend/src/main.ts`
+
+- [ ] Import and initialize ThemeManager singleton early in page load
+- [ ] Load site config and apply theme colors from `branding.theme`
+- [ ] Inject dynamic styles for theme colors
+- [ ] Make theme colors available as CSS custom properties
+
+#### Per-Album Theme Application
+
+**File**: `frontend/src/pages/album-detail-page.ts`
+
+- [ ] Check album's `theme_override` field when loading album
+- [ ] Apply album-specific theme using `themeManager.applyAlbumOverride()`
+- [ ] Reset to site-wide theme when leaving album page (in `disconnectedCallback`)
+
+### Testing Requirements
+
+#### Unit Tests
+- [ ] ThemeManager detects system preference correctly
+- [ ] ThemeManager saves and loads user preference from localStorage
+- [ ] ThemeManager responds to system preference changes
+- [ ] ThemeManager applies album overrides correctly
+- [ ] ThemeToggle component renders correct icon and label
+- [ ] ThemeToggle component toggles theme on click
+
+#### Integration Tests
+- [ ] Theme persists across page navigations
+- [ ] Theme applies to all components and pages
+- [ ] Per-album theme override works correctly
+- [ ] Theme resets when leaving album with override
+- [ ] System preference detection works in real browsers
+
+#### E2E Tests
+- [ ] User can toggle theme manually
+- [ ] Theme preference persists after page reload
+- [ ] Album with dark theme override displays correctly
+- [ ] Album with light theme override displays correctly
+- [ ] Theme toggle is keyboard accessible
+- [ ] Theme changes are announced to screen readers
+
+### Admin Interface
+
+The admin interface includes theme configuration controls in the Branding section.
+
+#### Theme Configuration UI
+
+**Section: Branding → Theme Settings**
+
+**File**: `admin/src/components/theme-settings-editor.ts`
+
+- [ ] Create admin component for theme configuration
+- [ ] Default theme mode dropdown:
+  - Option: "Follow System (Recommended)"
+  - Option: "Always Light"
+  - Option: "Always Dark"
+- [ ] Light theme color pickers:
+  - Background color input
+  - Surface color input
+  - Primary text color input
+  - Secondary text color input
+  - Border color input
+- [ ] Dark theme color pickers (same fields as light)
+- [ ] Live preview section:
+  - Preview panel showing light mode
+  - Preview panel showing dark mode
+- [ ] Save/cancel buttons
+- [ ] Form validation for hex color values
+
+#### Album Theme Override UI
+
+**In album edit form**, add theme override controls:
+
+- [ ] Theme override dropdown field:
+  - Option: "Follow Site Theme (Default)"
+  - Option: "Always Light Mode"
+  - Option: "Always Dark Mode"
+- [ ] Help text explaining the feature:
+  - "Force this album to always display in light or dark mode."
+  - "Useful for albums where specific background colors enhance the photos."
+
+### Backend Support
+
+#### Go Data Models
+
+**File**: `backend/internal/models/site_config.go`
+
+- [ ] Create `ThemeColors` struct with fields:
+  - Background, Surface, TextPrimary, TextSecondary, Border (all strings for hex colors)
+- [ ] Create `Theme` struct with fields:
+  - Mode (string: "system", "light", or "dark")
+  - Light (ThemeColors)
+  - Dark (ThemeColors)
+- [ ] Add `Theme` field to existing `Branding` struct
+- [ ] Add JSON tags for all fields
+
+**File**: `backend/internal/models/album.go`
+
+- [ ] Add `ThemeOverride` field to Album struct (optional string: "system", "light", or "dark")
+- [ ] Add JSON tag with omitempty
+
+#### Validation
+
+- [ ] Create `Validate()` method for Theme struct
+- [ ] Check theme mode is one of: "system", "light", "dark"
+- [ ] Validate all color fields are valid hex colors (#RRGGBB format)
+- [ ] Use compiled regex for hex color validation (performance optimization)
+- [ ] Return descriptive error messages for invalid values
+
+### Deployment Considerations
+
+#### Default Theme Colors
+
+- [ ] Update `scripts/bootstrap.sh` to include theme defaults in `site_config.json`
+- [ ] Default theme mode: "system"
+- [ ] Default light theme colors:
+  - background: #ffffff, surface: #f5f5f5, text_primary: #000000, text_secondary: #666666, border: #e0e0e0
+- [ ] Default dark theme colors:
+  - background: #0a0a0a, surface: #1a1a1a, text_primary: #ffffff, text_secondary: #999999, border: #333333
+
+#### Migration for Existing Sites
+
+**File**: `backend/internal/migrations/005_add_theme_support.go`
+
+- [ ] Create migration function to add theme support to existing site configs
+- [ ] Check if theme configuration already exists
+- [ ] If missing, add default theme object with mode "system" and default color palettes
+- [ ] Ensure migration is backwards compatible (doesn't break existing data)
+
+### Checklist
+
+- [ ] Add theme configuration to `site_config.json` schema
+- [ ] Add `theme_override` field to album schema
+- [ ] Create ThemeManager utility class
+- [ ] Create ThemeToggle web component
+- [ ] Implement CSS custom properties for theming
+- [ ] Add system preference detection with `prefers-color-scheme`
+- [ ] Implement localStorage persistence for user preference
+- [ ] Add per-album theme override support
+- [ ] Create admin UI for theme configuration
+- [ ] Create admin UI for album theme override
+- [ ] Add Go data models for theme configuration
+- [ ] Add theme validation in backend
+- [ ] Add default theme colors to bootstrap script
+- [ ] Create migration for existing sites
+- [ ] Write unit tests for ThemeManager
+- [ ] Write unit tests for ThemeToggle component
+- [ ] Write E2E tests for theme switching
+- [ ] Update documentation with theme configuration guide
+- [ ] Add accessibility features (ARIA labels, keyboard support)
+- [ ] Test theme transitions for smoothness
+- [ ] Verify theme works with all components (lightbox, nav, footer, etc.)
+
+---
+
 ## Phase 3: Frontend - Public Site (Week 3-5)
 
 **Global Site Configuration Usage**:
@@ -741,12 +1062,16 @@ The frontend loads `site_config.json` once on page load and uses it throughout t
 - Page titles and meta tags (`site.title`, `seo.*`)
 - Navigation menu visibility (`navigation.*`)
 - Branding (colors, fonts, logo) (`branding.*`)
+- Theme configuration (dark/light mode) (`branding.theme.*`)
 - Social links in footer (`social.*`)
 - Contact information (`owner.*`, `contact.*`)
 - Feature toggles (`features.*`)
 - Portfolio settings (`portfolio.*`)
 
 All Lit components should accept settings as properties or access via a global config store.
+
+**Theme System Integration**:
+The theme system (dark/light mode) is initialized early in the page load process to prevent color flashing. See Phase 2.5 for complete theme implementation details.
 
 ### 3.1 Landing Page / Portfolio
 **Main Portfolio Album Display**:
@@ -837,6 +1162,11 @@ Create reusable Lit components for the public site:
 #### Core Components
 - [ ] `<app-nav>` - Navigation menu component
 - [ ] `<app-footer>` - Footer component
+- [ ] `<theme-toggle>` - Theme switcher button (see Phase 2.5)
+  - Displays current theme mode (light/dark/system)
+  - Toggles between light and dark mode
+  - Keyboard accessible with proper ARIA labels
+  - Shows appropriate icon (sun/moon) based on current theme
 - [ ] `<photo-grid>` - Responsive image grid with masonry layout
   - Property: `photos` (array of photo objects)
   - Property: `layout` ("masonry" | "grid" | "justified")
@@ -2420,6 +2750,7 @@ Endpoints:
   - Visibility dropdown (public, unlisted, password_protected)
   - Password field (shown only if password_protected)
   - Allow downloads toggle
+  - Theme override selector (System/Light/Dark) - see Phase 2.5
   - Expiration date (optional, datepicker)
 - [ ] Photo upload zone
   - Drag-drop area
@@ -2497,6 +2828,12 @@ Endpoints:
   - Secondary color picker
   - Accent color picker
   - Preview of color scheme
+- [ ] Theme settings (see Phase 2.5 for complete implementation)
+  - Default theme mode selector (System/Light/Dark)
+  - Light theme color customization (background, surface, text, border)
+  - Dark theme color customization (background, surface, text, border)
+  - Live preview of both light and dark themes
+  - Explanation of how system theme detection works
 - [ ] Typography
   - Heading font dropdown (Google Fonts)
   - Body font dropdown (Google Fonts)
@@ -2810,6 +3147,7 @@ Already configured in Phase 1.5:
 **Frontend** (`frontend/src/utils/`):
 - [ ] `api.test.ts` - Data fetching and error handling
 - [ ] `router.test.ts` - URL routing logic
+- [ ] `theme-manager.test.ts` - Theme detection, switching, and persistence (see Phase 2.5)
 
 **Backend** (`backend/internal/`):
 - [ ] `models/album_test.go` - Album validation logic
@@ -2837,6 +3175,11 @@ Test these key workflows manually before each release:
 - [ ] Password-protected album requires password
 - [ ] Correct password grants access
 - [ ] Mobile responsive design works
+- [ ] Theme toggle switches between light and dark mode
+- [ ] Theme preference persists after page reload
+- [ ] System theme detection works correctly
+- [ ] Per-album theme override applies correctly
+- [ ] Theme colors render properly in all components
 
 **Admin**:
 - [ ] Login with credentials
