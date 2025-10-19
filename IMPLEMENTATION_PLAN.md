@@ -30,6 +30,7 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 - Blog functionality
 - Download albums as ZIP
 - Analytics dashboard
+- Album typography and layout customization
 - Comprehensive automated test suite
 - Client-side bcrypt password verification
 - Multiple image sizes for different screens
@@ -542,6 +543,11 @@ git commit -m "feat: your change"
 - `public`: Shows in public gallery list, accessible to everyone
 - `unlisted`: Not shown in gallery list, but accessible via direct URL
 - `password_protected`: Requires password to view (bcrypt hash stored)
+
+**Album Customization** (Phase 8 - Advanced Features):
+- `typography`: Optional per-album font customization (title, subtitle, body, caption fonts)
+- `layout_options`: Optional layout variations (masonry, grid, justified, carousel)
+- **MVP**: Leave these fields empty - albums use global settings from `site_config.json`
 
 #### `blog_posts.json`
 ```json
@@ -3682,6 +3688,7 @@ go list -json -m all | nancy sleuth
 - [ ] Watermarking for client galleries
 - [ ] Print shop integration
 - [ ] Multi-language support
+- [ ] **Album/Gallery Typography & Layout Customization** (see below)
 
 ### Phase 9: Developer Experience
 - [ ] CLI tool for common operations
@@ -3689,6 +3696,71 @@ go list -json -m all | nancy sleuth
 - [ ] Monitoring and logging
 - [ ] Automated backups
 - [ ] Local testing scripts and pre-commit hooks
+
+---
+
+## Phase 8 Feature: Album/Gallery Typography & Layout Customization
+
+> **Important**: This is an **advanced feature** for Phase 8, **NOT part of the MVP**. The MVP uses global typography and layouts from `site_config.json`.
+
+### Overview
+Enable administrators to assign different typography styles and layout options to individual albums, allowing each gallery to have a unique visual identity.
+
+### Use Cases
+- **Wedding galleries**: Elegant serif fonts with romantic styling
+- **Corporate portfolios**: Professional sans-serif typography
+- **Client galleries**: Match client's brand identity
+- **Portfolio sections**: Different visual styles for different types of work
+
+### Planned Capabilities
+
+#### Typography Customization
+- Per-album font selection for titles, subtitles, body text, and captions
+- Font properties: family, weight, size, line-height, letter-spacing
+- Support for Google Fonts and custom font uploads
+- Fallback to global typography settings when not customized
+
+#### Layout Options
+- Multiple photo layout modes: masonry, grid, justified, carousel
+- Configurable spacing and column options
+- Different cover photo presentation styles
+- Photo aspect ratio and crop preferences
+
+#### Color & Styling
+- Per-album color schemes (background, text, accents)
+- Border and shadow styling options
+- Hover effect variations
+
+#### Admin Features
+- Font browser with live preview
+- Typography presets (Elegant, Modern, Classic, Minimalist)
+- Copy settings between albums
+- Reset to global defaults
+
+### Data Structure
+Albums will have optional `typography` and `layout_options` fields. When not set or disabled, albums inherit from global settings. This ensures backward compatibility and simple MVP implementation.
+
+### Implementation Phases
+1. **Data model updates**: Add optional fields to album schema
+2. **Backend API**: CRUD endpoints for typography and layout settings
+3. **Frontend rendering**: Dynamic font loading and layout application
+4. **Admin interface**: Typography and layout editors with live preview
+5. **Testing**: Cross-browser compatibility and performance validation
+
+### Performance Considerations
+- Lazy load custom fonts only when album is viewed
+- Cache font files aggressively
+- Use font-display: swap to prevent Flash of Invisible Text
+- Preload fonts for likely navigation paths
+
+### Extensibility
+The `typography` and `layout_options` structure allows for future expansion:
+- Additional layout modes
+- More granular color controls
+- Photo presentation options (captions, EXIF display)
+- Navigation preferences (thumbnails, slideshow controls)
+
+This feature provides photographers flexibility to create unique visual experiences for different types of galleries while maintaining simplicity in the MVP.
 
 ---
 
