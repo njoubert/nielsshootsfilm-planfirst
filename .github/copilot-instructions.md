@@ -15,35 +15,7 @@
 - **Data**: JSON files in `public/data/` directory
 - **Testing**: Pre-commit hooks + manual E2E checklist (MVP), comprehensive suite in Phase 8
 
-## MVP Critical Path (Phases 1-5, 7)
-Focus on getting albums working with admin interface first. Skip:
-- Blog (Phase 8)
-- Analytics dashboard (Phase 8)
-- Download-as-ZIP (Phase 8)
-- Multiple admin users
-- Client-side bcrypt password verification
 
-## Key Files
-- `IMPLEMENTATION_PLAN.md`: Complete implementation guide (3,917 lines, simplified for MVP focus)
-- `docs/DEVELOPMENT_SETUP.md`: Detailed tool configurations (pre-commit, ESLint, golangci-lint)
-- `docs/SIMPLIFICATION_COMPLETE.md`: Record of 33% reduction (5,862 → 3,917 lines)
-- `agents.md`: Agent roles and capabilities for experiments
-- `plan.md`: Iterative planning document
-
-## Development Commands
-```bash
-# Setup (one-time)
-brew install pre-commit bazel
-pre-commit install
-./scripts/bootstrap.sh
-
-# Daily development
-cd frontend && npm run dev              # localhost:5173
-cd backend && go run cmd/admin/main.go  # localhost:8080
-
-# Pre-commit hooks run automatically on commit
-git add . && git commit -m "feat: change"
-```
 
 ## Coding Principles
 1. Keep static files pure (no server-side rendering for public pages)
@@ -53,7 +25,5 @@ git add . && git commit -m "feat: change"
 5. Use conventional commits (feat:, fix:, docs:, refactor:, test:)
 
 ## When Making Changes
-- Always check Quick Start section in IMPLEMENTATION_PLAN.md for MVP priorities
+- Always check the docs/MVP_PLAN.md for MVP priorities
 - Reference docs/DEVELOPMENT_SETUP.md for tool configuration details
-- Keep advanced features (blog, analytics, downloads) in Phase 8
-- Update agents.md if adding new agent capabilities or roles
