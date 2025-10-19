@@ -30,8 +30,7 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 - Blog functionality
 - Download albums as ZIP
 - Analytics dashboard
-- Album/Gallery typography customization
-- Album/Gallery custom styling options (layouts, colors, animations)
+- Album typography and layout customization
 - Comprehensive automated test suite
 - Client-side bcrypt password verification
 - Multiple image sizes for different screens
@@ -508,8 +507,6 @@ git commit -m "feat: your change"
       "order": 1,
       "created_at": "ISO8601",
       "updated_at": "ISO8601",
-      "typography": {},
-      "custom_styling": {},
       "photos": [
         {
           "id": "uuid",
@@ -547,10 +544,10 @@ git commit -m "feat: your change"
 - `unlisted`: Not shown in gallery list, but accessible via direct URL
 - `password_protected`: Requires password to view (bcrypt hash stored)
 
-**Album Customization Fields** (Phase 8 - Advanced Features):
-- `typography`: Optional custom typography settings for album-specific fonts (detailed in Phase 8)
-- `custom_styling`: Optional custom styling options for layouts, colors, animations (detailed in Phase 8)
-- **MVP Implementation**: Leave these fields empty (`{}`) or omit them - albums will use global settings from `site_config.json`
+**Album Customization** (Phase 8 - Advanced Features):
+- `typography`: Optional per-album font customization (title, subtitle, body, caption fonts)
+- `layout_options`: Optional layout variations (masonry, grid, justified, carousel)
+- **MVP**: Leave these fields empty - albums use global settings from `site_config.json`
 
 #### `blog_posts.json`
 ```json
@@ -3691,7 +3688,7 @@ go list -json -m all | nancy sleuth
 - [ ] Watermarking for client galleries
 - [ ] Print shop integration
 - [ ] Multi-language support
-- [ ] **Album/Gallery Typography Customization** (detailed below)
+- [ ] **Album/Gallery Typography & Layout Customization** (see below)
 
 ### Phase 9: Developer Experience
 - [ ] CLI tool for common operations
@@ -3702,421 +3699,68 @@ go list -json -m all | nancy sleuth
 
 ---
 
-## Phase 8 Feature Details
+## Phase 8 Feature: Album/Gallery Typography & Layout Customization
 
-### Album/Gallery Typography Customization
+> **Important**: This is an **advanced feature** for Phase 8, **NOT part of the MVP**. The MVP uses global typography and layouts from `site_config.json`.
 
-> **Note**: This is an **advanced feature** for Phase 8, **NOT part of the MVP**. The MVP uses consistent global typography for all albums as defined in `site_config.json`. This feature allows per-album typography customization for photographers who want unique styles for different galleries.
+### Overview
+Enable administrators to assign different typography styles and layout options to individual albums, allowing each gallery to have a unique visual identity.
 
-#### Overview
+### Use Cases
+- **Wedding galleries**: Elegant serif fonts with romantic styling
+- **Corporate portfolios**: Professional sans-serif typography
+- **Client galleries**: Match client's brand identity
+- **Portfolio sections**: Different visual styles for different types of work
 
-Enable administrators to assign different typography styles to individual albums/galleries, allowing each album to have a unique visual identity while maintaining site-wide consistency when desired.
+### Planned Capabilities
 
-#### Use Cases
-- **Wedding galleries**: Elegant script fonts for romantic feel
-- **Corporate portfolios**: Clean, professional sans-serif fonts
-- **Artistic projects**: Custom display fonts for creative expression
-- **Client galleries**: Match client's brand typography
-- **Portfolio sections**: Different styles for portraits vs. landscapes vs. commercial work
+#### Typography Customization
+- Per-album font selection for titles, subtitles, body text, and captions
+- Font properties: family, weight, size, line-height, letter-spacing
+- Support for Google Fonts and custom font uploads
+- Fallback to global typography settings when not customized
 
-#### Data Model Changes
+#### Layout Options
+- Multiple photo layout modes: masonry, grid, justified, carousel
+- Configurable spacing and column options
+- Different cover photo presentation styles
+- Photo aspect ratio and crop preferences
 
-##### Enhanced `albums.json` Schema
+#### Color & Styling
+- Per-album color schemes (background, text, accents)
+- Border and shadow styling options
+- Hover effect variations
 
-Add optional `typography` object to each album:
+#### Admin Features
+- Font browser with live preview
+- Typography presets (Elegant, Modern, Classic, Minimalist)
+- Copy settings between albums
+- Reset to global defaults
 
-```json
-{
-  "albums": [
-    {
-      "id": "uuid",
-      "slug": "wedding-sarah-john",
-      "title": "Sarah & John's Wedding",
-      // ... existing fields ...
-      
-      "typography": {
-        "enabled": true,
-        "title_font": {
-          "family": "Playfair Display",
-          "weight": 400,
-          "style": "normal",
-          "size": "3rem",
-          "line_height": 1.2,
-          "letter_spacing": "0.02em",
-          "text_transform": "none"
-        },
-        "subtitle_font": {
-          "family": "Open Sans",
-          "weight": 300,
-          "style": "italic",
-          "size": "1.25rem",
-          "line_height": 1.5,
-          "letter_spacing": "0.05em",
-          "text_transform": "uppercase"
-        },
-        "body_font": {
-          "family": "Open Sans",
-          "weight": 400,
-          "style": "normal",
-          "size": "1rem",
-          "line_height": 1.6,
-          "letter_spacing": "normal",
-          "text_transform": "none"
-        },
-        "caption_font": {
-          "family": "Open Sans",
-          "weight": 300,
-          "style": "italic",
-          "size": "0.875rem",
-          "line_height": 1.5,
-          "letter_spacing": "normal",
-          "text_transform": "none"
-        }
-      },
-      
-      // Extensible for future customization options
-      "custom_styling": {
-        "cover_layout": "full-screen",
-        "photo_layout": "masonry",
-        "spacing": "comfortable",
-        "border_style": "none"
-      }
-    }
-  ]
-}
-```
+### Data Structure
+Albums will have optional `typography` and `layout_options` fields. When not set or disabled, albums inherit from global settings. This ensures backward compatibility and simple MVP implementation.
 
-##### Typography Configuration Rules
+### Implementation Phases
+1. **Data model updates**: Add optional fields to album schema
+2. **Backend API**: CRUD endpoints for typography and layout settings
+3. **Frontend rendering**: Dynamic font loading and layout application
+4. **Admin interface**: Typography and layout editors with live preview
+5. **Testing**: Cross-browser compatibility and performance validation
 
-1. **Inheritance**: If `typography.enabled` is `false` or `typography` object is missing, album uses global fonts from `site_config.json`
-2. **Partial Override**: Can override specific fonts while inheriting others (e.g., custom title font but default body font)
-3. **Font Loading**: Only load custom fonts that are actually used across all albums
-4. **Validation**: Admin UI validates font availability and provides previews
+### Performance Considerations
+- Lazy load custom fonts only when album is viewed
+- Cache font files aggressively
+- Use font-display: swap to prevent Flash of Invisible Text
+- Preload fonts for likely navigation paths
 
-#### Frontend Implementation
+### Extensibility
+The `typography` and `layout_options` structure allows for future expansion:
+- Additional layout modes
+- More granular color controls
+- Photo presentation options (captions, EXIF display)
+- Navigation preferences (thumbnails, slideshow controls)
 
-##### Typography Component
-
-Create `typography-manager.ts` to handle per-album font loading:
-
-```typescript
-interface AlbumTypography {
-  enabled: boolean;
-  title_font?: FontConfig;
-  subtitle_font?: FontConfig;
-  body_font?: FontConfig;
-  caption_font?: FontConfig;
-}
-
-class TypographyManager {
-  // Load fonts dynamically when album is viewed
-  async loadAlbumFonts(typography: AlbumTypography): Promise<void>
-  
-  // Generate CSS variables for album-specific fonts
-  generateFontCSS(typography: AlbumTypography): string
-  
-  // Preload fonts for next album in navigation
-  preloadFonts(albumId: string): void
-}
-```
-
-##### CSS Implementation
-
-Use CSS custom properties for dynamic font application:
-
-```css
-.album-view {
-  /* Default to global fonts */
-  --album-font-title: var(--global-font-heading);
-  --album-font-subtitle: var(--global-font-body);
-  --album-font-body: var(--global-font-body);
-  --album-font-caption: var(--global-font-body);
-}
-
-.album-view[data-custom-typography="true"] {
-  /* Override with album-specific fonts */
-  --album-font-title: var(--album-custom-title);
-  --album-font-subtitle: var(--album-custom-subtitle);
-  --album-font-body: var(--album-custom-body);
-  --album-font-caption: var(--album-custom-caption);
-}
-
-.album-title {
-  font-family: var(--album-font-title);
-  font-size: var(--album-title-size);
-  font-weight: var(--album-title-weight);
-  line-height: var(--album-title-line-height);
-  letter-spacing: var(--album-title-letter-spacing);
-  text-transform: var(--album-title-transform);
-}
-```
-
-##### Font Sources
-
-Support multiple font sources:
-- **Google Fonts**: Most common, easy integration
-- **Adobe Fonts**: For professional typography
-- **Self-hosted fonts**: For custom/licensed fonts
-- **System fonts**: For performance-critical scenarios
-
-#### Backend Implementation
-
-##### Admin API Endpoints
-
-Add typography management endpoints:
-
-```
-POST   /api/admin/albums/{id}/typography          # Save typography settings
-GET    /api/admin/albums/{id}/typography          # Get current settings
-DELETE /api/admin/albums/{id}/typography          # Reset to global defaults
-GET    /api/admin/fonts/available                 # List available fonts
-POST   /api/admin/fonts/upload                    # Upload custom font files
-GET    /api/admin/fonts/preview?text=...&font=... # Generate font preview
-```
-
-##### Font Validation Service
-
-```go
-type TypographyService struct {
-    // Validate font family exists and is accessible
-    ValidateFont(family string, source string) error
-    
-    // Check if font needs to be loaded from external source
-    RequiresExternalLoad(family string) bool
-    
-    // Generate CSS @font-face rules for custom fonts
-    GenerateFontFaceCSS(fonts []FontConfig) string
-}
-```
-
-#### Admin Interface
-
-##### Typography Editor UI
-
-Create intuitive admin interface for typography customization:
-
-**Features**:
-- [ ] **Font Browser**: Search and preview Google Fonts, Adobe Fonts, system fonts
-- [ ] **Live Preview**: See changes in real-time with sample album content
-- [ ] **Font Pairing Suggestions**: Recommend complementary font combinations
-- [ ] **Quick Presets**: Pre-configured typography sets (Elegant, Modern, Classic, Minimalist, Bold)
-- [ ] **Individual Font Controls**: Granular control over each font type (title, subtitle, body, caption)
-- [ ] **Advanced Options**: Line height, letter spacing, text transform, font weight, font style
-- [ ] **Reset to Global**: One-click reset to site-wide typography
-- [ ] **Copy Settings**: Copy typography from another album
-- [ ] **Accessibility Check**: Warn about readability issues (contrast, size, line height)
-
-**UI Layout**:
-```
-┌─────────────────────────────────────────────────────────┐
-│ Album Typography Settings                               │
-├─────────────────────────────────────────────────────────┤
-│                                                          │
-│ ⚪ Use Global Typography (from Site Settings)           │
-│ ⚫ Customize Typography for This Album                   │
-│                                                          │
-│ ┌─ Quick Presets ─────────────────────────────────────┐ │
-│ │ [Elegant] [Modern] [Classic] [Minimalist] [Bold]    │ │
-│ └──────────────────────────────────────────────────────┘ │
-│                                                          │
-│ ┌─ Title Font ─────────────────────────────────────────┐│
-│ │ Font Family: [Playfair Display ▼]                    ││
-│ │ Weight: [400 ▼]  Style: [Normal ▼]                   ││
-│ │ Size: [3rem     ]  Line Height: [1.2    ]            ││
-│ │ Letter Spacing: [0.02em  ]  Transform: [None ▼]     ││
-│ │ Preview: The Title Font Looks Like This              ││
-│ └──────────────────────────────────────────────────────┘│
-│                                                          │
-│ ┌─ Subtitle Font ─────────────────────────────────────┐ │
-│ │ [Similar controls as Title Font]                     │ │
-│ └──────────────────────────────────────────────────────┘ │
-│                                                          │
-│ ┌─ Body/Description Font ─────────────────────────────┐ │
-│ │ [Similar controls]                                   │ │
-│ └──────────────────────────────────────────────────────┘ │
-│                                                          │
-│ ┌─ Caption Font ──────────────────────────────────────┐ │
-│ │ [Similar controls]                                   │ │
-│ └──────────────────────────────────────────────────────┘ │
-│                                                          │
-│ ┌─ Live Preview ──────────────────────────────────────┐ │
-│ │ [Album preview with current typography applied]      │ │
-│ └──────────────────────────────────────────────────────┘ │
-│                                                          │
-│ [Copy from Another Album ▼] [Reset to Global] [Save]    │
-└─────────────────────────────────────────────────────────┘
-```
-
-#### Performance Considerations
-
-- [ ] **Lazy Loading**: Only load custom fonts when album is viewed
-- [ ] **Font Subsetting**: Load only required characters for performance
-- [ ] **Caching**: Cache font files aggressively
-- [ ] **Preloading**: Preload fonts for likely next navigation
-- [ ] **Fallback Fonts**: Always specify fallback font stack
-- [ ] **Font Display Strategy**: Use `font-display: swap` to prevent FOIT (Flash of Invisible Text)
-
-#### Migration Strategy
-
-1. **Data Migration**: Add `typography` field to existing albums (default: `null` or `enabled: false`)
-2. **Backward Compatibility**: Albums without typography settings use global defaults
-3. **Schema Version**: Bump schema version in `site_config.json`
-4. **Database Migration**: Add migration script to update JSON files
-
-```bash
-# Migration: Add typography field to all albums
-./scripts/migrate-add-typography-field.sh
-```
-
-#### Extensibility: Future Album/Gallery Options
-
-The `custom_styling` field in the album schema provides a foundation for future customization options:
-
-##### Planned Future Options
-
-**Layout & Display**:
-```json
-"custom_styling": {
-  "cover_layout": "full-screen|split-screen|minimal|collage",
-  "photo_layout": "masonry|grid|justified|carousel|slideshow",
-  "columns": 3,
-  "spacing": "compact|comfortable|spacious",
-  "border_style": "none|thin|thick|shadow|rounded",
-  "hover_effects": "zoom|fade|lift|none"
-}
-```
-
-**Color Schemes**:
-```json
-"color_scheme": {
-  "enabled": true,
-  "background": "#ffffff",
-  "text": "#000000",
-  "accent": "#ff6b6b",
-  "overlay": "rgba(0,0,0,0.7)",
-  "link": "#0066cc",
-  "link_hover": "#004499"
-}
-```
-
-**Photo Presentation**:
-```json
-"photo_options": {
-  "aspect_ratio": "original|square|landscape|portrait",
-  "crop_mode": "cover|contain|fill",
-  "show_exif": true,
-  "show_captions": true,
-  "caption_position": "below|overlay-bottom|overlay-center|side",
-  "enable_zoom": true,
-  "enable_lightbox": true,
-  "lightbox_style": "dark|light|minimal"
-}
-```
-
-**Navigation & Controls**:
-```json
-"navigation": {
-  "show_thumbnails": true,
-  "thumbnail_position": "bottom|side|grid",
-  "show_slideshow": true,
-  "slideshow_interval": 5000,
-  "enable_keyboard_nav": true,
-  "show_photo_count": true,
-  "show_download_button": true
-}
-```
-
-**Animations & Transitions**:
-```json
-"animations": {
-  "page_transition": "fade|slide|zoom|none",
-  "photo_transition": "crossfade|slide|instant",
-  "load_animation": "fade-in|scale-in|slide-up|none",
-  "scroll_effects": "parallax|reveal|none"
-}
-```
-
-**Social & Sharing**:
-```json
-"sharing": {
-  "enable_sharing": true,
-  "platforms": ["facebook", "twitter", "pinterest", "email"],
-  "show_like_button": false,
-  "enable_comments": false,
-  "show_view_count": false
-}
-```
-
-**Album-Specific Features**:
-```json
-"features": {
-  "enable_favorites": true,
-  "enable_selections": true,
-  "enable_ordering": true,
-  "require_client_approval": false,
-  "show_purchase_options": false,
-  "enable_guestbook": false
-}
-```
-
-#### Implementation Checklist
-
-**Phase 8.1: Typography Foundation**
-- [ ] Update `albums.json` schema with `typography` field
-- [ ] Create data migration script for existing albums
-- [ ] Implement Go models and validation for typography config
-- [ ] Add typography API endpoints to admin backend
-- [ ] Create font validation and preview service
-
-**Phase 8.2: Frontend Typography**
-- [ ] Build `typography-manager.ts` for dynamic font loading
-- [ ] Implement CSS custom properties system
-- [ ] Add Google Fonts integration
-- [ ] Add fallback font stacks
-- [ ] Implement font preloading strategy
-- [ ] Add performance monitoring for font loading
-
-**Phase 8.3: Admin Interface**
-- [ ] Design typography editor UI/UX
-- [ ] Build font browser component
-- [ ] Implement live preview component
-- [ ] Create typography preset library
-- [ ] Add font pairing suggestions
-- [ ] Build accessibility checker
-- [ ] Add "copy from album" functionality
-
-**Phase 8.4: Testing & Polish**
-- [ ] Test typography across different browsers
-- [ ] Test font loading performance
-- [ ] Test fallback behavior
-- [ ] Verify accessibility compliance
-- [ ] Add user documentation
-- [ ] Create video tutorial for typography customization
-
-**Phase 8.5: Extended Customization Options**
-- [ ] Implement layout options (from extensibility section)
-- [ ] Implement color scheme customization
-- [ ] Implement photo presentation options
-- [ ] Implement navigation & control options
-- [ ] Create unified "Album Styling" admin interface
-- [ ] Add styling preset marketplace/sharing
-
-#### Documentation Requirements
-
-- [ ] **Admin Guide**: How to customize album typography
-- [ ] **Developer Guide**: How to add new font sources
-- [ ] **API Documentation**: Typography endpoints
-- [ ] **Best Practices**: Font pairing guidelines, performance tips
-- [ ] **Migration Guide**: Upgrading from global-only typography
-
-#### Success Metrics
-
-- [ ] Typography customization available for all albums
-- [ ] Font loading time < 500ms per album
-- [ ] No visible FOIT (Flash of Invisible Text)
-- [ ] Accessibility score maintained at WCAG AA
-- [ ] Admin can customize typography in < 2 minutes
-- [ ] Font preview renders accurately in admin interface
+This feature provides photographers flexibility to create unique visual experiences for different types of galleries while maintaining simplicity in the MVP.
 
 ---
 
