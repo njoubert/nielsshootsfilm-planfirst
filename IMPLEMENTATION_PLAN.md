@@ -632,7 +632,21 @@ Create minimal valid JSON files:
     "secondary_color": "#666666",
     "accent_color": "#ff6b6b",
     "theme": {
-      "mode": "system"
+      "mode": "system",
+      "light": {
+        "background": "#ffffff",
+        "surface": "#f5f5f5",
+        "text_primary": "#000000",
+        "text_secondary": "#666666",
+        "border": "#e0e0e0"
+      },
+      "dark": {
+        "background": "#0a0a0a",
+        "surface": "#1a1a1a",
+        "text_primary": "#ffffff",
+        "text_secondary": "#999999",
+        "border": "#333333"
+      }
     }
   },
   "portfolio": {
@@ -963,6 +977,8 @@ export class ThemeManager {
   
   /**
    * Toggle between light and dark mode
+   * Note: This converts 'system' mode to an explicit light/dark choice
+   * If user wants to return to system mode, they should use setTheme('system')
    */
   public toggleTheme(): void {
     const effective = this.getEffectiveTheme();
@@ -1154,8 +1170,7 @@ export class ThemeToggle extends LitElement {
 import { themeManager } from './utils/theme-manager.js';
 import './components/core/theme-toggle.js';
 
-// Initialize theme as early as possible to prevent flash
-themeManager.setTheme(themeManager.getTheme());
+// ThemeManager is initialized as singleton and theme is applied in constructor
 
 // Load site config and apply theme colors
 async function initializeSite() {
@@ -1169,30 +1184,65 @@ async function initializeSite() {
 function applyThemeColors(branding: any) {
   const root = document.documentElement;
   
-  // Apply accent colors
+  // Apply accent colors (consistent across themes)
   root.style.setProperty('--color-primary', branding.primary_color);
   root.style.setProperty('--color-secondary', branding.secondary_color);
   root.style.setProperty('--color-accent', branding.accent_color);
   
-  // Apply light theme colors
+  // Create dynamic style element for theme-specific colors
+  // This approach allows CSS to use the same variable names with data-theme attribute selectors
+  const styleEl = document.createElement('style');
+  styleEl.id = 'dynamic-theme-colors';
+  
+  let css = '';
+  
+  // Light theme colors
   if (branding.theme?.light) {
     const light = branding.theme.light;
-    root.style.setProperty('--color-background-light', light.background);
-    root.style.setProperty('--color-surface-light', light.surface);
-    root.style.setProperty('--color-text-primary-light', light.text_primary);
-    root.style.setProperty('--color-text-secondary-light', light.text_secondary);
-    root.style.setProperty('--color-border-light', light.border);
+    css += `
+      :root {
+        --color-background: ${light.background};
+        --color-surface: ${light.surface};
+        --color-text-primary: ${light.text_primary};
+        --color-text-secondary: ${light.text_secondary};
+        --color-border: ${light.border};
+      }
+    `;
   }
   
-  // Apply dark theme colors
+  // Dark theme colors
   if (branding.theme?.dark) {
     const dark = branding.theme.dark;
-    root.style.setProperty('--color-background-dark', dark.background);
-    root.style.setProperty('--color-surface-dark', dark.surface);
-    root.style.setProperty('--color-text-primary-dark', dark.text_primary);
-    root.style.setProperty('--color-text-secondary-dark', dark.text_secondary);
-    root.style.setProperty('--color-border-dark', dark.border);
+    css += `
+      :root[data-theme="dark"] {
+        --color-background: ${dark.background};
+        --color-surface: ${dark.surface};
+        --color-text-primary: ${dark.text_primary};
+        --color-text-secondary: ${dark.text_secondary};
+        --color-border: ${dark.border};
+      }
+      
+      @media (prefers-color-scheme: dark) {
+        :root[data-theme="system"] {
+          --color-background: ${dark.background};
+          --color-surface: ${dark.surface};
+          --color-text-primary: ${dark.text_primary};
+          --color-text-secondary: ${dark.text_secondary};
+          --color-border: ${dark.border};
+        }
+      }
+    `;
   }
+  
+  styleEl.textContent = css;
+  
+  // Remove old dynamic styles if they exist
+  const oldStyle = document.getElementById('dynamic-theme-colors');
+  if (oldStyle) {
+    oldStyle.remove();
+  }
+  
+  document.head.appendChild(styleEl);
 }
 
 initializeSite();
@@ -1453,9 +1503,11 @@ func (t *Theme) Validate() error {
     return nil
 }
 
+// Compile regex once at package level for performance
+var hexColorRegex = regexp.MustCompile(`^#[0-9A-Fa-f]{6}$`)
+
 func validateHexColor(color string) error {
-    matched, _ := regexp.MatchString(`^#[0-9A-Fa-f]{6}$`, color)
-    if !matched {
+    if !hexColorRegex.MatchString(color) {
         return fmt.Errorf("invalid hex color: %s", color)
     }
     return nil
