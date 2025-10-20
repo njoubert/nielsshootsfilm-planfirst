@@ -23,7 +23,7 @@ A modern photography portfolio with a unique hybrid static/dynamic architecture,
 
 - **Frontend**: TypeScript + Lit web components (~5KB), Vite for dev server
 - **Backend**: Go admin server for JSON file manipulation
-- **Build**: Bazel orchestrates npm and go build tools
+- **Build**: Simple shell scripts (frontend/scripts/, backend/scripts/)
 - **Data**: JSON files as database
 - **Testing**: Pre-commit hooks + manual E2E checklist (MVP)
 
@@ -46,12 +46,11 @@ This project is developed by a solo developer working with AI agents (GitHub Cop
 
 ## Project Status
 
-**✅ Phase 1**: Project Setup & Infrastructure - Complete  
-**✅ Phase 1.5**: Developer Experience & Code Quality - Complete  
-**✅ Phase 2**: Data Model & JSON Schema - Complete  
-**✅ Phase 3**: Frontend - Public Site - Complete  
-**✅ Phase 4**: Backend - Admin Server - Complete  
-**✅ Phase 5**: Bazel Build System Integration - Complete  
+**✅ Phase 1**: Project Setup & Infrastructure - Complete
+**✅ Phase 1.5**: Developer Experience & Code Quality - Complete
+**✅ Phase 2**: Data Model & JSON Schema - Complete
+**✅ Phase 3**: Frontend - Public Site - Complete
+**✅ Phase 4**: Backend - Admin Server - Complete
 **⏳ Phase 5.5**: Manual Browser Testing - Next
 
 See [`docs/plan/PLAN_MVP.md`](docs/plan/PLAN_MVP.md) for the full roadmap.
@@ -73,7 +72,6 @@ cd nielsshootsfilm-planfirst
 
 The script installs:
 
-- ✅ Bazel (build system)
 - ✅ Node.js 20.x (frontend)
 - ✅ Go 1.22+ (backend)
 - ✅ Frontend npm packages
@@ -87,7 +85,7 @@ If you prefer manual installation:
 
 ```bash
 # Install system dependencies (macOS)
-brew install bazelisk node@20 go@1.22 pre-commit golangci-lint
+brew install node@20 go@1.22 pre-commit golangci-lint
 
 # Install project dependencies
 cd frontend && npm install
@@ -102,24 +100,20 @@ pre-commit install
 
 ### Development
 
-**With Bazel (Recommended):**
+Run the development servers in two separate terminals:
 
 ```bash
-# Terminal 1 - Frontend dev server
-bazel run //frontend:dev
+# Terminal 1 - Frontend dev server with hot reload
+./frontend/scripts/dev.sh
 
-# Terminal 2 - Backend admin server
-bazel run //backend:dev
+# Terminal 2 - Backend admin server with auto-reload
+./backend/scripts/dev.sh
 ```
 
-**Without Bazel:**
+**Or use the convenience script (runs sequentially):**
 
 ```bash
-# Terminal 1 - Frontend dev server
-cd frontend && npm run dev
-
-# Terminal 2 - Backend admin server
-./scripts/start-backend.sh
+./dev.sh
 ```
 
 **Access:**
@@ -178,11 +172,11 @@ cd frontend && npm run dev
 ## Documentation
 
 - [`provision.sh`](provision.sh) - **First-time setup script** (run this first!)
-- [`docs/BAZEL_SETUP.md`](docs/BAZEL_SETUP.md) - Bazel build system guide
-- [`docs/BAZEL_CHEATSHEET.md`](docs/BAZEL_CHEATSHEET.md) - Quick Bazel reference
 - [`docs/plan/PLAN_MVP.md`](docs/plan/PLAN_MVP.md) - Complete implementation plan
 - [`docs/DEVELOPMENT_SETUP.md`](docs/DEVELOPMENT_SETUP.md) - Tool configurations
 - [`scripts/README.md`](scripts/README.md) - Available utility scripts
+- [`frontend/scripts/`](frontend/scripts/) - Frontend development scripts
+- [`backend/scripts/`](backend/scripts/) - Backend development scripts
 
 ## Contributing
 

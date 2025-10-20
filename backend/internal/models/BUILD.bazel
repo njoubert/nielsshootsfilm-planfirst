@@ -1,9 +1,0 @@
-load("@rules_go//go:def.bzl", "go_library")
-
-package(default_visibility = ["//visibility:public"])
-
-go_library(
-    name = "models",
-    srcs = ["album.go"],
-    importpath = "github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/models",
-)

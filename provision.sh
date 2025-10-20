@@ -71,42 +71,6 @@ check_homebrew() {
     fi
 }
 
-# Install Bazel/Bazelisk
-install_bazel() {
-    print_header "Installing Bazel Build System"
-
-    if command_exists bazel; then
-        BAZEL_VERSION=$(bazel version | head -n1 || echo "unknown")
-        print_success "Bazel already installed: $BAZEL_VERSION"
-        return
-    fi
-
-    if [[ "$OS" == "macos" ]]; then
-        print_info "Installing Bazelisk (Bazel version manager) via Homebrew..."
-        brew install bazelisk
-        print_success "Bazelisk installed"
-
-        # Create bazel alias if it doesn't exist
-        if ! command_exists bazel; then
-            print_info "Creating bazel alias..."
-            # Bazelisk is typically aliased as bazel automatically by brew
-        fi
-    elif [[ "$OS" == "linux" ]]; then
-        print_info "Installing Bazelisk via npm..."
-        npm install -g @bazel/bazelisk
-        print_success "Bazelisk installed"
-    fi
-
-    # Verify installation
-    if command_exists bazel; then
-        BAZEL_VERSION=$(bazel version | head -n1 || echo "installed")
-        print_success "Bazel ready: $BAZEL_VERSION"
-    else
-        print_error "Bazel installation failed"
-        exit 1
-    fi
-}
-
 # Install Node.js
 install_node() {
     print_header "Installing Node.js"
@@ -324,14 +288,6 @@ verify_installation() {
 
     local all_good=true
 
-    # Check Bazel
-    if command_exists bazel; then
-        print_success "Bazel: $(bazel version 2>/dev/null | head -n1 || echo 'installed')"
-    else
-        print_error "Bazel: not found"
-        all_good=false
-    fi
-
     # Check Node.js
     if command_exists node; then
         print_success "Node.js: $(node --version)"
@@ -396,28 +352,28 @@ print_next_steps() {
     echo "Your development environment is ready! Here's what you can do:"
     echo ""
     echo -e "${GREEN}📚 Read the documentation:${NC}"
-    echo "   • Quick start: cat docs/BAZEL_CHEATSHEET.md"
-    echo "   • Full guide:  open docs/BAZEL_SETUP.md"
+    echo "   • Quick start: cat README.md"
+    echo "   • Full plan:   open docs/plan/PLAN_MVP.md"
     echo ""
     echo -e "${GREEN}🚀 Start development servers:${NC}"
-    echo "   Terminal 1: cd frontend && npm run dev"
-    echo "   Terminal 2: ./scripts/start-backend.sh"
+    echo "   Terminal 1: ./frontend/scripts/dev.sh"
+    echo "   Terminal 2: ./backend/scripts/dev.sh"
     echo ""
-    echo "   Or with Bazel:"
-    echo "   Terminal 1: bazel run //frontend:dev"
-    echo "   Terminal 2: bazel run //backend:dev"
+    echo "   Or use convenience script:"
+    echo "   ./dev.sh"
     echo ""
     echo -e "${GREEN}🧪 Run tests:${NC}"
-    echo "   bazel test //:test-all"
-    echo "   OR: cd frontend && npm run test"
-    echo "   OR: cd backend && go test ./..."
+    echo "   Frontend: ./frontend/scripts/test.sh"
+    echo "   Backend:  ./backend/scripts/test.sh"
     echo ""
     echo -e "${GREEN}🎨 Format and lint:${NC}"
-    echo "   bazel run //:format"
-    echo "   bazel test //:lint"
+    echo "   Format all: ./format.sh"
+    echo "   Lint frontend: ./frontend/scripts/lint.sh"
+    echo "   Lint backend:  ./backend/scripts/lint.sh"
     echo ""
     echo -e "${GREEN}📦 Build for production:${NC}"
-    echo "   bazel build //:build-all"
+    echo "   Frontend: ./frontend/scripts/build.sh"
+    echo "   Backend:  ./backend/scripts/build.sh"
     echo ""
     echo -e "${GREEN}🔑 Setup admin credentials:${NC}"
     if [ ! -f "admin_config.json" ]; then
@@ -435,7 +391,6 @@ main() {
     print_header "Provisioning nielsshootsfilm-planfirst Development Environment"
 
     echo "This script will install all required dependencies:"
-    echo "  • Bazel (build system)"
     echo "  • Node.js 20.x (frontend)"
     echo "  • Go 1.22+ (backend)"
     echo "  • Frontend npm packages"
@@ -457,7 +412,6 @@ main() {
 
     # Run installation steps
     check_homebrew
-    install_bazel
     install_node
     install_go
     install_frontend_deps

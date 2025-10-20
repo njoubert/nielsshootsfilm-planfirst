@@ -4,13 +4,11 @@
 set -e
 
 echo "Formatting frontend code..."
-cd frontend
-npm run format
+./frontend/scripts/format.sh
 
 echo ""
 echo "Formatting backend code..."
-cd ../backend
-gofmt -w -s .
+./backend/scripts/fmt.sh
 
 echo ""
 echo "✓ All code formatted"

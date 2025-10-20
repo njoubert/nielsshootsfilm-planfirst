@@ -42,10 +42,10 @@ This project uses specific documentation files to outline plans.
 - You must read and do your best to follow these plans.
 - The entry-point planning doc for the MVP of this product is /docs/MVP_PLAN.md.
 
-Reports are not necessary. If you choose to write a report on your work, please follow these guidelines:
+This repository requires writing reports if you make major changes to the codebase. To write reports, please follow these guidelines:
 
 - Reports live in /docs/reports/\*.md
-- Reports should be short and concise, ideally fit into 1000 words or less.
+- Reports should be short and concise, ideally fit into 500 words or less.
 
 ## When Making Changes
 
