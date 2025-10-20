@@ -1,8 +1,9 @@
-import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   root: 'src',
+  publicDir: resolve(__dirname, '../data'),
   build: {
     outDir: '../dist',
     emptyOutDir: true,
@@ -15,11 +16,4 @@ export default defineConfig({
       allow: ['..', '../..'],
     },
   },
-  resolve: {
-    alias: {
-      // Alias /data to the parent data directory
-      '/data': resolve(__dirname, '../data'),
-    },
-  },
-  publicDir: resolve(__dirname, '../data'),
 });

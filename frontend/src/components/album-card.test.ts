@@ -1,9 +1,9 @@
 import { expect, fixture, html } from '@open-wc/testing';
-import { describe, it, beforeEach } from 'vitest';
 import * as sinon from 'sinon';
+import { beforeEach, describe, it } from 'vitest';
+import type { Album } from '../types/data-models';
 import './album-card';
 import type { AlbumCard } from './album-card';
-import type { Album } from '../types/data-models';
 
 describe('AlbumCard', () => {
   let mockAlbum: Album;
