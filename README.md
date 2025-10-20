@@ -46,55 +46,87 @@ This project is developed by a solo developer working with AI agents (GitHub Cop
 
 ## Project Status
 
-**✅ Phase 1**: Project Setup & Infrastructure - Complete
-**✅ Phase 1.5**: Developer Experience & Code Quality - Complete
-**⏳ Phase 2**: Data Model & JSON Schema - Next
+**✅ Phase 1**: Project Setup & Infrastructure - Complete  
+**✅ Phase 1.5**: Developer Experience & Code Quality - Complete  
+**✅ Phase 2**: Data Model & JSON Schema - Complete  
+**✅ Phase 3**: Frontend - Public Site - Complete  
+**✅ Phase 4**: Backend - Admin Server - Complete  
+**✅ Phase 5**: Bazel Build System Integration - Complete  
+**⏳ Phase 5.5**: Manual Browser Testing - Next
 
-See [`docs/PLAN_MVP.md`](docs/PLAN_MVP.md) for the full roadmap.
+See [`docs/plan/PLAN_MVP.md`](docs/plan/PLAN_MVP.md) for the full roadmap.
 
 ## Quick Start
 
-### Prerequisites
+### First-Time Setup (Automated)
 
-```bash
-# macOS (using Homebrew)
-brew install pre-commit go node bazel golangci-lint
-```
-
-### Setup
+Run the provisioning script to install all dependencies:
 
 ```bash
 # Clone repository
 git clone <repo-url>
 cd nielsshootsfilm-planfirst
 
+# Run provisioning script (installs everything)
+./provision.sh
+```
+
+The script installs:
+
+- ✅ Bazel (build system)
+- ✅ Node.js 20.x (frontend)
+- ✅ Go 1.22+ (backend)
+- ✅ Frontend npm packages
+- ✅ Backend Go modules
+- ✅ Pre-commit hooks
+- ✅ Optional dev tools (golangci-lint, jq)
+
+### Manual Setup (Alternative)
+
+If you prefer manual installation:
+
+```bash
+# Install system dependencies (macOS)
+brew install bazelisk node@20 go@1.22 pre-commit golangci-lint
+
+# Install project dependencies
+cd frontend && npm install
+cd ../backend && go mod download
+
 # Install pre-commit hooks
 pre-commit install
 
-# Install frontend dependencies
-cd frontend && npm install
-
-# Install backend dependencies
-cd ../backend && go mod download
-
-# Copy environment template
-cp .env.example .env
+# Bootstrap project (create data files, set admin password)
+./scripts/bootstrap.sh
 ```
 
 ### Development
+
+**With Bazel (Recommended):**
+
+```bash
+# Terminal 1 - Frontend dev server
+bazel run //frontend:dev
+
+# Terminal 2 - Backend admin server
+bazel run //backend:dev
+```
+
+**Without Bazel:**
 
 ```bash
 # Terminal 1 - Frontend dev server
 cd frontend && npm run dev
 
-# Terminal 2 - Backend admin server (when ready)
-cd backend && go run cmd/admin/main.go
+# Terminal 2 - Backend admin server
+./scripts/start-backend.sh
 ```
 
 **Access:**
 
 - Frontend: <http://localhost:5173>
 - Backend API: <http://localhost:8080>
+- Admin Interface: <http://localhost:5173/admin>
 
 ## Architecture Overview
 
@@ -145,9 +177,12 @@ cd backend && go run cmd/admin/main.go
 
 ## Documentation
 
-- [`docs/PLAN_MVP.md`](docs/PLAN_MVP.md) - Complete implementation plan and architecture
-- [`docs/DEVELOPER_WORKFLOW.md`](docs/DEVELOPER_WORKFLOW.md) - Daily development workflow
-- [`docs/DEVELOPMENT_SETUP.md`](docs/DEVELOPMENT_SETUP.md) - Detailed tool configurations
+- [`provision.sh`](provision.sh) - **First-time setup script** (run this first!)
+- [`docs/BAZEL_SETUP.md`](docs/BAZEL_SETUP.md) - Bazel build system guide
+- [`docs/BAZEL_CHEATSHEET.md`](docs/BAZEL_CHEATSHEET.md) - Quick Bazel reference
+- [`docs/plan/PLAN_MVP.md`](docs/plan/PLAN_MVP.md) - Complete implementation plan
+- [`docs/DEVELOPMENT_SETUP.md`](docs/DEVELOPMENT_SETUP.md) - Tool configurations
+- [`scripts/README.md`](scripts/README.md) - Available utility scripts
 
 ## Contributing
 

@@ -1,0 +1,480 @@
+#!/usr/bin/env bash
+#
+# Provision Script for nielsshootsfilm-planfirst
+#
+# This script sets up all dependencies needed to develop on this project.
+# Run this after cloning the repository for the first time.
+#
+# Usage: ./provision.sh
+#
+
+set -e  # Exit on error
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Helper functions
+print_header() {
+    echo ""
+    echo -e "${BLUE}=================================================${NC}"
+    echo -e "${BLUE}$1${NC}"
+    echo -e "${BLUE}=================================================${NC}"
+    echo ""
+}
+
+print_success() {
+    echo -e "${GREEN}✓ $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠ $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}✗ $1${NC}"
+}
+
+print_info() {
+    echo -e "  $1"
+}
+
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Detect OS
+detect_os() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        OS="macos"
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        OS="linux"
+    else
+        OS="unknown"
+    fi
+}
+
+# Check if Homebrew is installed (macOS)
+check_homebrew() {
+    if [[ "$OS" == "macos" ]]; then
+        if ! command_exists brew; then
+            print_error "Homebrew not found"
+            print_info "Install Homebrew from: https://brew.sh"
+            print_info "Run: /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+            exit 1
+        else
+            print_success "Homebrew installed"
+        fi
+    fi
+}
+
+# Install Bazel/Bazelisk
+install_bazel() {
+    print_header "Installing Bazel Build System"
+
+    if command_exists bazel; then
+        BAZEL_VERSION=$(bazel version | head -n1 || echo "unknown")
+        print_success "Bazel already installed: $BAZEL_VERSION"
+        return
+    fi
+
+    if [[ "$OS" == "macos" ]]; then
+        print_info "Installing Bazelisk (Bazel version manager) via Homebrew..."
+        brew install bazelisk
+        print_success "Bazelisk installed"
+
+        # Create bazel alias if it doesn't exist
+        if ! command_exists bazel; then
+            print_info "Creating bazel alias..."
+            # Bazelisk is typically aliased as bazel automatically by brew
+        fi
+    elif [[ "$OS" == "linux" ]]; then
+        print_info "Installing Bazelisk via npm..."
+        npm install -g @bazel/bazelisk
+        print_success "Bazelisk installed"
+    fi
+
+    # Verify installation
+    if command_exists bazel; then
+        BAZEL_VERSION=$(bazel version | head -n1 || echo "installed")
+        print_success "Bazel ready: $BAZEL_VERSION"
+    else
+        print_error "Bazel installation failed"
+        exit 1
+    fi
+}
+
+# Install Node.js
+install_node() {
+    print_header "Installing Node.js"
+
+    if command_exists node; then
+        NODE_VERSION=$(node --version)
+        print_success "Node.js already installed: $NODE_VERSION"
+
+        # Check version requirement (>= 20.x)
+        REQUIRED_MAJOR=20
+        CURRENT_MAJOR=$(node --version | cut -d. -f1 | sed 's/v//')
+
+        if [ "$CURRENT_MAJOR" -lt "$REQUIRED_MAJOR" ]; then
+            print_warning "Node.js version is $NODE_VERSION, but v20.x or higher is recommended"
+            print_info "Consider upgrading with: brew upgrade node"
+        fi
+    else
+        if [[ "$OS" == "macos" ]]; then
+            print_info "Installing Node.js via Homebrew..."
+            brew install node@20
+            print_success "Node.js installed"
+        elif [[ "$OS" == "linux" ]]; then
+            print_info "Installing Node.js via nvm recommended"
+            print_info "Visit: https://github.com/nvm-sh/nvm"
+            print_warning "Please install Node.js 20.x manually"
+        fi
+    fi
+
+    # Verify npm
+    if command_exists npm; then
+        NPM_VERSION=$(npm --version)
+        print_success "npm ready: v$NPM_VERSION"
+    else
+        print_error "npm not found"
+        exit 1
+    fi
+}
+
+# Install Go
+install_go() {
+    print_header "Installing Go"
+
+    if command_exists go; then
+        GO_VERSION=$(go version | awk '{print $3}')
+        print_success "Go already installed: $GO_VERSION"
+
+        # Check version requirement (>= 1.22)
+        REQUIRED_VERSION="1.22"
+        CURRENT_VERSION=$(go version | awk '{print $3}' | sed 's/go//')
+
+        if ! printf '%s\n' "$REQUIRED_VERSION" "$CURRENT_VERSION" | sort -V -C 2>/dev/null; then
+            print_warning "Go version is $GO_VERSION, but 1.22 or higher is recommended"
+        fi
+    else
+        if [[ "$OS" == "macos" ]]; then
+            print_info "Installing Go via Homebrew..."
+            brew install go@1.22
+            print_success "Go installed"
+        elif [[ "$OS" == "linux" ]]; then
+            print_info "Installing Go..."
+            print_info "Visit: https://go.dev/doc/install"
+            print_warning "Please install Go 1.22 or higher manually"
+        fi
+    fi
+
+    # Verify Go installation
+    if command_exists go; then
+        print_success "Go ready: $(go version | awk '{print $3}')"
+    else
+        print_error "Go installation failed"
+        exit 1
+    fi
+}
+
+# Install frontend dependencies
+install_frontend_deps() {
+    print_header "Installing Frontend Dependencies"
+
+    if [ ! -d "frontend" ]; then
+        print_error "frontend directory not found"
+        exit 1
+    fi
+
+    cd frontend
+
+    if [ ! -f "package.json" ]; then
+        print_error "package.json not found"
+        exit 1
+    fi
+
+    print_info "Installing npm packages..."
+    npm install
+
+    print_success "Frontend dependencies installed"
+    cd ..
+}
+
+# Install backend dependencies
+install_backend_deps() {
+    print_header "Installing Backend Dependencies"
+
+    if [ ! -d "backend" ]; then
+        print_error "backend directory not found"
+        exit 1
+    fi
+
+    cd backend
+
+    if [ ! -f "go.mod" ]; then
+        print_error "go.mod not found"
+        exit 1
+    fi
+
+    print_info "Downloading Go modules..."
+    go mod download
+
+    print_info "Tidying Go modules..."
+    go mod tidy
+
+    print_success "Backend dependencies installed"
+    cd ..
+}
+
+# Install pre-commit hooks
+install_precommit() {
+    print_header "Installing Pre-commit Hooks"
+
+    if command_exists pre-commit; then
+        print_success "pre-commit already installed"
+    else
+        if [[ "$OS" == "macos" ]]; then
+            print_info "Installing pre-commit via Homebrew..."
+            brew install pre-commit
+        elif [[ "$OS" == "linux" ]]; then
+            print_info "Installing pre-commit via pip..."
+            pip install pre-commit || pip3 install pre-commit
+        fi
+    fi
+
+    # Install git hooks
+    if [ -f ".pre-commit-config.yaml" ]; then
+        print_info "Installing git hook scripts..."
+        pre-commit install
+
+        # Generate secrets baseline if it doesn't exist
+        if [ ! -f ".secrets.baseline" ]; then
+            print_info "Generating secrets baseline..."
+            if command_exists detect-secrets; then
+                detect-secrets scan > .secrets.baseline
+                print_success "Secrets baseline generated"
+            else
+                print_warning "detect-secrets not found, skipping baseline generation"
+            fi
+        fi
+
+        print_success "Pre-commit hooks installed"
+    else
+        print_warning "No .pre-commit-config.yaml found"
+    fi
+}
+
+# Install optional tools
+install_optional_tools() {
+    print_header "Installing Optional Development Tools"
+
+    # golangci-lint for Go linting
+    if ! command_exists golangci-lint; then
+        if [[ "$OS" == "macos" ]]; then
+            print_info "Installing golangci-lint..."
+            brew install golangci-lint
+            print_success "golangci-lint installed"
+        else
+            print_warning "golangci-lint not installed (optional)"
+            print_info "Install from: https://golangci-lint.run/usage/install/"
+        fi
+    else
+        print_success "golangci-lint already installed"
+    fi
+
+    # jq for JSON processing (useful for scripts)
+    if ! command_exists jq; then
+        if [[ "$OS" == "macos" ]]; then
+            print_info "Installing jq..."
+            brew install jq
+            print_success "jq installed"
+        else
+            print_warning "jq not installed (optional)"
+        fi
+    else
+        print_success "jq already installed"
+    fi
+}
+
+# Run bootstrap script
+run_bootstrap() {
+    print_header "Running Project Bootstrap"
+
+    if [ -f "scripts/bootstrap.sh" ]; then
+        print_info "This will set up data files and admin credentials"
+        read -p "Run bootstrap script now? (y/N): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            ./scripts/bootstrap.sh
+        else
+            print_warning "Skipped bootstrap - run './scripts/bootstrap.sh' manually later"
+        fi
+    else
+        print_warning "Bootstrap script not found"
+    fi
+}
+
+# Verify installation
+verify_installation() {
+    print_header "Verifying Installation"
+
+    local all_good=true
+
+    # Check Bazel
+    if command_exists bazel; then
+        print_success "Bazel: $(bazel version 2>/dev/null | head -n1 || echo 'installed')"
+    else
+        print_error "Bazel: not found"
+        all_good=false
+    fi
+
+    # Check Node.js
+    if command_exists node; then
+        print_success "Node.js: $(node --version)"
+    else
+        print_error "Node.js: not found"
+        all_good=false
+    fi
+
+    # Check npm
+    if command_exists npm; then
+        print_success "npm: v$(npm --version)"
+    else
+        print_error "npm: not found"
+        all_good=false
+    fi
+
+    # Check Go
+    if command_exists go; then
+        print_success "Go: $(go version | awk '{print $3}')"
+    else
+        print_error "Go: not found"
+        all_good=false
+    fi
+
+    # Check pre-commit
+    if command_exists pre-commit; then
+        print_success "pre-commit: installed"
+    else
+        print_warning "pre-commit: not found (optional but recommended)"
+    fi
+
+    # Check frontend dependencies
+    if [ -d "frontend/node_modules" ]; then
+        print_success "Frontend dependencies: installed"
+    else
+        print_error "Frontend dependencies: not found"
+        all_good=false
+    fi
+
+    # Check backend dependencies
+    if [ -f "backend/go.sum" ]; then
+        print_success "Backend dependencies: installed"
+    else
+        print_error "Backend dependencies: not found"
+        all_good=false
+    fi
+
+    echo ""
+    if [ "$all_good" = true ]; then
+        print_success "All core dependencies verified!"
+        return 0
+    else
+        print_error "Some dependencies are missing"
+        return 1
+    fi
+}
+
+# Print next steps
+print_next_steps() {
+    print_header "Next Steps"
+
+    echo "Your development environment is ready! Here's what you can do:"
+    echo ""
+    echo -e "${GREEN}📚 Read the documentation:${NC}"
+    echo "   • Quick start: cat docs/BAZEL_CHEATSHEET.md"
+    echo "   • Full guide:  open docs/BAZEL_SETUP.md"
+    echo ""
+    echo -e "${GREEN}🚀 Start development servers:${NC}"
+    echo "   Terminal 1: cd frontend && npm run dev"
+    echo "   Terminal 2: ./scripts/start-backend.sh"
+    echo ""
+    echo "   Or with Bazel:"
+    echo "   Terminal 1: bazel run //frontend:dev"
+    echo "   Terminal 2: bazel run //backend:dev"
+    echo ""
+    echo -e "${GREEN}🧪 Run tests:${NC}"
+    echo "   bazel test //:test-all"
+    echo "   OR: cd frontend && npm run test"
+    echo "   OR: cd backend && go test ./..."
+    echo ""
+    echo -e "${GREEN}🎨 Format and lint:${NC}"
+    echo "   bazel run //:format"
+    echo "   bazel test //:lint"
+    echo ""
+    echo -e "${GREEN}📦 Build for production:${NC}"
+    echo "   bazel build //:build-all"
+    echo ""
+    echo -e "${GREEN}🔑 Setup admin credentials:${NC}"
+    if [ ! -f "admin_config.json" ]; then
+        echo "   ./scripts/bootstrap.sh"
+    else
+        echo "   ✓ Already configured"
+    fi
+    echo ""
+    echo "Happy coding! 🎉"
+    echo ""
+}
+
+# Main execution
+main() {
+    print_header "Provisioning nielsshootsfilm-planfirst Development Environment"
+
+    echo "This script will install all required dependencies:"
+    echo "  • Bazel (build system)"
+    echo "  • Node.js 20.x (frontend)"
+    echo "  • Go 1.22+ (backend)"
+    echo "  • Frontend npm packages"
+    echo "  • Backend Go modules"
+    echo "  • Pre-commit hooks"
+    echo "  • Optional development tools"
+    echo ""
+
+    read -p "Continue with installation? (Y/n): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+        echo "Installation cancelled"
+        exit 0
+    fi
+
+    # Detect OS
+    detect_os
+    print_info "Detected OS: $OS"
+
+    # Run installation steps
+    check_homebrew
+    install_bazel
+    install_node
+    install_go
+    install_frontend_deps
+    install_backend_deps
+    install_precommit
+    install_optional_tools
+
+    # Verify everything
+    if verify_installation; then
+        run_bootstrap
+        print_next_steps
+    else
+        print_error "Installation completed with errors"
+        print_info "Please review the output above and install missing dependencies"
+        exit 1
+    fi
+}
+
+# Run main function
+main
