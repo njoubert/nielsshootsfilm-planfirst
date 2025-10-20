@@ -1,0 +1,21 @@
+# Node
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Build artifacts
+dist/
+frontend/dist/
+backend/dist/
+coverage/
+
+# Bazel outputs
+bazel-*
+
+# Editor
+.vscode/
+.idea/
+
+# Env files
+.env
+.env.local

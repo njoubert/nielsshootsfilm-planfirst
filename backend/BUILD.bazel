@@ -1,0 +1,9 @@
+load("@rules_go//go:def.bzl", "go_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+go_binary(
+    name = "admin_server",
+    srcs = ["cmd/admin/main.go"],
+    importpath = "github.com/njoubert/nielsshootsfilm-planfirst/backend/cmd/admin",
+)

@@ -1,0 +1,48 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-yaml
+      - id: check-json
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: detect-private-key
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        additional_dependencies:
+          - prettier@3.2.5
+          - prettier-plugin-packagejson@2.4.7
+        files: "(frontend/|docs/).*\.(json|ya?ml|ts|tsx|js|jsx|css|md)$"
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v8.57.0
+    hooks:
+      - id: eslint
+        additional_dependencies:
+          - eslint@8.57.0
+          - eslint-plugin-lit@1.11.0
+          - @typescript-eslint/parser@7.2.0
+          - @typescript-eslint/eslint-plugin@7.2.0
+        files: "frontend/src/.*\.(ts|tsx)$"
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.1
+    hooks:
+      - id: gofmt
+      - id: golangci-lint
+        args: ["run"]
+  - repo: local
+    hooks:
+      - id: vitest
+        name: vitest unit tests
+        entry: npm run test -- --run
+        language: system
+        pass_filenames: false
+        types: [ts]
+        files: "frontend/src/.*\.(ts|tsx)$"
+      - id: go-test
+        name: go test ./...
+        entry: go test ./...
+        language: system
+        pass_filenames: false
+        types: [go]

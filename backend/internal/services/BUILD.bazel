@@ -1,0 +1,10 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+package(default_visibility = ["//visibility:public"])
+
+go_library(
+    name = "services",
+    srcs = ["album_service.go"],
+    importpath = "github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/services",
+    visibility = ["//visibility:public"],
+)

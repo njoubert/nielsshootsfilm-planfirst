@@ -1,0 +1,11 @@
+build --color=yes
+build --curses=yes
+build --show_timestamps
+build --verbose_failures
+
+common --experimental_enable_bzlmod
+
+run --ui_event_filters=-info,-stdout
+run --experimental_ui
+
+test --test_output=errors

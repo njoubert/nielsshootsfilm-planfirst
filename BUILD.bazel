@@ -1,0 +1,7 @@
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "project_docs",
+    srcs = glob(["docs/**/*.md"]),
+    visibility = ["//visibility:public"],
+)

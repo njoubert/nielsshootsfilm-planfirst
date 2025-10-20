@@ -1,0 +1,29 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@rules_nodejs//nodejs:defs.bzl", "nodejs_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+# Type-check and transpile the frontend TypeScript sources.
+ts_project(
+    name = "frontend_ts",
+    srcs = glob(["src/**/*.ts"]),
+    tsconfig = "tsconfig.json",
+    deps = [
+        "@npm//@types/node",
+        "@npm//lit",
+    ],
+)
+
+# Convenience wrapper to invoke the Vite dev server via Bazel.
+nodejs_binary(
+    name = "dev_server",
+    data = [
+        ":frontend_ts",
+        "vite.config.ts",
+        "vitest.config.ts",
+        "//data:all",
+    ],
+    entry_point = "@npm//:vite/bin/vite.js",
+    node_options = ["--no-warnings"],
+    templated_args = ["--config", "$(rootpath vite.config.ts)"],
+)
