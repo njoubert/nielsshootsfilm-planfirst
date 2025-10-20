@@ -21,11 +21,11 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 
 **Must Have (MVP)**:
 
-1. **Phase 1**: Project Setup & Infrastructure (Bazel, repo structure, pre-commit hooks)
-2. **Phase 1.5**: Developer Experience & Code Quality (tooling, automation, quick start workflow)
-3. **Phase 2**: Data Model & JSON Schema (albums.json, site_config.json schemas)
-4. **Phase 3**: Frontend - Public Site (portfolio page, album viewing, password protection)
-5. **Phase 4**: Backend - Admin Server (album CRUD, photo upload, admin auth)
+1. ✅**Phase 1**: Project Setup & Infrastructure (Bazel, repo structure, pre-commit hooks)
+2. ✅**Phase 1.5**: Developer Experience & Code Quality (tooling, automation, quick start workflow)
+3. ✅**Phase 2**: Data Model & JSON Schema (albums.json, site_config.json schemas)
+4. ✅**Phase 3**: Frontend - Public Site (portfolio page, album viewing, password protection)
+5. ✅**Phase 4**: Backend - Admin Server (album CRUD, photo upload, admin auth)
 6. **Phase 5**: Integration, Testing & Deployment (pre-commit hooks, unit tests, manual E2E checklist, release packaging)
 
 **Post-MVP Enhancements**:
@@ -1384,6 +1384,20 @@ Already configured in Phase 1.5:
 
 #### 5.3.3 Manual E2E Test Checklist
 
+**Admin API Testing (Automated)**: ✅ **COMPLETE**
+
+Created comprehensive API test suite (`scripts/test-api.sh`):
+
+- ✅ All 13 core API endpoint tests passing
+- ✅ Server management scripts (start/stop backend)
+- ✅ Authentication and session management tests
+- ✅ Album CRUD operations (create, read, update, delete)
+- ✅ Authorization checks (401 on protected endpoints)
+
+See [API_TEST_RESULTS.md](./API_TEST_RESULTS.md) for detailed test documentation.
+
+**Remaining Manual Tests**:
+
 Test these key workflows manually before each release:
 
 **Public Site**:
@@ -1401,14 +1415,15 @@ Test these key workflows manually before each release:
 - [ ] Per-album theme override applies correctly
 - [ ] Theme colors render properly in all components
 
-**Admin**:
+**Admin** (remaining manual tests not covered by API test suite):
 
-- [ ] Login with credentials
-- [ ] Create new album
-- [ ] Upload photos to album
-- [ ] Edit album settings (title, visibility)
-- [ ] Delete photo
-- [ ] Delete album
-- [ ] Logout works
+- [ ] Admin UI login page works
+- [ ] Album list displays in admin UI
+- [ ] Photo upload via admin UI
+- [ ] Photo preview/management in admin UI
+- [ ] Album settings form works
+- [ ] Photo deletion via admin UI
+- [ ] Album deletion via admin UI with confirmation
+- [ ] Admin UI logout button works
 
 ---

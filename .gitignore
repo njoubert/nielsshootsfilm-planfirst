@@ -41,6 +41,11 @@ Thumbs.db
 *.log
 logs/
 
+# Server runtime files
+*.pid
+.server.pid
+.server.log
+
 # Uploaded content (for local dev)
 static/uploads/*
 !static/uploads/.gitkeep
