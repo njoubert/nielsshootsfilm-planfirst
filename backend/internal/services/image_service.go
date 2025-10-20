@@ -30,6 +30,8 @@ var allowedMimeTypes = map[string]bool{
 	"image/webp": true,
 	"image/gif":  true,
 	"image/tiff": true,
+	"image/heic": true,
+	"image/heif": true,
 }
 
 // ImageService handles image upload and processing.
@@ -81,7 +83,7 @@ func (s *ImageService) ProcessUpload(fileHeader *multipart.FileHeader) (*models.
 		return nil, fmt.Errorf("failed to read file header: %w", err)
 	}
 
-	contentType := http.DetectContentType(buffer)
+	contentType := detectContentType(buffer, fileHeader.Filename)
 	if !allowedMimeTypes[contentType] {
 		return nil, fmt.Errorf("unsupported file type: %s", contentType)
 	}
@@ -352,4 +354,38 @@ func ValidateFilename(filename string) error {
 		return errors.New("invalid filename: path traversal attempt detected")
 	}
 	return nil
+}
+
+// detectContentType detects the content type of an image file.
+// Extends http.DetectContentType to support HEIC/HEIF formats.
+func detectContentType(data []byte, filename string) string {
+	// First try standard detection
+	contentType := http.DetectContentType(data)
+
+	// If it's not recognized and we have enough data, check for HEIC/HEIF
+	if contentType == "application/octet-stream" && len(data) >= 12 {
+		// HEIC/HEIF files are ISO Base Media File Format (similar to MP4)
+		// They have 'ftyp' box at offset 4-8, followed by brand identifier
+		if string(data[4:8]) == "ftyp" {
+			brand := string(data[8:12])
+			// Check for HEIC/HEIF brand codes
+			if brand == "heic" || brand == "heix" || brand == "heim" ||
+				brand == "heis" || brand == "hevc" || brand == "hevx" {
+				return "image/heic"
+			}
+			if brand == "mif1" || brand == "msf1" {
+				// These can be HEIF
+				// Check file extension as fallback
+				lowerFilename := strings.ToLower(filename)
+				if strings.HasSuffix(lowerFilename, ".heif") {
+					return "image/heif"
+				}
+				if strings.HasSuffix(lowerFilename, ".heic") {
+					return "image/heic"
+				}
+			}
+		}
+	}
+
+	return contentType
 }

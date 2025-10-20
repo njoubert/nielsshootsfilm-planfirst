@@ -260,6 +260,26 @@ install_vips() {
         fi
     fi
 
+    # Install libheif for HEIC/HEIF support
+    if [[ "$OS" == "macos" ]]; then
+        if command_exists brew && ! brew list libheif &>/dev/null; then
+            print_info "Installing libheif for HEIC/HEIF support..."
+            brew install libheif
+            print_success "libheif installed"
+        else
+            print_success "libheif already installed or available"
+        fi
+    elif [[ "$OS" == "linux" ]]; then
+        if command_exists apt-get; then
+            print_info "Installing libheif for HEIC/HEIF support..."
+            sudo apt-get install -y libheif-dev
+            print_success "libheif installed"
+        elif command_exists yum; then
+            print_warning "libheif may need manual installation on this system"
+            print_info "HEIC/HEIF support requires libheif"
+        fi
+    fi
+
     # Verify libvips installation
     if command_exists vips; then
         print_success "libvips ready: $(vips --version | head -n 1)"
