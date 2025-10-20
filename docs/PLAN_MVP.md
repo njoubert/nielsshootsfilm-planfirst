@@ -1237,7 +1237,10 @@ Endpoints:
 
 ---
 
-## Phase 5: Integration & Build System (Week 9)
+## Phase 5: Integration & Build System
+
+See the [DEVELOPMENT_SETUP.md](DEVELOPMENT_SETUP.md) for details. 
+Summary here:
 
 ### 5.1 Bazel Build Targets
 - [ ] `//frontend:dev_server` - Run frontend dev server
