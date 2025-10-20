@@ -101,6 +101,14 @@ repos:
   # Local hooks for custom checks
   - repo: local
     hooks:
+      # Check that shell scripts are only in designated scripts directories
+      - id: check-script-locations
+        name: Check Script Locations
+        entry: scripts/check-script-locations.sh
+        language: system
+        files: \.sh$
+        pass_filenames: true
+
       # Run TypeScript type checking
       - id: typescript-typecheck
         name: TypeScript Type Check
