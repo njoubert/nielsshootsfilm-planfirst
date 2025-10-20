@@ -13,7 +13,7 @@ if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")
     if ps -p "$PID" > /dev/null 2>&1; then
         echo "Frontend server is already running (PID: $PID)"
-        echo "Use ./scripts/stop-frontend.sh to stop it first"
+        echo "Use ./frontend/scripts/stop-frontend.sh to stop it first"
         exit 1
     else
         echo "Removing stale PID file"
@@ -38,7 +38,7 @@ sleep 2
 if ps -p "$SERVER_PID" > /dev/null 2>&1; then
     echo "Frontend server started successfully (PID: $SERVER_PID)"
     echo "View logs: tail -f $LOG_FILE"
-    echo "Stop server: ./scripts/stop-frontend.sh"
+    echo "Stop server: ./frontend/scripts/stop-frontend.sh"
     echo "Access at: http://localhost:5173"
 else
     echo "Error: Server failed to start. Check logs:"

@@ -57,27 +57,16 @@ export async function logout(): Promise<void> {
 }
 
 /**
- * Check if user is authenticated by trying to access a protected endpoint.
+ * Check if user is authenticated by calling the dedicated auth check endpoint.
  */
 export async function checkAuth(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/albums`, {
-      method: 'POST',
+    const response = await fetch(`${API_BASE_URL}/api/admin/auth/check`, {
+      method: 'GET',
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ title: '_auth_check_' }),
     });
 
-    // If we get 401, not authenticated
-    if (response.status === 401) {
-      return false;
-    }
-
-    // If we get 400, we're authenticated but request was invalid (expected)
-    // Any other status means we're authenticated
-    return true;
+    return response.ok;
   } catch {
     return false;
   }

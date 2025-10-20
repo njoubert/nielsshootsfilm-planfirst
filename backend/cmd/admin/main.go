@@ -119,6 +119,12 @@ func main() {
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Auth(authService, logger))
 
+			// Auth check endpoint
+			r.Get("/auth/check", func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"authenticated":true}`))
+			})
+
 			// Album management
 			r.Post("/albums", albumHandler.Create)
 			r.Put("/albums/{id}", albumHandler.Update)

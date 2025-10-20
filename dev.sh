@@ -1,6 +1,19 @@
 #!/usr/bin/env bash
 # Run both frontend and backend dev servers in parallel
 
+
+
+
+echo "=================================================="
+echo "Stopping Development Servers"
+echo "=================================================="
+echo ""
+
+./backend/scripts/stop-backend.sh
+echo ""
+./frontend/scripts/stop-frontend.sh
+echo ""
+
 set -e
 
 echo "=================================================="
