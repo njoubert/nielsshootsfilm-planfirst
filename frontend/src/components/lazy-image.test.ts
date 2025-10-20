@@ -1,6 +1,6 @@
 import { expect, fixture, html } from '@open-wc/testing';
-import { describe, it, beforeEach } from 'vitest';
 import * as sinon from 'sinon';
+import { beforeEach, describe, it } from 'vitest';
 import './lazy-image';
 import type { LazyImage } from './lazy-image';
 

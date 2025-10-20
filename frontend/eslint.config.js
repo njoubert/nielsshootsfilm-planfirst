@@ -1,8 +1,8 @@
 import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import litPlugin from 'eslint-plugin-lit';
 import prettierConfig from 'eslint-config-prettier';
+import litPlugin from 'eslint-plugin-lit';
 import globals from 'globals';
+import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   eslint.configs.recommended,

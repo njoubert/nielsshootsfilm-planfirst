@@ -1,8 +1,8 @@
 import { expect, fixture, html } from '@open-wc/testing';
 import { describe, it } from 'vitest';
+import type { OwnerInfo, SocialLinks } from '../types/data-models';
 import './app-footer';
 import type { AppFooter } from './app-footer';
-import type { OwnerInfo, SocialLinks } from '../types/data-models';
 
 describe('AppFooter', () => {
   it('should render the component', async () => {

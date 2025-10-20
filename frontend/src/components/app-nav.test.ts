@@ -1,8 +1,8 @@
 import { expect, fixture, html } from '@open-wc/testing';
 import { describe, it } from 'vitest';
+import type { NavigationConfig } from '../types/data-models';
 import './app-nav';
 import type { AppNav } from './app-nav';
-import type { NavigationConfig } from '../types/data-models';
 
 describe('AppNav', () => {
   it('should render the component', async () => {

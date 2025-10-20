@@ -1,17 +1,17 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { SiteConfig } from '../types/data-models';
-import { Router } from '../utils/router';
 import { fetchSiteConfig } from '../utils/api';
+import { Router } from '../utils/router';
 import { themeManager } from '../utils/theme-manager';
 
 // Import all components
-import './app-nav';
-import './app-footer';
-import './loading-spinner';
-import '../pages/portfolio-page';
-import '../pages/album-list-page';
 import '../pages/album-detail-page';
+import '../pages/album-list-page';
+import '../pages/portfolio-page';
+import './app-footer';
+import './app-nav';
+import './loading-spinner';
 
 /**
  * Root application shell component.
