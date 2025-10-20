@@ -1,6 +1,15 @@
-import './components/app-shell';
+/**
+ * Main application entry point.
+ * Bootstraps the app-shell component and initializes global setup.
+ */
 
-// Bootstraps the root Lit component once the DOM is ready.
+import './components/app-shell';
+import './styles/global.css';
+
+// Bootstrap the application
 window.addEventListener('DOMContentLoaded', () => {
-  // No-op placeholder: actual bootstrap logic will be added in Phase 3.
+  const appRoot = document.getElementById('app');
+  if (appRoot) {
+    appRoot.innerHTML = '<app-shell></app-shell>';
+  }
 });
