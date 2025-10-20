@@ -3,9 +3,6 @@ package services
 import (
 	"errors"
 	"fmt"
-	"image"
-	_ "image/jpeg" // Register JPEG decoder
-	_ "image/png"  // Register PNG decoder
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -13,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/disintegration/imaging"
+	"github.com/davidbyttow/govips/v2/vips"
 	"github.com/google/uuid"
 	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/models"
 	"github.com/rwcarlsen/goexif/exif"
@@ -23,14 +20,16 @@ const (
 	maxFileSize      = 100 * 1024 * 1024 // 100 MB
 	displayMaxSize   = 3840              // 4K display version
 	thumbnailMaxSize = 800               // Thumbnail size
-	displayQuality   = 85                // WebP quality for display
-	thumbnailQuality = 80                // WebP quality for thumbnail
+	displayQuality   = 85                // Quality for display (JPEG/WebP)
+	thumbnailQuality = 80                // Quality for thumbnail (JPEG/WebP)
 )
 
 var allowedMimeTypes = map[string]bool{
 	"image/jpeg": true,
 	"image/png":  true,
 	"image/webp": true,
+	"image/gif":  true,
+	"image/tiff": true,
 }
 
 // ImageService handles image upload and processing.
@@ -40,6 +39,9 @@ type ImageService struct {
 
 // NewImageService creates a new image service.
 func NewImageService(uploadDir string) (*ImageService, error) {
+	// Initialize vips
+	vips.Startup(nil)
+
 	// Create upload directories
 	dirs := []string{
 		filepath.Join(uploadDir, "originals"),
@@ -59,7 +61,7 @@ func NewImageService(uploadDir string) (*ImageService, error) {
 	}, nil
 }
 
-// ProcessUpload processes an uploaded image file.
+// ProcessUpload processes an uploaded image file using libvips.
 func (s *ImageService) ProcessUpload(fileHeader *multipart.FileHeader) (*models.Photo, error) {
 	// Validate file size
 	if fileHeader.Size > maxFileSize {
@@ -92,49 +94,54 @@ func (s *ImageService) ProcessUpload(fileHeader *multipart.FileHeader) (*models.
 	// Generate UUID for this photo
 	photoID := uuid.New().String()
 
-	// Decode image
-	img, format, err := image.Decode(file)
+	// Read entire file into memory for vips processing
+	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode image: %w", err)
+		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	// Get image dimensions
-	bounds := img.Bounds()
-	width := bounds.Dx()
-	height := bounds.Dy()
-
-	// Reset file pointer for EXIF extraction
-	if _, err := file.Seek(0, 0); err != nil {
-		return nil, fmt.Errorf("failed to reset file pointer: %w", err)
-	}
-
-	// Extract EXIF data
-	exifData, err := s.extractEXIF(file)
+	// Load image with vips to get dimensions
+	img, err := vips.NewImageFromBuffer(fileBytes)
 	if err != nil {
-		// EXIF extraction is not critical, just log and continue
-		exifData = nil
+		return nil, fmt.Errorf("failed to decode image with vips: %w", err)
 	}
+	defer img.Close()
 
-	// Reset file pointer for saving original
-	if _, err := file.Seek(0, 0); err != nil {
-		return nil, fmt.Errorf("failed to reset file pointer: %w", err)
+	width := img.Width()
+	height := img.Height()
+
+	// Determine original format from content type
+	originalExt := ""
+	switch contentType {
+	case "image/jpeg":
+		originalExt = ".jpg"
+	case "image/png":
+		originalExt = ".png"
+	case "image/webp":
+		originalExt = ".webp"
+	case "image/gif":
+		originalExt = ".gif"
+	case "image/tiff":
+		originalExt = ".tiff"
+	default:
+		originalExt = ".jpg"
 	}
 
 	// Save original
-	originalExt := "." + strings.ToLower(format)
 	originalFilename := photoID + originalExt
 	originalPath := filepath.Join(s.uploadDir, "originals", originalFilename)
 
-	originalSize, err := s.saveFile(file, originalPath)
-	if err != nil {
+	if err := os.WriteFile(originalPath, fileBytes, 0600); err != nil {
 		return nil, fmt.Errorf("failed to save original: %w", err)
 	}
 
+	originalSize := int64(len(fileBytes))
+
 	// Generate display version (WebP)
-	displayFilename := photoID + ".webp"
+	displayFilename := photoID + "_display.webp"
 	displayPath := filepath.Join(s.uploadDir, "display", displayFilename)
 
-	displaySize, err := s.generateResizedVersion(img, displayPath, displayMaxSize, displayQuality)
+	displaySize, err := s.generateResizedVersion(fileBytes, displayPath, displayMaxSize, displayQuality)
 	if err != nil {
 		// Clean up original
 		_ = os.Remove(originalPath)
@@ -142,15 +149,22 @@ func (s *ImageService) ProcessUpload(fileHeader *multipart.FileHeader) (*models.
 	}
 
 	// Generate thumbnail (WebP)
-	thumbnailFilename := photoID + ".webp"
+	thumbnailFilename := photoID + "_thumbnail.webp"
 	thumbnailPath := filepath.Join(s.uploadDir, "thumbnails", thumbnailFilename)
 
-	thumbnailSize, err := s.generateResizedVersion(img, thumbnailPath, thumbnailMaxSize, thumbnailQuality)
+	thumbnailSize, err := s.generateResizedVersion(fileBytes, thumbnailPath, thumbnailMaxSize, thumbnailQuality)
 	if err != nil {
 		// Clean up original and display
 		_ = os.Remove(originalPath)
 		_ = os.Remove(displayPath)
 		return nil, fmt.Errorf("failed to generate thumbnail: %w", err)
+	}
+
+	// Extract EXIF data (using original file bytes)
+	exifData, err := s.extractEXIFFromBytes(fileBytes)
+	if err != nil {
+		// EXIF extraction is not critical, just log and continue
+		exifData = nil
 	}
 
 	// Create photo object
@@ -170,40 +184,57 @@ func (s *ImageService) ProcessUpload(fileHeader *multipart.FileHeader) (*models.
 	return photo, nil
 }
 
-// saveFile saves an uploaded file to disk.
-func (s *ImageService) saveFile(src io.Reader, dstPath string) (int64, error) {
-	// #nosec G304 - Destination path is controlled by the service
-	dst, err := os.Create(dstPath)
+// generateResizedVersion generates a resized WebP version of an image using libvips.
+func (s *ImageService) generateResizedVersion(imageBytes []byte, dstPath string, maxSize int, quality int) (int64, error) {
+	// Load image with vips
+	img, err := vips.NewImageFromBuffer(imageBytes)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to load image: %w", err)
 	}
-	defer func() { _ = dst.Close() }()
+	defer img.Close()
 
-	size, err := io.Copy(dst, src)
+	// Calculate scaling to fit within maxSize
+	width := img.Width()
+	height := img.Height()
+
+	scale := 1.0
+	if width > maxSize || height > maxSize {
+		if width > height {
+			scale = float64(maxSize) / float64(width)
+		} else {
+			scale = float64(maxSize) / float64(height)
+		}
+	}
+
+	// Resize if needed
+	if scale < 1.0 {
+		if err := img.Resize(scale, vips.KernelLanczos3); err != nil {
+			return 0, fmt.Errorf("failed to resize image: %w", err)
+		}
+	}
+
+	// Export as WebP
+	ep := vips.NewWebpExportParams()
+	ep.Quality = quality
+	ep.Lossless = false
+	ep.StripMetadata = true
+
+	imageData, _, err := img.ExportWebp(ep)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to export webp: %w", err)
 	}
 
-	return size, nil
+	// Write to file
+	if err := os.WriteFile(dstPath, imageData, 0600); err != nil {
+		return 0, fmt.Errorf("failed to write file: %w", err)
+	}
+
+	return int64(len(imageData)), nil
 }
 
-// generateResizedVersion generates a resized WebP version of an image.
-func (s *ImageService) generateResizedVersion(img image.Image, dstPath string, maxSize int, quality int) (int64, error) {
-	// Resize image to fit within maxSize (maintaining aspect ratio)
-	resized := imaging.Fit(img, maxSize, maxSize, imaging.Lanczos)
-
-	// Save as WebP
-	if err := imaging.Save(resized, dstPath); err != nil {
-		return 0, err
-	}
-
-	// Get file size
-	info, err := os.Stat(dstPath)
-	if err != nil {
-		return 0, err
-	}
-
-	return info.Size(), nil
+// extractEXIFFromBytes extracts EXIF data from image bytes.
+func (s *ImageService) extractEXIFFromBytes(imageBytes []byte) (*models.EXIF, error) {
+	return s.extractEXIF(strings.NewReader(string(imageBytes)))
 }
 
 // extractEXIF extracts EXIF data from an image file.

@@ -54,6 +54,7 @@ This repository requires writing reports if you make major changes to the codeba
 - Always check the docs/MVP_PLAN.md for MVP priorities
 - Reference docs/DEVELOPMENT_SETUP.md for tool configuration details
 - Always run pre-commit hooks before committing code, by using `pre-commit run`.
+- Check the documentation that is close to the files you changed and make updates as needed.
 
 ## You MAY NOT
 

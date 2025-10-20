@@ -232,6 +232,44 @@ install_precommit() {
     fi
 }
 
+# Install libvips for image processing
+install_vips() {
+    print_header "Installing libvips (Image Processing)"
+
+    if command_exists vips; then
+        VIPS_VERSION=$(vips --version | head -n 1)
+        print_success "libvips already installed: $VIPS_VERSION"
+    else
+        if [[ "$OS" == "macos" ]]; then
+            print_info "Installing libvips via Homebrew..."
+            brew install vips
+            print_success "libvips installed"
+        elif [[ "$OS" == "linux" ]]; then
+            print_info "Installing libvips..."
+            if command_exists apt-get; then
+                sudo apt-get update
+                sudo apt-get install -y libvips-dev
+            elif command_exists yum; then
+                sudo yum install -y vips-devel
+            else
+                print_warning "libvips not installed (required for image uploads)"
+                print_info "Install manually: https://www.libvips.org/install.html"
+                return 1
+            fi
+            print_success "libvips installed"
+        fi
+    fi
+
+    # Verify libvips installation
+    if command_exists vips; then
+        print_success "libvips ready: $(vips --version | head -n 1)"
+    else
+        print_error "libvips installation failed"
+        print_info "This is required for image upload functionality"
+        return 1
+    fi
+}
+
 # Install optional tools
 install_optional_tools() {
     print_header "Installing Optional Development Tools"
@@ -309,6 +347,14 @@ verify_installation() {
         print_success "Go: $(go version | awk '{print $3}')"
     else
         print_error "Go: not found"
+        all_good=false
+    fi
+
+    # Check libvips
+    if command_exists vips; then
+        print_success "libvips: $(vips --version | head -n 1)"
+    else
+        print_error "libvips: not found (required for image uploads)"
         all_good=false
     fi
 
@@ -393,6 +439,7 @@ main() {
     echo "This script will install all required dependencies:"
     echo "  • Node.js 20.x (frontend)"
     echo "  • Go 1.22+ (backend)"
+    echo "  • libvips 8.x+ (image processing)"
     echo "  • Frontend npm packages"
     echo "  • Backend Go modules"
     echo "  • Pre-commit hooks"
@@ -414,6 +461,7 @@ main() {
     check_homebrew
     install_node
     install_go
+    install_vips
     install_frontend_deps
     install_backend_deps
     install_precommit
