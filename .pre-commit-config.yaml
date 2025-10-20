@@ -26,8 +26,9 @@ repos:
         args: ['--unsafe'] # Allow custom YAML tags
       # Detect private keys
       - id: detect-private-key
-      # Fix end of files
+      # Fix end of files (exclude JSON files - Go backend manages their formatting)
       - id: end-of-file-fixer
+        exclude: \.json$
       # Fix trailing whitespace
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
