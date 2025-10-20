@@ -74,23 +74,20 @@ describe('api utilities', () => {
       expect(result).toEqual(mockConfig);
     });
 
-    it('should return null on fetch error', async () => {
+    it('should throw error on fetch failure', async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 404,
+        statusText: 'Not Found',
       } as Response);
 
-      const result = await fetchSiteConfig();
-
-      expect(result).toBeNull();
+      await expect(fetchSiteConfig()).rejects.toThrow('Failed to fetch site config');
     });
 
-    it('should return null on network error', async () => {
+    it('should throw error on network error', async () => {
       global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
 
-      const result = await fetchSiteConfig();
-
-      expect(result).toBeNull();
+      await expect(fetchSiteConfig()).rejects.toThrow('Network error');
     });
   });
 
@@ -124,12 +121,14 @@ describe('api utilities', () => {
       expect(result).toEqual(mockAlbums);
     });
 
-    it('should return null on error', async () => {
-      global.fetch = vi.fn().mockRejectedValue(new Error('Error'));
+    it('should throw error on fetch failure', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+      } as Response);
 
-      const result = await fetchAlbumsData();
-
-      expect(result).toBeNull();
+      await expect(fetchAlbumsData()).rejects.toThrow('Failed to fetch albums');
     });
   });
 
@@ -241,53 +240,11 @@ describe('api utilities', () => {
       expect(result).toEqual(mockAlbum);
     });
 
-    it('should return null when no main album configured', async () => {
-      const mockConfig: SiteConfig = {
-        version: '1.0.0',
-        last_updated: '2025-10-19T00:00:00Z',
-        site: { title: 'Test', language: 'en', timezone: 'UTC' },
-        owner: {},
-        social: {},
-        branding: {
-          primary_color: '#000',
-          secondary_color: '#666',
-          accent_color: '#f00',
-          theme: {
-            mode: 'system',
-            light: {
-              background: '#fff',
-              surface: '#f5f5f5',
-              text_primary: '#000',
-              text_secondary: '#666',
-              border: '#e0e0e0',
-            },
-            dark: {
-              background: '#0a0a0a',
-              surface: '#1a1a1a',
-              text_primary: '#fff',
-              text_secondary: '#999',
-              border: '#333',
-            },
-          },
-        },
-        portfolio: { show_exif_data: true, enable_lightbox: true },
-        navigation: {
-          show_home: true,
-          show_albums: true,
-          show_about: true,
-          show_contact: true,
-        },
-        features: { enable_analytics: false },
-      };
+    it('should throw error when fetch fails', async () => {
+      // Mock only config fetch - albums fetch will fail
+      global.fetch = vi.fn().mockRejectedValue(new Error('Failed to fetch albums'));
 
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockConfig),
-      } as Response);
-
-      const result = await fetchMainPortfolioAlbum();
-
-      expect(result).toBeNull();
+      await expect(fetchMainPortfolioAlbum()).rejects.toThrow('Failed to fetch albums');
     });
   });
 
@@ -365,24 +322,23 @@ describe('api utilities', () => {
 
   describe('verifyAlbumPassword', () => {
     it('should verify password successfully', async () => {
-      const mockResponse = {
-        success: true,
+      const mockData = {
         token: 'test-token',
       };
 
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(mockResponse),
+        json: () => Promise.resolve(mockData),
       } as Response);
 
       const result = await verifyAlbumPassword('test-album', 'correct-password');
 
-      expect(global.fetch).toHaveBeenCalledWith('/api/albums/album-id/verify-password', {
+      expect(global.fetch).toHaveBeenCalledWith('/api/albums/verify-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: 'password' }),
+        body: JSON.stringify({ album_id: 'test-album', password: 'correct-password' }),
       });
-      expect(result).toEqual(mockResponse);
+      expect(result).toEqual({ success: true, token: 'test-token' });
     });
 
     it('should handle verification failure', async () => {
@@ -405,10 +361,7 @@ describe('api utilities', () => {
     it('should handle network error', async () => {
       global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
 
-      const result = await verifyAlbumPassword('album-id', 'password');
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
+      await expect(verifyAlbumPassword('album-id', 'password')).rejects.toThrow('Network error');
     });
   });
 });

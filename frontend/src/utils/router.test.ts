@@ -84,12 +84,13 @@ describe('Router', () => {
 
     it('should not navigate to same path twice', () => {
       const pushStateSpy = vi.spyOn(window.history, 'pushState');
+      pushStateSpy.mockClear(); // Clear constructor call
 
       router.navigate('/albums');
-      router.navigate('/albums');
+      router.navigate('/albums'); // Second call should be ignored
 
       // Should only be called once since second navigation is to same path
-      expect(pushStateSpy).toHaveBeenCalledTimes(2); // Once in constructor, once in navigate
+      expect(pushStateSpy).toHaveBeenCalledTimes(1);
     });
   });
 
