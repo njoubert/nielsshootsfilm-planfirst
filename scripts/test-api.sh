@@ -129,7 +129,7 @@ test_login() {
     HTTP_CODE=$(curl -s -o "$BODY_FILE" -w "%{http_code}" \
         -X POST "$BASE_URL/api/admin/login" \
         -H "Content-Type: application/json" \
-        -d '{"username":"admin","password":"test123"}' `# pragma: allowlist secret` \
+        -d '{"username":"admin","password":"admin"}' `# pragma: allowlist secret` \
         -c "$COOKIE_FILE")
 
     BODY=$(cat "$BODY_FILE")
