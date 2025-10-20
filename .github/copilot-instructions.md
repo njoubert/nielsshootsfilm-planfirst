@@ -44,8 +44,9 @@ This project uses specific documentation files to outline plans.
 
 This repository requires writing reports if you make major changes to the codebase. To write reports, please follow these guidelines:
 
+- Reports should use the current timezone for date and time messages.
 - Reports live in /docs/reports/\*.md
-- Report filenames should start with the date and hour: YYYY-MM-DD-HH_short_description.md
+- Report filenames should start with the date and local timezone hour: YYYY-MM-DD-HH_short_description.md
 - Reports should be short and concise, ideally fit into 500 words or less.
 
 ## When Making Changes
