@@ -1,6 +1,6 @@
+import fs from 'fs';
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
-import fs from 'fs';
 
 export default defineConfig({
   root: 'src',
