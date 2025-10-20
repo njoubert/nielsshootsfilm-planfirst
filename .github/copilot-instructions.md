@@ -51,7 +51,7 @@ Reports are not necessary. If you choose to write a report on your work, please 
 
 - Always check the docs/MVP_PLAN.md for MVP priorities
 - Reference docs/DEVELOPMENT_SETUP.md for tool configuration details
-- Always run prettier before committing code
+- Always run pre-commit hooks before committing code, by using `pre-commit run`.
 
 ## You MAY NOT
 
