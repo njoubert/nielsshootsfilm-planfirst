@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/handlers"
 	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/middleware"
+	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/models"
 	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/services"
 )
 
@@ -21,8 +22,6 @@ func main() {
 	}))
 
 	// Get configuration from environment
-	adminUsername := getEnv("ADMIN_USERNAME", "admin")
-	adminPasswordHash := getEnv("ADMIN_PASSWORD_HASH", "")
 	dataDir := getEnv("DATA_DIR", "../data")
 	uploadDir := getEnv("UPLOAD_DIR", "../static/uploads")
 	port := getEnv("PORT", "8080")
@@ -31,6 +30,27 @@ func main() {
 	fileService, err := services.NewFileService(dataDir)
 	if err != nil {
 		logger.Error("failed to create file service", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
+	// Load admin configuration from file
+	var adminConfig models.AdminConfig
+	if err := fileService.ReadJSON("admin_config.json", &adminConfig); err != nil {
+		logger.Error("failed to load admin config",
+			slog.String("error", err.Error()),
+			slog.String("hint", "run ./scripts/bootstrap.sh to create admin_config.json"),
+		)
+		os.Exit(1)
+	}
+
+	// Allow environment variables to override config file
+	adminUsername := getEnv("ADMIN_USERNAME", adminConfig.Username)
+	adminPasswordHash := getEnv("ADMIN_PASSWORD_HASH", adminConfig.PasswordHash)
+
+	if adminPasswordHash == "" {
+		logger.Error("admin password hash not configured",
+			slog.String("hint", "run ./scripts/bootstrap.sh to set admin password"),
+		)
 		os.Exit(1)
 	}
 

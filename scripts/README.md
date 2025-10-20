@@ -11,8 +11,10 @@ All scripts can be run directly from the command line:
 go run scripts/hash_password.go             # Hash a password
 ./scripts/test-api.sh                       # Run API tests
 node scripts/download-sample-images.js      # Download test images
-./scripts/start-backend.sh                  # Start backend server
-./scripts/stop-backend.sh                   # Stop backend server
+./backend/scripts/start-backend.sh          # Start backend server
+./backend/scripts/stop-backend.sh           # Stop backend server
+./frontend/scripts/start-frontend.sh        # Start frontend server
+./frontend/scripts/stop-frontend.sh         # Stop frontend server
 ```
 
 ## Available Scripts
@@ -88,46 +90,100 @@ Runs comprehensive API integration tests against the backend server.
 
 ### start-backend.sh
 
-Starts the Go backend server with hot-reload support.
+Starts the Go backend server in the background.
+
+**Location:** `backend/scripts/start-backend.sh`
 
 **Usage:**
 
 ```bash
-./scripts/start-backend.sh
-# OR use the backend script wrapper
-./backend/scripts/dev.sh
+./backend/scripts/start-backend.sh
 ```
 
 **What it does:**
 
-- Builds and starts the Go admin server on port 8080
-- Monitors source files for changes
-- Auto-recompiles and restarts on changes
-- Creates PID file for easy cleanup
+- Loads environment variables from `backend/.env`
+- Starts the Go admin server on port 8080
+- Runs in background with nohup
+- Creates PID file at `backend/.server.pid`
+- Logs output to `backend/.server.log`
 
 **Server endpoints:**
 
 - Admin API: `http://localhost:8080/api/admin/*`
 - Public API: `http://localhost:8080/api/*`
-- Admin UI: `http://localhost:8080/admin` (future)
 
 ---
 
 ### stop-backend.sh
 
-Stops the running backend server.
+Stops the running backend server with robust cleanup.
+
+**Location:** `backend/scripts/stop-backend.sh`
 
 **Usage:**
 
 ```bash
-./scripts/stop-backend.sh
+./backend/scripts/stop-backend.sh
 ```
 
 **What it does:**
 
-- Reads PID from `.server.pid`
-- Kills the server process
-- Cleans up PID file
+1. Kills the `go run` parent process
+2. Kills any orphaned child processes (the actual Go binary)
+3. Checks if port 8080 is still in use
+4. Force kills any zombie processes using the port
+5. Cleans up PID file
+
+**Why the robust cleanup:** `go run` creates two processes (parent wrapper + compiled binary), and sometimes the child survives when the parent dies, requiring explicit cleanup.
+
+---
+
+### start-frontend.sh
+
+Starts the Vite frontend dev server in the background.
+
+**Location:** `frontend/scripts/start-frontend.sh`
+
+**Usage:**
+
+```bash
+./frontend/scripts/start-frontend.sh
+```
+
+**What it does:**
+
+- Starts the Vite dev server on port 5173
+- Runs in background with nohup
+- Creates PID file at `frontend/.server.pid`
+- Logs output to `frontend/.server.log`
+- Provides hot-reload for frontend changes
+
+**Frontend URL:** `http://localhost:5173`
+
+---
+
+### stop-frontend.sh
+
+Stops the running frontend server with robust cleanup.
+
+**Location:** `frontend/scripts/stop-frontend.sh`
+
+**Usage:**
+
+```bash
+./frontend/scripts/stop-frontend.sh
+```
+
+**What it does:**
+
+1. Kills the `npm` parent process
+2. Kills any orphaned child processes (the actual Vite server)
+3. Checks if port 5173 is still in use
+4. Force kills any zombie processes using the port
+5. Cleans up PID file
+
+**Why the robust cleanup:** Similar to backend, `npm run` creates multiple processes that need explicit cleanup.
 
 ---
 
@@ -190,9 +246,16 @@ node scripts/download-sample-images.js
 ### Daily Development
 
 ```bash
-# Start servers (in separate terminals)
-./frontend/scripts/dev.sh
-./backend/scripts/dev.sh
+# Option 1: Start both servers together
+./dev.sh
+
+# Option 2: Start servers separately (in separate terminals)
+./backend/scripts/start-backend.sh
+./frontend/scripts/start-frontend.sh
+
+# Stop servers
+./backend/scripts/stop-backend.sh
+./frontend/scripts/stop-frontend.sh
 
 # Run tests
 ./frontend/scripts/test.sh

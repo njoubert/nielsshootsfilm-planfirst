@@ -6,13 +6,21 @@ Organized scripts for backend development tasks.
 
 ### Development
 
-- **`dev.sh`** - Run admin server with auto-reload on file changes
+- **`start-backend.sh`** - Start admin server in background
 
   ```bash
-  ./backend/scripts/dev.sh
+  ./backend/scripts/start-backend.sh
   ```
 
-  Uses the `scripts/start-backend.sh` wrapper for automatic reloading.
+  Starts the server on port 8080, logs to `backend/.server.log`, and saves PID to `backend/.server.pid`.
+
+- **`stop-backend.sh`** - Stop running admin server
+
+  ```bash
+  ./backend/scripts/stop-backend.sh
+  ```
+
+  Gracefully stops the server and cleans up any orphaned processes.
 
 ### Building
 

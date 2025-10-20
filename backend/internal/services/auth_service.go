@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -40,13 +41,23 @@ func NewAuthService(username, passwordHash string, sessionTTL time.Duration) *Au
 
 // Authenticate verifies credentials and creates a session.
 func (s *AuthService) Authenticate(username, password string) (string, error) { // pragma: allowlist secret
+	// Debug logging
+	slog.Info("authenticate attempt",
+		slog.String("username", username),
+		slog.String("stored_username", s.username),
+		slog.Int("hash_length", len(s.passwordHash)),
+		slog.Int("password_length", len(password)),
+	)
+
 	// Check username
 	if username != s.username {
+		slog.Warn("username mismatch")
 		return "", errors.New("invalid credentials")
 	}
 
 	// Check password
 	if err := bcrypt.CompareHashAndPassword([]byte(s.passwordHash), []byte(password)); err != nil {
+		slog.Warn("password hash comparison failed", slog.String("error", err.Error()))
 		return "", errors.New("invalid credentials")
 	}
 

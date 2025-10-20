@@ -6,11 +6,21 @@ Organized scripts for frontend development tasks.
 
 ### Development
 
-- **`dev.sh`** - Start Vite development server with hot module replacement
+- **`start-frontend.sh`** - Start Vite development server in background
 
   ```bash
-  ./frontend/scripts/dev.sh
+  ./frontend/scripts/start-frontend.sh
   ```
+
+  Starts the server on port 5173, logs to `frontend/.server.log`, and saves PID to `frontend/.server.pid`.
+
+- **`stop-frontend.sh`** - Stop running Vite development server
+
+  ```bash
+  ./frontend/scripts/stop-frontend.sh
+  ```
+
+  Gracefully stops the server and cleans up any orphaned processes.
 
 ### Building
 

@@ -4,8 +4,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-BACKEND_DIR="$PROJECT_ROOT/backend"
+BACKEND_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$BACKEND_DIR/.." && pwd)"
 PID_FILE="$BACKEND_DIR/.server.pid"
 LOG_FILE="$BACKEND_DIR/.server.log"
 
@@ -22,24 +22,13 @@ if [ -f "$PID_FILE" ]; then
     fi
 fi
 
-# Check if .env file exists
-if [ ! -f "$BACKEND_DIR/.env" ]; then
-    echo "Error: .env file not found in backend/"
-    echo "Please create backend/.env with required configuration"
-    echo "See backend/.env.example for template"
-    exit 1
-fi
-
-# Source the .env file
-set -a
-# shellcheck source=/dev/null
-source "$BACKEND_DIR/.env"
-set +a
-
-# Validate required environment variables
-if [ -z "$ADMIN_USERNAME" ] || [ -z "$ADMIN_PASSWORD_HASH" ]; then
-    echo "Error: ADMIN_USERNAME and ADMIN_PASSWORD_HASH must be set in .env"
-    exit 1
+# Check if .env file exists and source it (optional now that we have admin_config.json)
+if [ -f "$BACKEND_DIR/.env" ]; then
+    echo "Loading environment variables from .env..."
+    set -a
+    # shellcheck source=/dev/null
+    source "$BACKEND_DIR/.env"
+    set +a
 fi
 
 # Set defaults if not provided
