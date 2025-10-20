@@ -659,8 +659,23 @@
       "is_portfolio_album": false,
       "order": 0,
       "created_at": "2025-10-20T23:15:13.425761Z",
-      "updated_at": "2025-10-20T23:15:13.425761Z",
-      "photos": null
+      "updated_at": "2025-10-20T23:29:39.743728Z",
+      "photos": [
+        {
+          "id": "b5baeef4-56aa-40c1-8be0-f1b1ef6d5336",
+          "filename_original": "low-vs-high-res-distortion.gif",
+          "url_original": "/uploads/originals/4e5271d8-f82f-4d89-8fae-78dc0d32e594.gif",
+          "url_display": "/uploads/display/4e5271d8-f82f-4d89-8fae-78dc0d32e594_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/4e5271d8-f82f-4d89-8fae-78dc0d32e594_thumbnail.webp",
+          "order": 1,
+          "width": 640,
+          "height": 500,
+          "file_size_original": 926991,
+          "file_size_display": 25916,
+          "file_size_thumbnail": 20794,
+          "uploaded_at": "2025-10-20T23:29:39.743545Z"
+        }
+      ]
     }
   ]
 }

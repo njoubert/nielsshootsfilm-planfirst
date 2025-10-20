@@ -107,3 +107,61 @@ func TestValidateFilename(t *testing.T) {
 		})
 	}
 }
+
+func TestFormatBytes(t *testing.T) {
+	tests := []struct {
+		name  string
+		bytes int64
+		want  string
+	}{
+		{
+			name:  "Bytes",
+			bytes: 500,
+			want:  "500 B",
+		},
+		{
+			name:  "Kilobytes",
+			bytes: 1024,
+			want:  "1.0 KB",
+		},
+		{
+			name:  "Kilobytes with decimal",
+			bytes: 1536,
+			want:  "1.5 KB",
+		},
+		{
+			name:  "Megabytes",
+			bytes: 1048576,
+			want:  "1.0 MB",
+		},
+		{
+			name:  "Megabytes with decimal",
+			bytes: 305698438, // Example from user's error message
+			want:  "291.5 MB",
+		},
+		{
+			name:  "100 MB limit",
+			bytes: 104857600,
+			want:  "100.0 MB",
+		},
+		{
+			name:  "Gigabytes",
+			bytes: 1073741824,
+			want:  "1.0 GB",
+		},
+		{
+			name:  "Zero bytes",
+			bytes: 0,
+			want:  "0 B",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := formatBytes(tt.bytes)
+			if got != tt.want {
+				t.Errorf("formatBytes() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
