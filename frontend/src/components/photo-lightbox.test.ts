@@ -1,9 +1,9 @@
 import { expect, fixture, html } from '@open-wc/testing';
-import { beforeEach, describe, it, vi } from 'vitest';
 import sinon from 'sinon';
+import { beforeEach, describe, it, vi } from 'vitest';
+import type { Photo } from '../types/data-models';
 import './photo-lightbox';
 import type { PhotoLightbox } from './photo-lightbox';
-import type { Photo } from '../types/data-models';
 
 describe('PhotoLightbox', () => {
   const mockPhotos: Photo[] = [
