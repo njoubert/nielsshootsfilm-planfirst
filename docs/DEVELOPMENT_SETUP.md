@@ -1,3 +1,9 @@
+# Development Setup
+
+> **Note**: This document contains historical Bazel configuration. Bazel was removed from the project in October 2025 in favor of simple script-based workflows. See [BAZEL_REMOVAL.md](reports/BAZEL_REMOVAL.md) for details. For current development workflow, see [README.md](../README.md) and the script directories: `frontend/scripts/` and `backend/scripts/`.
+
+---
+
 ## Phase 1.5: Developer Experience & Code Quality (Week 1-2)
 
 **Philosophy**: Automate code quality checks to maintain consistency across the polyglot codebase.

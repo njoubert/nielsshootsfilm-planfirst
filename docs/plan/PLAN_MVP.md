@@ -21,7 +21,7 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 
 **Must Have (MVP)**:
 
-1. ✅**Phase 1**: Project Setup & Infrastructure (Bazel, repo structure, pre-commit hooks)
+1. ✅**Phase 1**: Project Setup & Infrastructure (repo structure, pre-commit hooks)
 2. ✅**Phase 1.5**: Developer Experience & Code Quality (tooling, automation, quick start workflow)
 3. ✅**Phase 2**: Data Model & JSON Schema (albums.json, site_config.json schemas)
 4. ✅**Phase 3**: Frontend - Public Site (portfolio page, album viewing, password protection)
@@ -122,11 +122,11 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 
 ### Build System
 
-- **Bazel**: Monorepo build orchestrator
-  - Coordinates TypeScript (via npm/vite) and Go builds
-  - Hermetic builds with reproducible outputs
-  - Incremental compilation for fast rebuilds
-  - **Note**: Bazel wraps existing tools (npm, go build, vite) rather than replacing them
+- **npm scripts**: Frontend task automation (dev, build, test, lint)
+- **Go toolchain**: Backend compilation and testing
+- **Shell scripts**: Organized in `frontend/scripts/` and `backend/scripts/` for common tasks
+  - Simple, transparent wrappers around npm and go commands
+  - No build system overhead - direct tool invocation
 
 ### Frontend (Public Site)
 
@@ -163,14 +163,13 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 
 ## Phase 1: Project Setup & Infrastructure
 
-### 1.1 Bazel Workspace Setup
+### 1.1 Project Structure Setup
 
-- [ ] Initialize Bazel workspace (`WORKSPACE` file)
-- [ ] Configure `rules_typescript` for frontend
-- [ ] Configure `rules_go` for backend
-- [ ] Set up `rules_nodejs` for npm dependencies
-- [ ] Create `.bazelrc` with common configurations
-- [ ] Set up `.bazelignore` for excluded directories
+- [x] Initialize Git repository
+- [x] Create directory structure (frontend/, backend/, data/, static/, scripts/)
+- [x] Set up pre-commit hooks for code quality
+- [x] Configure `.gitignore` for dependencies and build artifacts
+- [x] Create organized script directories (frontend/scripts/, backend/scripts/)
 
 ### 1.1.1 Frontend Dependencies (npm)
 
@@ -178,16 +177,16 @@ Add to `frontend/package.json`:
 
 **Production Dependencies**:
 
-- [ ] `lit` - Web components library (~5KB)
-- [ ] `bcryptjs` - Client-side password verification
-- [ ] `@types/bcryptjs` - TypeScript types for bcryptjs
+- [x] `lit` - Web components library (~5KB)
+- [x] `bcryptjs` - Client-side password verification
+- [x] `@types/bcryptjs` - TypeScript types for bcryptjs
 
 **Development Dependencies**:
 
-- [ ] `vite` - Build tool and dev server
-- [ ] `typescript` - TypeScript compiler
-- [ ] `@types/node` - Node.js type definitions
-- [ ] `vitest` - Fast Vite-native test runner
+- [x] `vite` - Build tool and dev server
+- [x] `typescript` - TypeScript compiler
+- [x] `@types/node` - Node.js type definitions
+- [x] `vitest` - Fast Vite-native test runner
 - [ ] `@vitest/ui` - UI for Vitest tests
 - [ ] `@web/test-runner` - Real browser testing for web components
 - [ ] `@open-wc/testing` - Testing helpers for web components
@@ -206,11 +205,18 @@ Add to `frontend/package.json`:
 
 ```text
 /
-├── WORKSPACE
-├── BUILD.bazel
-├── .bazelrc
+├── README.md
+├── provision.sh
+├── dev.sh
+├── format.sh
 ├── frontend/
-│   ├── BUILD.bazel
+│   ├── scripts/
+│   │   ├── dev.sh
+│   │   ├── build.sh
+│   │   ├── test.sh
+│   │   ├── lint.sh
+│   │   ├── format.sh
+│   │   └── typecheck.sh
 │   ├── src/
 │   │   ├── index.html
 │   │   ├── pages/
@@ -244,7 +250,12 @@ Add to `frontend/package.json`:
 │   ├── vitest.config.ts
 │   └── vite.config.ts
 ├── backend/
-│   ├── BUILD.bazel
+│   ├── scripts/
+│   │   ├── dev.sh
+│   │   ├── build.sh
+│   │   ├── test.sh
+│   │   ├── lint.sh
+│   │   └── fmt.sh
 │   ├── cmd/
 │   │   └── admin/
 │   │       └── main.go
@@ -263,7 +274,6 @@ Add to `frontend/package.json`:
 │   │       └── album_lifecycle_test.go
 │   └── go.mod
 ├── e2e/
-│   ├── BUILD.bazel
 │   ├── public/
 │   │   ├── landing-page.spec.ts
 │   │   ├── album-browsing.spec.ts
@@ -274,7 +284,6 @@ Add to `frontend/package.json`:
 │   │   └── photo-upload.spec.ts
 │   └── playwright.config.ts
 ├── testdata/
-│   ├── BUILD.bazel
 │   ├── images/
 │   │   ├── test-photo-1.jpg
 │   │   └── test-photo-2.jpg
@@ -1330,19 +1339,30 @@ Endpoints:
 See the [DEVELOPMENT_SETUP.md](DEVELOPMENT_SETUP.md) for details.
 Summary here:
 
-### 5.1 Bazel Build Targets
+### 5.1 Development Scripts
 
-- [ ] `//frontend:dev_server` - Run frontend dev server
-- [ ] `//frontend:build` - Build frontend for production
-- [ ] `//backend:admin_server` - Build and run admin server
-- [ ] `//:deploy` - Build everything for deployment
+**Frontend** (`frontend/scripts/`):
+
+- [x] `dev.sh` - Run frontend dev server
+- [x] `build.sh` - Build frontend for production
+- [x] `test.sh` - Run unit tests
+- [x] `lint.sh` - Lint TypeScript
+- [x] `format.sh` - Format code with Prettier
+
+**Backend** (`backend/scripts/`):
+
+- [x] `dev.sh` - Run admin server with hot-reload
+- [x] `build.sh` - Build Go binary
+- [x] `test.sh` - Run Go unit tests
+- [x] `lint.sh` - Lint Go code
+- [x] `fmt.sh` - Format Go code
 
 ### 5.2 Development Workflow
 
-- [ ] Script to initialize data JSON files with defaults
-- [ ] Script to run both frontend and backend concurrently
-- [ ] Hot-reload configuration
-- [ ] Development environment documentation
+- [x] Script to initialize data JSON files with defaults (`scripts/bootstrap.sh`)
+- [x] Convenience scripts to run both frontend and backend (`dev.sh`)
+- [x] Hot-reload configuration for both frontend and backend
+- [x] Development environment documentation
 
 ### 5.3 Testing Strategy (Simplified)
 
