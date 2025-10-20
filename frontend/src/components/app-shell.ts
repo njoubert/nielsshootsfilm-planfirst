@@ -4,11 +4,18 @@ import type { SiteConfig } from '../types/data-models';
 import { fetchSiteConfig } from '../utils/api';
 import { Router } from '../utils/router';
 import { themeManager } from '../utils/theme-manager';
+import { checkAuth } from '../utils/admin-api';
 
-// Import all components
+// Import all public components
 import '../pages/album-detail-page';
 import '../pages/album-list-page';
 import '../pages/portfolio-page';
+
+// Import admin components
+import '../pages/admin-login-page';
+import '../pages/admin-albums-page';
+import '../pages/admin-album-editor-page';
+
 import './app-footer';
 import './app-nav';
 import './loading-spinner';
@@ -66,12 +73,21 @@ export class AppShell extends LitElement {
       console.error('Failed to load site config:', error);
     }
 
-    // Initialize router
+    // Initialize router with admin routes
     this.router = new Router([
+      // Public routes
       { path: '/', component: 'portfolio-page' },
       { path: '/albums', component: 'album-list-page' },
       { path: '/albums/:slug', component: 'album-detail-page' },
-      { path: '*', component: 'portfolio-page' }, // 404 fallback to home
+
+      // Admin routes (with auth guard)
+      { path: '/admin/login', component: 'admin-login-page' },
+      { path: '/admin', component: 'admin-albums-page', guard: checkAuth },
+      { path: '/admin/albums', component: 'admin-albums-page', guard: checkAuth },
+      { path: '/admin/albums/:id/edit', component: 'admin-album-editor-page', guard: checkAuth },
+
+      // Fallback
+      { path: '*', component: 'portfolio-page' },
     ]);
 
     // Subscribe to route changes
@@ -97,6 +113,11 @@ export class AppShell extends LitElement {
       `;
     }
 
+    // Admin pages don't need header/footer
+    if (this.currentPath.startsWith('/admin')) {
+      return html`<main>${this.renderPage()}</main>`;
+    }
+
     if (!this.config) {
       return html`
         <div class="error">
@@ -119,10 +140,12 @@ export class AppShell extends LitElement {
   }
 
   private renderPage() {
-    const route = this.router?.getCurrentRoute();
-    if (!route) {
+    const match = this.router?.getCurrentRoute();
+    if (!match) {
       return html`<portfolio-page></portfolio-page>`;
     }
+
+    const { route, params } = match;
 
     switch (route.component) {
       case 'portfolio-page':
@@ -130,16 +153,21 @@ export class AppShell extends LitElement {
       case 'album-list-page':
         return html`<album-list-page></album-list-page>`;
       case 'album-detail-page':
-        return html`<album-detail-page .slug=${this.extractSlug()}></album-detail-page>`;
+        return html`<album-detail-page .slug=${params.slug || ''}></album-detail-page>`;
+
+      // Admin pages
+      case 'admin-login-page':
+        return html`<admin-login-page></admin-login-page>`;
+      case 'admin-albums-page':
+        return html`<admin-albums-page></admin-albums-page>`;
+      case 'admin-album-editor-page':
+        return html`<admin-album-editor-page
+          .albumId=${params.id || 'new'}
+        ></admin-album-editor-page>`;
+
       default:
         return html`<portfolio-page></portfolio-page>`;
     }
-  }
-
-  private extractSlug(): string {
-    // Extract slug from /albums/:slug pattern
-    const match = this.currentPath.match(/^\/albums\/([^/]+)$/);
-    return match ? match[1] : '';
   }
 }
 
