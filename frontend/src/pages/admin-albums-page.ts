@@ -320,6 +320,11 @@ export class AdminAlbumsPage extends LitElement {
   }
 
   private getCoverThumbnail(album: Album): string | null {
+    // Handle albums with no photos
+    if (!album.photos || album.photos.length === 0) {
+      return null;
+    }
+
     if (album.cover_photo_id) {
       const coverPhoto = album.photos.find((p) => p.id === album.cover_photo_id);
       return coverPhoto?.url_thumbnail || null;
@@ -395,7 +400,7 @@ export class AdminAlbumsPage extends LitElement {
                           : ''}
 
                         <div class="album-meta">
-                          <span>📷 ${album.photos.length} photos</span>
+                          <span>📷 ${album.photos?.length || 0} photos</span>
                           <span class="visibility-badge visibility-${album.visibility}">
                             ${this.formatVisibility(album.visibility)}
                           </span>

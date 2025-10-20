@@ -298,4 +298,110 @@ describe('AdminAlbumsPage', () => {
     const viewLinks = el.shadowRoot?.querySelectorAll('a[href^="/albums/"]');
     expect(viewLinks?.length).to.be.greaterThan(0);
   });
+
+  describe('getCoverThumbnail method', () => {
+    it('should return null for album with empty photos array', () => {
+      fetchAllAlbumsStub.resolves([]);
+      const el = document.createElement('admin-albums-page');
+
+      const albumWithNoPhotos: Album = {
+        id: 'album-empty',
+        slug: 'album-empty',
+        title: 'Empty Album',
+        visibility: 'public',
+        photos: [],
+        allow_downloads: true,
+        is_portfolio_album: false,
+        order: 1,
+        created_at: '2025-10-20T00:00:00Z',
+        updated_at: '2025-10-20T00:00:00Z',
+      };
+
+      // Should return null without crashing
+      const result = el['getCoverThumbnail'](albumWithNoPhotos);
+      expect(result).to.be.null;
+    });
+
+    it('should return null for album with null photos array', () => {
+      fetchAllAlbumsStub.resolves([]);
+      const el = document.createElement('admin-albums-page');
+
+      const albumWithNullPhotos: Album = {
+        id: 'album-null',
+        slug: 'album-null',
+        title: 'Null Photos Album',
+        visibility: 'public',
+        photos: null as unknown as [],
+        allow_downloads: true,
+        is_portfolio_album: false,
+        order: 1,
+        created_at: '2025-10-20T00:00:00Z',
+        updated_at: '2025-10-20T00:00:00Z',
+      };
+
+      // Should return null without crashing
+      const result = el['getCoverThumbnail'](albumWithNullPhotos);
+      expect(result).to.be.null;
+    });
+
+    it('should return null for album with cover_photo_id but no photos', () => {
+      fetchAllAlbumsStub.resolves([]);
+      const el = document.createElement('admin-albums-page');
+
+      const albumWithInvalidCover: Album = {
+        id: 'album-invalid-cover',
+        slug: 'album-invalid-cover',
+        title: 'Invalid Cover Album',
+        visibility: 'public',
+        cover_photo_id: 'nonexistent-photo',
+        photos: [],
+        allow_downloads: true,
+        is_portfolio_album: false,
+        order: 1,
+        created_at: '2025-10-20T00:00:00Z',
+        updated_at: '2025-10-20T00:00:00Z',
+      };
+
+      // Should return null without crashing (even with cover_photo_id set)
+      const result = el['getCoverThumbnail'](albumWithInvalidCover);
+      expect(result).to.be.null;
+    });
+
+    it('should return thumbnail for album with photos', () => {
+      fetchAllAlbumsStub.resolves([]);
+      const el = document.createElement('admin-albums-page');
+
+      const albumWithPhotos: Album = {
+        id: 'album-photos',
+        slug: 'album-photos',
+        title: 'Album with Photos',
+        visibility: 'public',
+        photos: [
+          {
+            id: 'photo-1',
+            filename_original: 'test.jpg',
+            url_original: '/originals/test.jpg',
+            url_display: '/display/test.jpg',
+            url_thumbnail: '/thumbnails/test.jpg',
+            order: 0,
+            width: 1920,
+            height: 1080,
+            file_size_original: 1000,
+            file_size_display: 500,
+            file_size_thumbnail: 100,
+            uploaded_at: '2025-10-20T00:00:00Z',
+          },
+        ],
+        allow_downloads: true,
+        is_portfolio_album: false,
+        order: 1,
+        created_at: '2025-10-20T00:00:00Z',
+        updated_at: '2025-10-20T00:00:00Z',
+      };
+
+      // Should return the first photo's thumbnail
+      const result = el['getCoverThumbnail'](albumWithPhotos);
+      expect(result).to.equal('/thumbnails/test.jpg');
+    });
+  });
 });
