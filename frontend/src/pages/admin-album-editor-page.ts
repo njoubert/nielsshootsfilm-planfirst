@@ -2,17 +2,17 @@
  * Admin album editor page - create or edit an album.
  */
 
-import { LitElement, html, css } from 'lit';
+import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import type { Album } from '../types/data-models';
 import {
   createAlbum,
-  updateAlbum,
-  fetchAlbumById,
-  uploadPhotos,
   deletePhoto,
+  fetchAlbumById,
   setCoverPhoto,
+  updateAlbum,
+  uploadPhotos,
 } from '../utils/admin-api';
-import type { Album } from '../types/data-models';
 
 @customElement('admin-album-editor-page')
 export class AdminAlbumEditorPage extends LitElement {

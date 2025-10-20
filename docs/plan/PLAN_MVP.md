@@ -1061,11 +1061,13 @@ Albums display photos at full quality. Users can right-click to save individual 
 When an image is uploaded, the backend creates three versions:
 
 1. **Original** (`/static/uploads/originals/`)
+
    - [ ] Store untouched original file
    - [ ] Preserve original filename in metadata
    - [ ] No compression, no resizing
 
 2. **Display Version** (`/static/uploads/display/`)
+
    - [ ] Target: 3840px on longest side (optimized for 4K displays)
    - [ ] Format: WebP with quality 85
    - [ ] Maintain aspect ratio

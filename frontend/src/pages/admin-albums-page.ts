@@ -2,10 +2,10 @@
  * Admin albums list page - main dashboard for managing albums.
  */
 
-import { LitElement, html, css } from 'lit';
+import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { fetchAllAlbums, deleteAlbum, logout } from '../utils/admin-api';
 import type { Album } from '../types/data-models';
+import { deleteAlbum, fetchAllAlbums, logout } from '../utils/admin-api';
 
 @customElement('admin-albums-page')
 export class AdminAlbumsPage extends LitElement {

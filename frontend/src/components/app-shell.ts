@@ -1,10 +1,10 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { SiteConfig } from '../types/data-models';
+import { checkAuth } from '../utils/admin-api';
 import { fetchSiteConfig } from '../utils/api';
 import { Router } from '../utils/router';
 import { themeManager } from '../utils/theme-manager';
-import { checkAuth } from '../utils/admin-api';
 
 // Import all public components
 import '../pages/album-detail-page';
@@ -12,9 +12,9 @@ import '../pages/album-list-page';
 import '../pages/portfolio-page';
 
 // Import admin components
-import '../pages/admin-login-page';
-import '../pages/admin-albums-page';
 import '../pages/admin-album-editor-page';
+import '../pages/admin-albums-page';
+import '../pages/admin-login-page';
 
 import './app-footer';
 import './app-nav';

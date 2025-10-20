@@ -34,6 +34,21 @@
 - **Simple > Complete**: Ship working code fast, iterate later
 - **Skip unnecessary boilerplate**: Don't create files/code that won't be used immediately
 
+## Where to find plans and where to save reports
+
+This project uses specific documentation files to outline plans.
+
+- Plans live in /docs/plan/\*.md
+- You must read and do your best to follow these plans.
+- The entry-point planning doc for the MVP of this product is /docs/MVP_PLAN.md.
+
+This project requires reports of major work items.
+
+- Reports live in /docs/reports/\*.md
+- Please generate reports that explain the changes made and major decisions.
+- For example, if you find that that integration tests need major refactoring so you choose not to build it, you must create a report in /docs/reports/ explaining this.
+- You can also create reports for completed phases, test results, and other major work items.
+
 ## When Making Changes
 
 - Always check the docs/MVP_PLAN.md for MVP priorities

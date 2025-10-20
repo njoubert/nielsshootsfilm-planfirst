@@ -42,20 +42,23 @@ describe('Router', () => {
   describe('route matching', () => {
     it('should match exact route', () => {
       router.navigate('/albums');
-      const route = router.getCurrentRoute();
-      expect(route).toEqual({ path: '/albums', component: 'album-list-page' });
+      const match = router.getCurrentRoute();
+      expect(match?.route).toEqual({ path: '/albums', component: 'album-list-page' });
+      expect(match?.params).toEqual({});
     });
 
     it('should return wildcard route for unknown paths', () => {
       router.navigate('/unknown');
-      const route = router.getCurrentRoute();
-      expect(route).toEqual({ path: '*', component: 'not-found-page' });
+      const match = router.getCurrentRoute();
+      expect(match?.route).toEqual({ path: '*', component: 'not-found-page' });
+      expect(match?.params).toEqual({});
     });
 
     it('should match root path', () => {
       router.navigate('/');
-      const route = router.getCurrentRoute();
-      expect(route).toEqual({ path: '/', component: 'portfolio-page' });
+      const match = router.getCurrentRoute();
+      expect(match?.route).toEqual({ path: '/', component: 'portfolio-page' });
+      expect(match?.params).toEqual({});
     });
 
     it('should return null when no route matches and no wildcard', () => {
