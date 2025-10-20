@@ -333,6 +333,6 @@ If you're used to running commands directly, here's the mapping:
 
 ## Summary
 
-**Bazel installed**: Use `bazel run`, `bazel test`, `bazel build` commands  
-**Bazel not installed**: Use the direct npm/go commands (everything still works!)  
+**Bazel installed**: Use `bazel run`, `bazel test`, `bazel build` commands
+**Bazel not installed**: Use the direct npm/go commands (everything still works!)
 **Recommendation**: Install Bazel for a better developer experience, but it's optional.
