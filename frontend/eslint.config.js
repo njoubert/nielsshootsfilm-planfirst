@@ -31,6 +31,13 @@ export default tseslint.config(
     },
   },
   {
+    files: ['**/*.test.ts'],
+    rules: {
+      '@typescript-eslint/no-unused-expressions': 'off',
+      '@typescript-eslint/no-floating-promises': 'off',
+    },
+  },
+  {
     ignores: ['node_modules/**', 'dist/**', '*.config.js', '*.config.ts'],
   },
   prettierConfig
