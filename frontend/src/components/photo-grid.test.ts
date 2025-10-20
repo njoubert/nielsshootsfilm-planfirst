@@ -1,8 +1,8 @@
 import { expect, fixture, html, oneEvent } from '@open-wc/testing';
 import { beforeEach, describe, it, vi } from 'vitest';
+import type { Photo } from '../types/data-models';
 import './photo-grid';
 import type { PhotoGrid } from './photo-grid';
-import type { Photo } from '../types/data-models';
 
 describe('PhotoGrid', () => {
   beforeEach(() => {

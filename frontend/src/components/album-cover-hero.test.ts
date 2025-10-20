@@ -1,8 +1,8 @@
 import { expect, fixture, html } from '@open-wc/testing';
 import { describe, it } from 'vitest';
+import type { Photo } from '../types/data-models';
 import './album-cover-hero';
 import type { AlbumCoverHero } from './album-cover-hero';
-import type { Photo } from '../types/data-models';
 
 describe('AlbumCoverHero', () => {
   const mockPhoto: Photo = {
