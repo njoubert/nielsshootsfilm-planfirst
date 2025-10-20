@@ -62,6 +62,7 @@ data/*.json
 *.so
 *.dylib
 go.sum
+backend/bin/
 
 # Temporary files
 tmp/
