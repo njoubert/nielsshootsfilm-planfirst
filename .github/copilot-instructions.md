@@ -42,13 +42,10 @@ This project uses specific documentation files to outline plans.
 - You must read and do your best to follow these plans.
 - The entry-point planning doc for the MVP of this product is /docs/MVP_PLAN.md.
 
-This project requires reports of major work items.
+Reports are not necessary. If you choose to write a report on your work, please follow these guidelines:
 
 - Reports live in /docs/reports/\*.md
 - Reports should be short and concise, ideally fit into 1000 words or less.
-- Please generate reports that explain the changes made and major decisions.
-- For example, if you find that that integration tests need major refactoring so you choose not to build it, you must create a report in /docs/reports/ explaining this.
-- You can also create reports for completed phases, test results, and other major work items.
 
 ## When Making Changes
 
