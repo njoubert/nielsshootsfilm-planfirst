@@ -5,6 +5,7 @@
 This document outlines the implementation plan for a hybrid static/dynamic photography website that combines the speed and simplicity of static site generation with the ease of content management through a dynamic admin interface.
 
 ### Core Philosophy
+
 - **Visitor-facing pages**: Pure static files (HTML, CSS, JS, JSON) served by simple web server
 - **Admin interface**: Dynamic Go backend that modifies static JSON files
 - **No traditional database**: JSON files act as the data store
@@ -19,6 +20,7 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 ### Phase Priority
 
 **Must Have (MVP)**:
+
 1. **Phase 1**: Project Setup & Infrastructure (Bazel, repo structure, pre-commit hooks)
 2. **Phase 1.5**: Developer Experience & Code Quality (tooling, automation, quick start workflow)
 3. **Phase 2**: Data Model & JSON Schema (albums.json, site_config.json schemas)
@@ -27,6 +29,7 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 6. **Phase 5**: Integration, Testing & Deployment (pre-commit hooks, unit tests, manual E2E checklist, release packaging)
 
 **Post-MVP Enhancements**:
+
 - Dark/Light Mode Theme System (system detection, manual toggle, per-album overrides)
 - Blog functionality
 - Download albums as ZIP
@@ -37,6 +40,7 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 - Multiple image sizes for different screens
 
 **Developer Experience Backlog**:
+
 - CLI tools
 - Migration scripts
 - Enhanced monitoring
@@ -44,18 +48,22 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 ### Simplified Workflow
 
 **Setup steps**:
+
 1. Clone repo and install pre-commit
 2. Install frontend and backend dependencies
 3. Run bootstrap script to create data files and set admin password
 
 **Daily development**:
+
 - Run frontend dev server (Terminal 1)
 - Run backend admin server (Terminal 2)
 
 **Before committing**:
+
 - Pre-commit hooks run automatically
 
 **Deploy**:
+
 - Build release
 - Copy to server
 - Run deployment script
@@ -73,7 +81,7 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 
 ## Architecture Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                    Public Website                        │
 │  (Static HTML/CSS/JS + JSON data files)                 │
@@ -113,6 +121,7 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 ## Technology Stack
 
 ### Build System
+
 - **Bazel**: Monorepo build orchestrator
   - Coordinates TypeScript (via npm/vite) and Go builds
   - Hermetic builds with reproducible outputs
@@ -120,6 +129,7 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
   - **Note**: Bazel wraps existing tools (npm, go build, vite) rather than replacing them
 
 ### Frontend (Public Site)
+
 - **TypeScript**: Type-safe JavaScript
 - **Lit**: Lightweight web components library (~5KB)
   - Native web components
@@ -131,6 +141,7 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 - **Development server**: Vite dev server with hot module replacement
 
 ### Backend (Admin)
+
 - **Go**: Backend server language
   - `net/http`: Web server
   - `encoding/json`: JSON manipulation
@@ -143,6 +154,7 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
   - Authentication middleware
 
 ### Assets & Storage
+
 - **Image formats**: JPEG, WebP (for web optimization)
 - **File storage**: Local filesystem
 - **JSON**: Data persistence format
@@ -152,6 +164,7 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 ## Phase 1: Project Setup & Infrastructure
 
 ### 1.1 Bazel Workspace Setup
+
 - [ ] Initialize Bazel workspace (`WORKSPACE` file)
 - [ ] Configure `rules_typescript` for frontend
 - [ ] Configure `rules_go` for backend
@@ -160,14 +173,17 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 - [ ] Set up `.bazelignore` for excluded directories
 
 ### 1.1.1 Frontend Dependencies (npm)
+
 Add to `frontend/package.json`:
 
 **Production Dependencies**:
+
 - [ ] `lit` - Web components library (~5KB)
 - [ ] `bcryptjs` - Client-side password verification
 - [ ] `@types/bcryptjs` - TypeScript types for bcryptjs
 
 **Development Dependencies**:
+
 - [ ] `vite` - Build tool and dev server
 - [ ] `typescript` - TypeScript compiler
 - [ ] `@types/node` - Node.js type definitions
@@ -187,7 +203,8 @@ Add to `frontend/package.json`:
 - [ ] `vite-plugin-lit-css` - CSS in Lit components (optional)
 
 ### 1.2 Repository Structure
-```
+
+```text
 /
 ├── WORKSPACE
 ├── BUILD.bazel
@@ -286,6 +303,7 @@ Add to `frontend/package.json`:
 ```
 
 ### 1.3 Development Environment
+
 - [ ] Set up local development scripts
 - [ ] Create Bazel targets for running dev servers
 - [ ] Configure Vite for frontend with HMR (hot module replacement)
@@ -308,6 +326,7 @@ Add to `frontend/package.json`:
 **Installation**: Install pre-commit using brew or pip, then run installation command in repo
 
 **What it does**:
+
 - Formats code (Prettier for TS/JS, gofmt for Go)
 - Runs linters (ESLint, golangci-lint)
 - Checks for secrets, large files, merge conflicts
@@ -319,15 +338,18 @@ Add to `frontend/package.json`:
 ### 1.5.2 Quick Start Workflow
 
 **First-time setup**:
+
 - Clone repo and navigate to project directory
 - Install pre-commit
 - Install frontend and backend dependencies
 
 **Daily development**:
+
 - Run frontend dev server in Terminal 1
 - Run backend admin server in Terminal 2
 
 **Before committing**:
+
 - Pre-commit hooks run automatically on git commit
 
 ### 1.5.3 Checklist
@@ -341,12 +363,12 @@ Add to `frontend/package.json`:
 
 ---
 
-
 ## Phase 2: Data Model & JSON Schema
 
 ### 2.1 Define JSON Schemas
 
 #### `site_config.json`
+
 **Comprehensive site configuration - all settings editable via admin interface**
 
 ```json
@@ -485,6 +507,7 @@ Add to `frontend/package.json`:
 ```
 
 **Notes**:
+
 - All fields optional except `site.title`
 - Extensible structure - easy to add new sections
 - Supports Markdown in bio and descriptions
@@ -504,7 +527,7 @@ Add to `frontend/package.json`:
       "description": "Long-form description...",
       "cover_photo_id": "uuid",
       "visibility": "public|unlisted|password_protected",
-      "password_hash": "bcrypt-hash (only if password_protected)",
+      "password_hash": "bcrypt-hash (only if password_protected)", <!-- pragma: allowlist secret -->
       "expiration_date": "ISO8601 (optional, for client galleries)",
       "allow_downloads": true,
       "is_portfolio_album": false,
@@ -547,16 +570,19 @@ Add to `frontend/package.json`:
 ```
 
 **Album Visibility Modes**:
+
 - `public`: Shows in public gallery list, accessible to everyone
 - `unlisted`: Not shown in gallery list, but accessible via direct URL
-- `password_protected`: Requires password to view (bcrypt hash stored)
+- `password_protected`: Requires password to view (bcrypt hash stored) <!-- pragma: allowlist secret -->
 
 **Album Customization** (Post-MVP Advanced Features):
+
 - `typography`: Optional per-album font customization (title, subtitle, body, caption fonts)
 - `layout_options`: Optional layout variations (masonry, grid, justified, carousel)
 - **MVP**: Leave these fields empty - albums use global settings from `site_config.json`
 
 ### 2.2 Go Data Models
+
 - [ ] Create Go structs for `Album`, `Photo`, `SiteConfig`
 - [ ] Implement JSON marshal/unmarshal methods
 - [ ] Add validation logic (required fields, format checks)
@@ -571,6 +597,7 @@ Add to `frontend/package.json`:
 Create minimal valid JSON files:
 
 **`data/albums.json`**:
+
 ```json
 {
   "albums": []
@@ -578,6 +605,7 @@ Create minimal valid JSON files:
 ```
 
 **`data/site_config.json`**:
+
 ```json
 {
   "version": "1.0.0",
@@ -638,6 +666,7 @@ Create minimal valid JSON files:
 #### Bootstrap Script
 
 Create `scripts/bootstrap.sh` that:
+
 - Creates directory structure (data/, static/uploads/ with subdirectories)
 - Creates empty data files (albums.json, site_config.json) if they don't exist
 - Creates .gitkeep files for upload directories
@@ -652,6 +681,7 @@ The script should output success messages and instructions for running frontend 
 Create `scripts/hash_password.go` - a utility to generate bcrypt hashes for passwords.
 
 #### Checklist
+
 - [ ] Create `data/` directory structure
 - [ ] Create `static/uploads/` directories
 - [ ] Create template JSON files
@@ -662,11 +692,11 @@ Create `scripts/hash_password.go` - a utility to generate bcrypt hashes for pass
 
 ---
 
-
 ## Phase 3: Frontend - Public Site
 
 **Global Site Configuration Usage**:
 The frontend loads `site_config.json` once on page load and uses it throughout the application for:
+
 - Page titles and meta tags (`site.title`, `seo.*`)
 - Navigation menu visibility (`navigation.*`)
 - Branding (colors, fonts, logo) (`branding.*`)
@@ -679,7 +709,9 @@ The frontend loads `site_config.json` once on page load and uses it throughout t
 All Lit components should accept settings as properties. Settings gets injected from a global config store.
 
 ### 3.1 Landing Page / Portfolio
+
 **Main Portfolio Album Display**:
+
 - [ ] Hero section with cover photo from main portfolio album
   - Full-screen cover image
   - Album title and subtitle overlaid
@@ -700,7 +732,9 @@ All Lit components should accept settings as properties. Settings gets injected 
 - [ ] Apply branding colors from `site_config.branding`
 
 ### 3.2 Public Albums
+
 **Album Listing Page**:
+
 - [ ] Grid of album covers (only public albums)
 - [ ] Each card shows:
   - Cover photo
@@ -711,6 +745,7 @@ All Lit components should accept settings as properties. Settings gets injected 
 - [ ] Load data from `albums.json` (filter `visibility: "public"`)
 
 **Individual Album View**:
+
 - [ ] Full-screen cover photo section
   - Cover photo fills viewport above fold
   - Album title and subtitle overlaid on cover
@@ -738,6 +773,7 @@ All Lit components should accept settings as properties. Settings gets injected 
 **MVP**: Server-side password check. Client-side bcrypt can be added post-MVP.
 
 **Password Entry Page**:
+
 - [ ] Clean, minimal password form
 - [ ] Submit password to backend API for verification
 - [ ] Backend returns session token on success
@@ -745,6 +781,7 @@ All Lit components should accept settings as properties. Settings gets injected 
 - [ ] Store session token in sessionStorage
 
 **Album View** (same as public, but with access control):
+
 - [ ] Check session token before displaying album
 - [ ] Show expiration warning if applicable
 - [ ] Same photo grid and lightbox as public albums
@@ -752,9 +789,11 @@ All Lit components should accept settings as properties. Settings gets injected 
 **Post-MVP Enhancement**: Client-side bcrypt verification (no server required)
 
 ### 3.5 Lit Web Components
+
 Create reusable Lit components for the public site:
 
 #### Core Components
+
 - [ ] `<app-nav>` - Navigation menu component
 - [ ] `<app-footer>` - Footer component
 - [ ] `<photo-grid>` - Responsive image grid with masonry layout
@@ -796,6 +835,7 @@ Create reusable Lit components for the public site:
 - [ ] `<loading-spinner>` - Loading state indicator
 
 #### Page-Level Components
+
 - [ ] `<portfolio-page>` - Landing page component
   - Fetches main portfolio album
   - Displays cover hero + photo grid
@@ -809,6 +849,7 @@ Create reusable Lit components for the public site:
   - Download functionality
 
 #### Component Features
+
 - [ ] Reactive state management with Lit reactive properties
 - [ ] Shadow DOM for style encapsulation
 - [ ] Event-driven communication between components
@@ -825,6 +866,7 @@ Albums display photos at full quality. Users can right-click to save individual 
 ## Phase 4: Backend - Admin Server
 
 ### 4.1 Core Server Setup
+
 - [ ] HTTP server with routing (chi router)
 - [ ] Static file serving (for uploaded images)
 - [ ] CORS configuration
@@ -836,6 +878,7 @@ Albums display photos at full quality. Users can right-click to save individual 
 #### 4.1.1 Error Handling Strategy
 
 **Philosophy**:
+
 - Log everything server-side with full context
 - Return safe, user-friendly errors to clients
 - Never expose internal details in production
@@ -845,6 +888,7 @@ Albums display photos at full quality. Users can right-click to save individual 
 #### 4.1.2 Logging Strategy
 
 **Philosophy**:
+
 - Structured logging for easy parsing and searching
 - Different log levels for different environments
 - Request tracing with unique IDs
@@ -856,6 +900,7 @@ Albums display photos at full quality. Users can right-click to save individual 
 **What to Log**:
 
 ✅ **DO Log**:
+
 - All HTTP requests (method, path, status, duration)
 - Authentication events (login, logout, failed attempts)
 - Data mutations (create, update, delete operations)
@@ -865,6 +910,7 @@ Albums display photos at full quality. Users can right-click to save individual 
 - Performance metrics
 
 ❌ **DO NOT Log**:
+
 - Passwords or password hashes
 - Session tokens or CSRF tokens
 - Full IP addresses (hash them)
@@ -874,6 +920,7 @@ Albums display photos at full quality. Users can right-click to save individual 
 #### 4.1.3 Error Handling in Frontend
 
 **Toast/Notification System**:
+
 - Provide a basic toast popup notification system for errors.
 
 ### 4.2 Authentication & Authorization
@@ -883,12 +930,14 @@ Albums display photos at full quality. Users can right-click to save individual 
 #### 4.2.1 Authentication Strategy
 
 **Single Admin User Model**:
+
 - Admin credentials stored in environment variables (`.env`)
 - Password hashed with bcrypt (stored hash in env or first-run setup)
 - Session-based authentication (not JWT - simpler for single-page admin)
 - Sessions stored in encrypted files or in-memory with persistence
 
 **Why Session-Based**:
+
 - Simpler than JWT for single-user admin panel
 - Can be easily invalidated server-side
 - Works well with CSRF protection
@@ -897,6 +946,7 @@ Albums display photos at full quality. Users can right-click to save individual 
 #### 4.2.2 Session Management
 
 **Session Configuration**:
+
 - Session duration: 24 hours (configurable)
 - Extend session on activity: Yes
 - Session cookie name: `photoadmin_session`
@@ -909,7 +959,8 @@ Albums display photos at full quality. Users can right-click to save individual 
 #### 4.2.3 Authentication Flow
 
 **Login Process**:
-```
+
+```text
 1. User visits /admin → Redirected to /admin/login
 2. User submits credentials
 3. Backend verifies against env variables
@@ -922,6 +973,7 @@ Albums display photos at full quality. Users can right-click to save individual 
 #### 4.2.9 Implementation Checklist
 
 **Backend**:
+
 - [ ] Session store implementation (file-based or in-memory)
 - [ ] Login handler with bcrypt verification
 - [ ] Logout handler
@@ -932,6 +984,7 @@ Albums display photos at full quality. Users can right-click to save individual 
 - [ ] Admin setup CLI tool for initial password
 
 **Frontend**:
+
 - [ ] Login page component
 - [ ] Login form with validation
 - [ ] Store session/CSRF token
@@ -942,12 +995,14 @@ Albums display photos at full quality. Users can right-click to save individual 
 - [ ] Auto-logout on session expiration
 
 **Environment/Config**:
+
 - [ ] Add auth variables to `.env.example`
 - [ ] Document session configuration options
 - [ ] Add password requirements to docs
 - [ ] Security best practices documentation
 
 ### 4.3 JSON File Management Service
+
 - [ ] Atomic file read/write operations
 - [ ] File locking mechanism
 - [ ] Backup before write
@@ -961,23 +1016,27 @@ Albums display photos at full quality. Users can right-click to save individual 
 #### 4.4.1 Upload Constraints and Validation
 
 **File Size Limits**:
+
 - **Single file maximum**: 100 MB (configurable)
 - **Batch upload maximum**: 5000 MB total (configurable)
 - **Max files per batch**: 500 files (configurable)
 - **Rationale**: Balance between professional photography file sizes and server resources
 
 **Allowed File Types**:
+
 - **JPEG**: `.jpg`, `.jpeg` (most common)
 - **PNG**: `.png` (transparency support)
 - **WebP**: `.webp` (modern format)
 - **HEIC**: `.heic`, `.heif` (iPhone photos)
 
 **File Type Detection**:
+
 - **DO NOT trust file extension** - validate via magic bytes
 - Use Go's `http.DetectContentType()` or `github.com/h2non/filetype`
 - Reject files that don't match expected image MIME types
 
 **Filename Sanitization**:
+
 - Original filename stored in metadata but not used for storage
 - Storage filename: UUID + `.webp` (or original extension for originals)
 - Reject filenames with path traversal attempts (`../`, `..\\`)
@@ -986,6 +1045,7 @@ Albums display photos at full quality. Users can right-click to save individual 
 **Configuration** (`.env` or `site_config.json`):
 
 #### 4.4.4 Upload Pipeline
+
 - [ ] Multi-file upload handler (drag-drop or click-to-upload)
 - [ ] **File validation** (size, type, dimensions, magic bytes)
 - [ ] **Disk space check** before processing
@@ -997,14 +1057,17 @@ Albums display photos at full quality. Users can right-click to save individual 
 - [ ] **Partial success handling** (some files succeed, some fail)
 
 #### Image Processing Workflow
+
 When an image is uploaded, the backend creates three versions:
 
 1. **Original** (`/static/uploads/originals/`)
+
    - [ ] Store untouched original file
    - [ ] Preserve original filename in metadata
    - [ ] No compression, no resizing
 
 2. **Display Version** (`/static/uploads/display/`)
+
    - [ ] Target: 3840px on longest side (optimized for 4K displays)
    - [ ] Format: WebP with quality 85
    - [ ] Maintain aspect ratio
@@ -1018,13 +1081,15 @@ When an image is uploaded, the backend creates three versions:
    - [ ] Target file size: ~50-100KB
 
 #### EXIF Processing
+
 - [ ] Extract EXIF from original using Go library (e.g., `github.com/rwcarlsen/goexif`)
 - [ ] Parse camera, lens, ISO, aperture, shutter speed, focal length
 - [ ] Store in photo metadata (albums.json)
 - [ ] Extract date taken for sorting
 
 #### Storage Organization
-```
+
+```text
 /static/uploads/
 ├── originals/
 │   └── <uuid>.<original-ext>  (e.g., abc123.jpg, def456.cr2)
@@ -1035,6 +1100,7 @@ When an image is uploaded, the backend creates three versions:
 ```
 
 #### Image Libraries (Go)
+
 - [ ] `github.com/disintegration/imaging` - Image resizing and processing
 - [ ] `github.com/rwcarlsen/goexif` - EXIF extraction
 - [ ] Native `image/jpeg`, `image/png` support
@@ -1043,6 +1109,7 @@ When an image is uploaded, the backend creates three versions:
 ### 4.5 Admin API Endpoints
 
 #### Album Management
+
 - `GET /api/admin/albums` - List all albums
 - `GET /api/admin/albums/:id` - Get album details
 - `POST /api/admin/albums` - Create new album
@@ -1052,13 +1119,16 @@ When an image is uploaded, the backend creates three versions:
 - `POST /api/admin/albums/:id/reorder` - Reorder photos in album
 
 #### Photo Upload & Management
+
 **Upload Workflow**:
+
 1. Admin selects/creates album
 2. Uploads photos to that album
 3. Backend processes: original → display → thumbnail
 4. Returns photo metadata
 
 Endpoints:
+
 - `POST /api/admin/albums/:id/photos/upload` - Upload photos to album (multipart form)
   - Accepts multiple files
   - Returns array of photo objects with IDs
@@ -1068,23 +1138,27 @@ Endpoints:
 - `DELETE /api/admin/albums/:id/photos/:photoId` - Delete photo from album
 - `POST /api/admin/albums/:id/photos/reorder` - Reorder photos in album
 
-#### Password Management
-- `POST /api/admin/albums/:id/set-password` - Set or update password for album
-  - Body: `{ "password": "plaintext" }`
+#### Password Management <!-- pragma: allowlist secret -->
+
+- `POST /api/admin/albums/:id/set-password` - Set or update password for album <!-- pragma: allowlist secret -->
+  - Body: `{ "password": "plaintext" }` <!-- pragma: allowlist secret -->
   - Backend bcrypts and stores hash
-- `DELETE /api/admin/albums/:id/password` - Remove password protection
+- `DELETE /api/admin/albums/:id/password` - Remove password protection <!-- pragma: allowlist secret -->
 
 #### Main Portfolio Album
+
 - `PUT /api/admin/config/main-portfolio-album` - Set which album is the main portfolio
   - Body: `{ "album_id": "uuid" }`
   - Updates `site_config.json`
 
 #### Media Management
+
 - `POST /api/admin/upload` - Upload images
 - `GET /api/admin/media` - List uploaded media
 - `DELETE /api/admin/media/:id` - Delete media
 
 #### Site Configuration / Settings
+
 - `GET /api/admin/settings` - Get complete site configuration
 - `PUT /api/admin/settings` - Update entire site configuration
 - `PATCH /api/admin/settings/:section` - Update specific section (site, owner, social, branding, etc.)
@@ -1099,13 +1173,16 @@ Endpoints:
 ### 4.6 Admin UI (Server-Rendered HTML)
 
 #### Dashboard
+
 - [ ] Overview stats
   - Total albums (public, unlisted, password-protected)
   - Total photos
   - Recent uploads
 
 #### Album Management Page
+
 **Main View** - Album List:
+
 - [ ] Grid/list view of all albums
 - [ ] Show album cover, title, visibility status
 - [ ] Filter by visibility (all, public, unlisted, password-protected)
@@ -1114,6 +1191,7 @@ Endpoints:
 - [ ] Quick actions: Edit, Delete, View Public URL
 
 **Album Editor** - Edit Single Album:
+
 - [ ] Album metadata form
   - Title (required)
   - Subtitle (optional)
@@ -1141,25 +1219,30 @@ Endpoints:
 - [ ] Save/Cancel buttons
 
 #### Main Portfolio Album Selector
+
 - [ ] Dropdown or modal to select which album is the main portfolio
 - [ ] Preview of selected album
 - [ ] "Set as Main Portfolio" button
 
 #### Settings Page
+
 **Comprehensive settings management with tabbed/sectioned interface**
 
 **Main Layout**:
+
 - [ ] Tabbed or sidebar navigation for different setting sections
 - [ ] "Save Changes" button (sticky at bottom or top)
 - [ ] "Reset to Default" option with confirmation
 - [ ] Unsaved changes warning
 
 **Section 1: General Settings**
+
 - [ ] Site title (required field)
 - [ ] Site tagline/subtitle
 - [ ] Site description (textarea)
 
 **Section 2: Owner Information**
+
 - [ ] Owner name
 - [ ] Bio (rich text editor with Markdown support)
 - [ ] Email address
@@ -1167,6 +1250,7 @@ Endpoints:
 - [ ] Location
 
 **Section 3: Social Media**
+
 - [ ] Input fields for each platform:
   - Instagram, Facebook, Twitter, LinkedIn
   - YouTube, Pinterest, TikTok
@@ -1177,6 +1261,7 @@ Endpoints:
 - [ ] Preview of how social links will appear
 
 **Section 4: Branding**
+
 - [ ] Logo upload
   - Image preview
   - Drag-drop or click to upload
@@ -1195,6 +1280,7 @@ Endpoints:
   - Font preview
 
 **Section 5: Portfolio Settings**
+
 - [ ] Main portfolio album selector
   - Dropdown of all albums
   - Preview of selected album
@@ -1202,13 +1288,13 @@ Endpoints:
 - [ ] Show EXIF data toggle
 - [ ] Show photo count toggle
 
-
 **Section 6: Gallery Defaults**
+
 - [ ] Default visibility (public, unlisted, password_protected)
 - [ ] Default allow downloads toggle
 
-
 **Section 7: System & Maintenance**
+
 - [ ] Admin password change
   - Current password
   - New password
@@ -1220,6 +1306,7 @@ Endpoints:
   - Total uptime
 
 **UI/UX Considerations**:
+
 - [ ] Form validation with inline error messages
 - [ ] Success notifications after save
 - [ ] Unsaved changes prompt before leaving page
@@ -1229,6 +1316,7 @@ Endpoints:
 **API Endpoints Used**:
 
 **Implementation Notes**:
+
 - All queries should be efficient with proper indexes
 - Cache aggregated stats for common time periods
 - Daily stats table provides fast queries for historical data
@@ -1239,16 +1327,18 @@ Endpoints:
 
 ## Phase 5: Integration & Build System
 
-See the [DEVELOPMENT_SETUP.md](DEVELOPMENT_SETUP.md) for details. 
+See the [DEVELOPMENT_SETUP.md](DEVELOPMENT_SETUP.md) for details.
 Summary here:
 
 ### 5.1 Bazel Build Targets
+
 - [ ] `//frontend:dev_server` - Run frontend dev server
 - [ ] `//frontend:build` - Build frontend for production
 - [ ] `//backend:admin_server` - Build and run admin server
 - [ ] `//:deploy` - Build everything for deployment
 
 ### 5.2 Development Workflow
+
 - [ ] Script to initialize data JSON files with defaults
 - [ ] Script to run both frontend and backend concurrently
 - [ ] Hot-reload configuration
@@ -1259,6 +1349,7 @@ Summary here:
 **MVP Approach**: Start with pre-commit hooks, automated unit testing, and manual end-to-end testing.
 
 **Initial Testing**:
+
 - **Pre-commit hooks**: Linting, formatting, type-checking (automated)
 - **Manual E2E**: Key workflows tested manually before each release
 - **Critical unit tests**: Core business logic only (auth, file I/O)
@@ -1268,6 +1359,7 @@ Summary here:
 #### 5.3.1 Pre-commit Quality Checks
 
 Already configured in Phase 1.5:
+
 - Linting (ESLint for TS, golangci-lint for Go)
 - Formatting (Prettier, gofmt)
 - Type checking (tsc --noEmit)
@@ -1277,11 +1369,13 @@ Already configured in Phase 1.5:
 #### 5.3.2 Critical Unit Tests (Minimal Set)
 
 **Frontend** (`frontend/src/utils/`):
+
 - [ ] `api.test.ts` - Data fetching and error handling
 - [ ] `router.test.ts` - URL routing logic
 - [ ] `theme-manager.test.ts` - Theme detection, switching, and persistence (see Phase 3)
 
 **Backend** (`backend/internal/`):
+
 - [ ] `models/album_test.go` - Album validation logic
 - [ ] `services/file_service_test.go` - Atomic file writes
 - [ ] `services/auth_service_test.go` - Password verification
@@ -1293,6 +1387,7 @@ Already configured in Phase 1.5:
 Test these key workflows manually before each release:
 
 **Public Site**:
+
 - [ ] Landing page loads and displays portfolio album
 - [ ] Album list shows public albums
 - [ ] Album detail page displays photos
@@ -1307,6 +1402,7 @@ Test these key workflows manually before each release:
 - [ ] Theme colors render properly in all components
 
 **Admin**:
+
 - [ ] Login with credentials
 - [ ] Create new album
 - [ ] Upload photos to album
