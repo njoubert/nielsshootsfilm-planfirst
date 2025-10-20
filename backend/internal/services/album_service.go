@@ -79,26 +79,24 @@ func (s *AlbumService) Create(album *models.Album) error {
 	album.CreatedAt = time.Now().UTC()
 	album.UpdatedAt = time.Now().UTC()
 
-	// Generate slug if not provided
-	if album.Slug == "" {
-		album.Slug = generateSlug(album.Title)
-	}
-
-	// Validate album
-	if err := album.Validate(); err != nil {
-		return fmt.Errorf("validation failed: %w", err)
-	}
-
-	// Check for duplicate slug
+	// Get existing albums
 	albums, err := s.GetAll()
 	if err != nil {
 		return err
 	}
 
-	for _, existing := range albums {
-		if existing.Slug == album.Slug {
-			return errors.New("album with this slug already exists")
-		}
+	// Generate slug if not provided
+	if album.Slug == "" {
+		baseSlug := generateSlug(album.Title)
+		album.Slug = generateUniqueSlug(baseSlug, albums)
+	} else {
+		// If slug is provided, ensure it's unique
+		album.Slug = generateUniqueSlug(album.Slug, albums)
+	}
+
+	// Validate album
+	if err := album.Validate(); err != nil {
+		return fmt.Errorf("validation failed: %w", err)
 	}
 
 	// Add album to collection
@@ -318,4 +316,39 @@ func generateSlug(title string) string {
 	}
 
 	return slug
+}
+
+// generateUniqueSlug ensures a slug is unique by appending a number if needed.
+func generateUniqueSlug(baseSlug string, existingAlbums []models.Album) string {
+	slug := baseSlug
+
+	// Check if slug already exists
+	exists := false
+	for _, album := range existingAlbums {
+		if album.Slug == slug {
+			exists = true
+			break
+		}
+	}
+
+	if !exists {
+		return slug
+	}
+
+	// Append numbers until we find a unique slug
+	for i := 1; ; i++ {
+		candidate := fmt.Sprintf("%s-%d", baseSlug, i)
+		exists = false
+
+		for _, album := range existingAlbums {
+			if album.Slug == candidate {
+				exists = true
+				break
+			}
+		}
+
+		if !exists {
+			return candidate
+		}
+	}
 }
