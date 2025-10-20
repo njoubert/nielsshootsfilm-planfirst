@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+bazel-*
+*.min.js
+package-lock.json
+coverage/
+.vscode/
+.idea/

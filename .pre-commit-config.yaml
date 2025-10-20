@@ -1,48 +1,142 @@
+# Pre-commit hooks configuration
+# See https://pre-commit.com for more information
+
+default_language_version:
+  node: system
+
 repos:
+  # ====================
+  # General / Multi-language
+  # ====================
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
-      - id: check-yaml
+      # Prevent committing large files
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      # Check for files that would conflict on case-insensitive filesystems
+      - id: check-case-conflict
+      # Check for merge conflicts
+      - id: check-merge-conflict
+      # Check JSON files
       - id: check-json
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
+        exclude: ^\.vscode/
+      # Check YAML files
+      - id: check-yaml
+        args: ['--unsafe'] # Allow custom YAML tags
+      # Detect private keys
       - id: detect-private-key
+      # Fix end of files
+      - id: end-of-file-fixer
+      # Fix trailing whitespace
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+
+  # ====================
+  # Secrets Detection
+  # ====================
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: package-lock.json
+
+  # ====================
+  # TypeScript / JavaScript
+  # ====================
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v3.1.0
     hooks:
       - id: prettier
-        additional_dependencies:
-          - prettier@3.2.5
-          - prettier-plugin-packagejson@2.4.7
-        files: "(frontend/|docs/).*\.(json|ya?ml|ts|tsx|js|jsx|css|md)$"
-  - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.57.0
-    hooks:
-      - id: eslint
-        additional_dependencies:
-          - eslint@8.57.0
-          - eslint-plugin-lit@1.11.0
-          - @typescript-eslint/parser@7.2.0
-          - @typescript-eslint/eslint-plugin@7.2.0
-        files: "frontend/src/.*\.(ts|tsx)$"
+        files: \.(js|ts|json|yaml|yml|md|html|css)$
+        args:
+          - --write
+          - --ignore-unknown
+
+  # ====================
+  # Go
+  # ====================
   - repo: https://github.com/dnephin/pre-commit-golang
     rev: v0.5.1
     hooks:
-      - id: gofmt
-      - id: golangci-lint
-        args: ["run"]
+      # Format Go code
+      - id: go-fmt
+        args: [-w]
+      # Organize imports
+      - id: go-imports
+      # Run go vet
+      - id: go-vet
+      # Check go.mod is tidy
+      - id: go-mod-tidy
+
+  # ====================
+  # Bazel
+  # ====================
+  - repo: https://github.com/keith/pre-commit-buildifier
+    rev: 6.4.0
+    hooks:
+      - id: buildifier
+        args: [--lint=fix]
+      - id: buildifier-lint
+
+  # ====================
+  # Markdown / Documentation
+  # ====================
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.38.0
+    hooks:
+      - id: markdownlint
+        args: ['--fix']
+        exclude: 'CHANGELOG.md'
+
+  # ====================
+  # Shell scripts
+  # ====================
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.6
+    hooks:
+      - id: shellcheck
+
+  # Local hooks for custom checks
   - repo: local
     hooks:
-      - id: vitest
-        name: vitest unit tests
-        entry: npm run test -- --run
+      # Run TypeScript type checking
+      - id: typescript-typecheck
+        name: TypeScript Type Check
+        entry: bash -c 'cd frontend && npm run typecheck'
+        language: system
+        files: \.ts$
+        pass_filenames: false
+
+      # Run ESLint on TypeScript files
+      - id: eslint
+        name: ESLint
+        entry: bash -c 'cd frontend && npm run lint'
+        language: system
+        files: \.(ts|js)$
+        pass_filenames: false
+
+      # Run frontend unit tests (on push only)
+      - id: frontend-unit-tests
+        name: Frontend Unit Tests
+        entry: bash -c 'cd frontend && npm run test:ci'
         language: system
         pass_filenames: false
-        types: [ts]
-        files: "frontend/src/.*\.(ts|tsx)$"
-      - id: go-test
-        name: go test ./...
-        entry: go test ./...
+        stages: [pre-push]
+
+      # Run Go unit tests (on push only)
+      - id: go-unit-tests
+        name: Go Unit Tests
+        entry: bash -c 'cd backend && go test -short ./...'
         language: system
         pass_filenames: false
-        types: [go]
+        stages: [pre-push]
+
+      # Run golangci-lint
+      - id: golangci-lint
+        name: golangci-lint
+        entry: bash -c 'cd backend && golangci-lint run --fix'
+        language: system
+        files: \.go$
+        pass_filenames: false
