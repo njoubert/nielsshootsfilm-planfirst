@@ -111,21 +111,15 @@ if [ ! -f "$PROJECT_ROOT/data/admin_config.json" ]; then
         exit 1
     fi
 
-    # Generate bcrypt hash using Go
+    # Generate bcrypt hash using Node.js and bcryptjs (already installed in frontend)
     echo "Generating password hash..."
-    HASH=$(go run "$PROJECT_ROOT/scripts/hash_password.go" "$ADMIN_PASSWORD")
+    HASH=$(cd "$PROJECT_ROOT/frontend" && node -e "const bcrypt = require('bcryptjs'); console.log(bcrypt.hashSync('$ADMIN_PASSWORD', 10));")
 
     # Create admin_config.json
     cat > "$PROJECT_ROOT/data/admin_config.json" <<EOF
 {
-  "version": "1.0",
-  "admin": {
-    "username": "admin",
-    "password_hash": "$HASH"
-  },
-  "session": {
-    "timeout_minutes": 60
-  }
+  "username": "admin",
+  "password_hash": "$HASH"
 }
 EOF
     echo -e "${GREEN}✓ admin_config.json created${NC}\n"
