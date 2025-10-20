@@ -1,6 +1,6 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { SocialLinks, OwnerInfo } from '../types/data-models';
+import type { OwnerInfo, SocialLinks } from '../types/data-models';
 
 /**
  * Footer component with social links and contact info.
