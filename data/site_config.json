@@ -53,7 +53,7 @@
     }
   },
   "portfolio": {
-    "main_album_id": "",
+    "main_album_id": "sample-portfolio",
     "show_exif_data": true,
     "default_photo_layout": "grid",
     "enable_lightbox": true,

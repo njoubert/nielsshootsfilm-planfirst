@@ -1,5 +1,70 @@
 {
   "version": "1.0",
   "last_updated": "2024-01-01T00:00:00Z",
-  "albums": []
+  "albums": [
+    {
+      "id": "sample-portfolio",
+      "slug": "portfolio",
+      "title": "Portfolio",
+      "subtitle": "Featured Work",
+      "description": "A curated selection of my best photography",
+      "cover_photo_id": "photo-1",
+      "visibility": "public",
+      "allow_downloads": false,
+      "is_portfolio_album": true,
+      "order": 0,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z",
+      "photos": [
+        {
+          "id": "photo-1",
+          "filename_original": "sample1.jpg",
+          "url_original": "https://picsum.photos/1920/1080?random=1",
+          "url_display": "https://picsum.photos/1200/800?random=1",
+          "url_thumbnail": "https://picsum.photos/400/300?random=1",
+          "caption": "Sample photo 1",
+          "alt_text": "A beautiful landscape",
+          "order": 0,
+          "width": 1920,
+          "height": 1080,
+          "file_size_original": 2500000,
+          "file_size_display": 800000,
+          "file_size_thumbnail": 50000,
+          "uploaded_at": "2024-01-01T00:00:00Z"
+        },
+        {
+          "id": "photo-2",
+          "filename_original": "sample2.jpg",
+          "url_original": "https://picsum.photos/1920/1080?random=2",
+          "url_display": "https://picsum.photos/1200/800?random=2",
+          "url_thumbnail": "https://picsum.photos/400/300?random=2",
+          "caption": "Sample photo 2",
+          "alt_text": "Urban architecture",
+          "order": 1,
+          "width": 1920,
+          "height": 1080,
+          "file_size_original": 2500000,
+          "file_size_display": 800000,
+          "file_size_thumbnail": 50000,
+          "uploaded_at": "2024-01-02T00:00:00Z"
+        },
+        {
+          "id": "photo-3",
+          "filename_original": "sample3.jpg",
+          "url_original": "https://picsum.photos/1920/1080?random=3",
+          "url_display": "https://picsum.photos/1200/800?random=3",
+          "url_thumbnail": "https://picsum.photos/400/300?random=3",
+          "caption": "Sample photo 3",
+          "alt_text": "Portrait",
+          "order": 2,
+          "width": 1920,
+          "height": 1080,
+          "file_size_original": 2500000,
+          "file_size_display": 800000,
+          "file_size_thumbnail": 50000,
+          "uploaded_at": "2024-01-03T00:00:00Z"
+        }
+      ]
+    }
+  ]
 }
