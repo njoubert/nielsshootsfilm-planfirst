@@ -1,6 +1,6 @@
 # Bazel Removal & Script-Based Workflow Migration
 
-**Date:** October 20, 2025  
+**Date:** October 20, 2025
 **Status:** Complete ✅
 
 ## Summary
@@ -91,11 +91,11 @@ Bazel was **overkill** for this project because:
 
 ## Benefits of Script-Based Approach
 
-✅ **Transparent** - Shell scripts are easy to read and understand  
-✅ **Simple** - Wraps existing npm/go commands directly  
-✅ **Organized** - Scripts grouped by area (frontend/backend)  
-✅ **Familiar** - Uses standard tools (npm, go) everyone knows  
-✅ **Fast iteration** - No build system in the way  
+✅ **Transparent** - Shell scripts are easy to read and understand
+✅ **Simple** - Wraps existing npm/go commands directly
+✅ **Organized** - Scripts grouped by area (frontend/backend)
+✅ **Familiar** - Uses standard tools (npm, go) everyone knows
+✅ **Fast iteration** - No build system in the way
 ✅ **Easy to maintain** - Scripts are self-documenting
 
 ## Migration Path
@@ -139,6 +139,6 @@ All scripts tested and working:
 
 The project is now simpler, more maintainable, and better aligned with its core philosophy. Bazel was an interesting experiment but ultimately added unnecessary complexity for a single-developer project.
 
-**Lines of code saved:** ~1,900+  
-**Complexity reduced:** Significant  
+**Lines of code saved:** ~1,900+
+**Complexity reduced:** Significant
 **Developer experience:** Improved (more straightforward)
