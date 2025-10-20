@@ -352,7 +352,18 @@ describe('admin-api utilities', () => {
         ];
 
         const mockResponse = {
-          uploaded: 2,
+          uploaded: [
+            {
+              id: 'photo-1',
+              filename_original: 'photo1.jpg',
+              url_thumbnail: '/uploads/thumbnails/photo1.jpg',
+            },
+            {
+              id: 'photo-2',
+              filename_original: 'photo2.jpg',
+              url_thumbnail: '/uploads/thumbnails/photo2.jpg',
+            },
+          ],
           errors: [],
         };
 
@@ -376,8 +387,11 @@ describe('admin-api utilities', () => {
       it('should throw error on upload failure', async () => {
         global.fetch = vi.fn().mockResolvedValue({
           ok: false,
+          headers: {
+            get: () => 'text/plain',
+          },
           text: () => Promise.resolve('Upload failed'),
-        } as Response);
+        } as unknown as Response);
 
         await expect(uploadPhotos('album-1', [])).rejects.toThrow('Upload failed');
       });

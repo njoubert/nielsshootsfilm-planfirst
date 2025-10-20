@@ -253,6 +253,8 @@ export class AdminAlbumEditorPage extends LitElement {
       border-radius: 4px;
       color: #155724;
       margin-bottom: 1rem;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .error-message {
@@ -262,6 +264,8 @@ export class AdminAlbumEditorPage extends LitElement {
       border-radius: 4px;
       color: #721c24;
       margin-bottom: 1rem;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
   `;
 
@@ -388,17 +392,33 @@ export class AdminAlbumEditorPage extends LitElement {
 
     this.uploading = true;
     this.error = '';
+    this.success = '';
 
     try {
       const result = await uploadPhotos(this.albumId, files);
 
-      if (result.errors.length > 0) {
-        this.error = `Some uploads failed: ${result.errors.join(', ')}`;
-      }
-
       // Reload album to show new photos
       await this.loadAlbum();
-      this.success = `Uploaded ${result.uploaded.length} photo(s)`;
+
+      // Handle results based on success/failure counts
+      const uploadedCount = result.uploaded.length;
+      const errorCount = result.errors.length;
+      const totalFiles = uploadedCount + errorCount;
+
+      if (uploadedCount === 0 && errorCount > 0) {
+        // All uploads failed
+        this.error = `All ${errorCount} upload(s) failed:\n${result.errors.join('\n')}`;
+      } else if (uploadedCount > 0 && errorCount > 0) {
+        // Partial success
+        this.success = `Uploaded ${uploadedCount} of ${totalFiles} photo(s)`;
+        this.error = `${errorCount} upload(s) failed:\n${result.errors.join('\n')}`;
+      } else if (uploadedCount > 0) {
+        // All succeeded
+        this.success = `Successfully uploaded ${uploadedCount} photo(s)`;
+      } else {
+        // No files processed (shouldn't happen)
+        this.error = 'No files were processed';
+      }
     } catch (err) {
       this.error = err instanceof Error ? err.message : 'Upload failed';
     } finally {

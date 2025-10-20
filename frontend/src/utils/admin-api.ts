@@ -208,8 +208,15 @@ export async function uploadPhotos(albumId: string, files: File[]): Promise<Uplo
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || 'Failed to upload photos');
+    // Try to get detailed error message
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const errorData = (await response.json()) as { error?: string; message?: string };
+      throw new Error(errorData.error || errorData.message || 'Failed to upload photos');
+    } else {
+      const error = await response.text();
+      throw new Error(error || 'Failed to upload photos');
+    }
   }
 
   return response.json() as Promise<UploadPhotosResponse>;

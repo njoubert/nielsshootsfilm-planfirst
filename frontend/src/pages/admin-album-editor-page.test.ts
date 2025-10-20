@@ -320,7 +320,16 @@ describe('AdminAlbumEditorPage', () => {
 
     it('should handle file upload', async () => {
       fetchAlbumByIdStub.resolves(mockAlbum);
-      uploadPhotosStub.resolves({ uploaded: 1, errors: [] });
+      uploadPhotosStub.resolves({
+        uploaded: [
+          {
+            id: 'photo-1',
+            filename_original: 'test.jpg',
+            url_thumbnail: '/uploads/thumbnails/test.jpg',
+          },
+        ],
+        errors: [],
+      });
 
       const el = await fixture<AdminAlbumEditorPage>(
         html`<admin-album-editor-page albumId="album-1"></admin-album-editor-page>`
@@ -375,7 +384,7 @@ describe('AdminAlbumEditorPage', () => {
 
     it('should handle upload errors', async () => {
       fetchAlbumByIdStub.resolves(mockAlbum);
-      uploadPhotosStub.resolves({ uploaded: 0, errors: ['File too large'] });
+      uploadPhotosStub.resolves({ uploaded: [], errors: ['File too large'] });
 
       const el = await fixture<AdminAlbumEditorPage>(
         html`<admin-album-editor-page albumId="album-1"></admin-album-editor-page>`
@@ -394,6 +403,7 @@ describe('AdminAlbumEditorPage', () => {
 
       await waitUntil(() => el['error'] !== '', 'error should be set', { timeout: 2000 });
 
+      expect(el['error']).to.include('All 1 upload(s) failed');
       expect(el['error']).to.include('File too large');
     });
   });
