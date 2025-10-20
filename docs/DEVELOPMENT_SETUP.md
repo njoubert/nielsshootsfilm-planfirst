@@ -1,4 +1,3 @@
-
 ## Phase 1.5: Developer Experience & Code Quality (Week 1-2)
 
 **Philosophy**: Automate code quality checks to maintain consistency across the polyglot codebase.
@@ -8,6 +7,7 @@
 **Framework**: [pre-commit](https://pre-commit.com/) - Git hook manager
 
 #### Installation
+
 ```bash
 # Install pre-commit (Python-based)
 pip install pre-commit
@@ -47,7 +47,7 @@ repos:
       - id: check-json
       # Check YAML files
       - id: check-yaml
-        args: ['--unsafe']  # Allow custom YAML tags
+        args: ['--unsafe'] # Allow custom YAML tags
       # Detect private keys
       - id: detect-private-key
       # Fix end of files
@@ -151,7 +151,7 @@ repos:
         stages: [commit-msg]
         additional_dependencies: ['@commitlint/config-conventional']
 
-# Local hooks for custom checks
+  # Local hooks for custom checks
   - repo: local
     hooks:
       # Run fast unit tests before commit
@@ -160,14 +160,14 @@ repos:
         entry: bash -c 'cd frontend && npm run test:ci'
         language: system
         pass_filenames: false
-        stages: [push]  # Only on push, not every commit
+        stages: [push] # Only on push, not every commit
 
       - id: go-unit-tests
         name: Go Unit Tests
         entry: bash -c 'cd backend && go test -short ./...'
         language: system
         pass_filenames: false
-        stages: [push]  # Only on push, not every commit
+        stages: [push] # Only on push, not every commit
 ```
 
 #### Secrets Baseline Setup
@@ -187,6 +187,7 @@ detect-secrets audit .secrets.baseline
 #### TypeScript / JavaScript
 
 **ESLint** - Linting
+
 ```json
 // frontend/.eslintrc.json
 {
@@ -215,6 +216,7 @@ detect-secrets audit .secrets.baseline
 ```
 
 **Prettier** - Formatting
+
 ```json
 // .prettierrc
 {
@@ -240,6 +242,7 @@ package-lock.json
 ```
 
 **TypeScript Config**
+
 ```json
 // frontend/tsconfig.json
 {
@@ -263,6 +266,7 @@ package-lock.json
 ```
 
 **Package Scripts**
+
 ```json
 // frontend/package.json
 {
@@ -285,6 +289,7 @@ package-lock.json
 #### Go
 
 **golangci-lint** - Comprehensive Go linter
+
 ```yaml
 # .golangci.yml
 run:
@@ -293,21 +298,21 @@ run:
 
 linters:
   enable:
-    - gofmt          # Format code
-    - goimports      # Organize imports
-    - govet          # Vet examines Go source code
-    - errcheck       # Check for unchecked errors
-    - staticcheck    # Static analysis
-    - unused         # Check for unused code
-    - gosimple       # Simplify code
-    - ineffassign    # Detect ineffectual assignments
-    - typecheck      # Type checking
-    - gocritic       # Opinionated Go linter
-    - misspell       # Spell check
-    - gosec          # Security checks
-    - dupl           # Duplicate code detection
-    - godot          # Check comments end with period
-    - gocyclo        # Cyclomatic complexity
+    - gofmt # Format code
+    - goimports # Organize imports
+    - govet # Vet examines Go source code
+    - errcheck # Check for unchecked errors
+    - staticcheck # Static analysis
+    - unused # Check for unused code
+    - gosimple # Simplify code
+    - ineffassign # Detect ineffectual assignments
+    - typecheck # Type checking
+    - gocritic # Opinionated Go linter
+    - misspell # Spell check
+    - gosec # Security checks
+    - dupl # Duplicate code detection
+    - godot # Check comments end with period
+    - gocyclo # Cyclomatic complexity
 
 linters-settings:
   gocyclo:
@@ -330,6 +335,7 @@ issues:
 ```
 
 **Go Formatting**
+
 ```bash
 # Format all Go files
 gofmt -w .
@@ -346,6 +352,7 @@ golangci-lint run --fix
 ### 1.5.3 VS Code Configuration
 
 #### Workspace Settings
+
 ```json
 // .vscode/settings.json
 {
@@ -424,6 +431,7 @@ golangci-lint run --fix
 ```
 
 #### Recommended Extensions
+
 ```json
 // .vscode/extensions.json
 {
@@ -464,6 +472,7 @@ golangci-lint run --fix
 ```
 
 #### Debug Configuration
+
 ```json
 // .vscode/launch.json
 {
@@ -560,11 +569,13 @@ indent_style = tab
 ### 1.5.5 Secrets Management
 
 **Tools**:
+
 - **detect-secrets**: Prevent committing secrets
 - **.env files**: For local development (gitignored)
 - **Bazel secrets**: Never commit secrets to BUILD files
 
 #### .gitignore
+
 ```
 # Dependencies
 node_modules/
@@ -620,6 +631,7 @@ data/*.json
 ```
 
 #### Environment Variables Template
+
 ```bash
 # .env.example (commit this)
 # Copy to .env and fill in values
@@ -648,6 +660,7 @@ SESSION_SECRET=your-secret-key-here
 ### 1.5.6 Developer Workflow
 
 #### First-time Setup
+
 ```bash
 # 1. Clone repository
 git clone <repo-url>
@@ -680,6 +693,7 @@ pre-commit run --all-files
 ```
 
 #### Daily Development
+
 ```bash
 # Start development servers
 bazel run //frontend:dev_server  # Terminal 1
@@ -700,6 +714,7 @@ git push
 ```
 
 #### Manual Checks
+
 ```bash
 # Run all linters manually
 cd frontend && npm run lint
@@ -724,6 +739,7 @@ pre-commit run --all-files
 ### 1.5.7 Bazel Integration
 
 **Run pre-commit checks via Bazel**:
+
 ```python
 # //BUILD.bazel
 
@@ -753,6 +769,7 @@ echo "All checks passed!"
 ```
 
 **CI Integration**:
+
 ```bash
 # Run in CI
 bazel test //:pre_commit_check
@@ -774,6 +791,7 @@ bazel test //:lint_all
 ```
 
 **Types**:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -783,6 +801,7 @@ bazel test //:lint_all
 - `chore`: Maintenance tasks
 
 **Examples**:
+
 ```
 feat(albums): add password protection for client galleries
 
@@ -805,6 +824,7 @@ Adds tests for arrow key navigation and ESC key closing.
 ```
 
 **Commitlint Config**:
+
 ```js
 // .commitlintrc.js
 module.exports = {
@@ -824,11 +844,11 @@ module.exports = {
         'perf',
         'ci',
         'build',
-        'revert'
-      ]
+        'revert',
+      ],
     ],
-    'subject-case': [2, 'always', 'sentence-case']
-  }
+    'subject-case': [2, 'always', 'sentence-case'],
+  },
 };
 ```
 
@@ -837,6 +857,7 @@ module.exports = {
 ### 1.5.9 Code Review Checklist
 
 Before requesting review:
+
 - [ ] All pre-commit hooks pass
 - [ ] Code is formatted (Prettier for TS, gofmt for Go)
 - [ ] All linters pass (ESLint, golangci-lint)

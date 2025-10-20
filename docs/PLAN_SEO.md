@@ -1,6 +1,7 @@
 ## Settings
 
 **Section 6: SEO & Analytics**
+
 - [ ] Meta title
 - [ ] Meta description
 - [ ] Meta keywords (tag input)

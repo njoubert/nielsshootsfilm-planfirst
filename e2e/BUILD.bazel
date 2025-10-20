@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
 filegroup(
-  name = "specs",
-  srcs = glob(["**/*.spec.ts"]),
+    name = "specs",
+    srcs = glob(["**/*.spec.ts"]),
 )

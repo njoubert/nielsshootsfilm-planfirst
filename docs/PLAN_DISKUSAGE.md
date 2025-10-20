@@ -6,14 +6,12 @@
 
 **Disk Space Warning in Admin UI**:
 
-
-
 ## Dashboard UI
-  - Storage usage
 
-
+- Storage usage
 
 ## Admin Settings
+
 - [ ] Storage statistics
   - Total storage used
   - Storage by type (originals, display, thumbnails)

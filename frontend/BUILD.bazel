@@ -18,12 +18,15 @@ ts_project(
 nodejs_binary(
     name = "dev_server",
     data = [
-        ":frontend_ts",
         "vite.config.ts",
         "vitest.config.ts",
+        ":frontend_ts",
         "//data:all",
     ],
     entry_point = "@npm//:vite/bin/vite.js",
     node_options = ["--no-warnings"],
-    templated_args = ["--config", "$(rootpath vite.config.ts)"],
+    templated_args = [
+        "--config",
+        "$(rootpath vite.config.ts)",
+    ],
 )

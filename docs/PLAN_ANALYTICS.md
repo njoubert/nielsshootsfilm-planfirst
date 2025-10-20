@@ -5,8 +5,8 @@
 - Download tracking
 - Analytics data is read from SQLite database (Phase 2.2)
 
-
 ### 3.8 TypeScript Utilities
+
 - [ ] JSON data fetching utilities with type safety
 - [ ] Type definitions for all JSON schemas (Album, Photo, BlogPost, SiteConfig)
 - [ ] Client-side routing (History API or simple hash routing)
@@ -18,18 +18,18 @@
 - [ ] **Analytics tracking utility** (fire-and-forget, graceful degradation)
 - [ ] bcrypt.js for client-side password verification
 
-
 #### Analytics Tracking (Public, No Auth Required)
+
 **Public endpoints** - accessible from static site, no authentication:
+
 - `POST /api/analytics/album-view` - Track album view
 - `POST /api/analytics/photo-view` - Track photo view in lightbox
 - `POST /api/analytics/photo-download` - Track photo download
 - `POST /api/analytics/album-download` - Track album download
 - `POST /api/analytics/page-view` - Track general page view
 
-
-
 **Request format** (all endpoints):
+
 ```json
 {
   "event": "album-view",
@@ -45,10 +45,8 @@
 
 **Response**: `202 Accepted` (fire and forget, no response body needed)
 
-
-
-
 **Admin analytics endpoints** (auth required):
+
 - `GET /api/admin/analytics/overview` - Dashboard overview stats
   - Total views, downloads, unique visitors (last 7/30/90 days)
 - `GET /api/admin/analytics/albums` - Album-specific stats
@@ -62,9 +60,8 @@
   - Daily/weekly/monthly aggregates
   - Query params: `?period=daily&days=30`
 
-
-
 ## Dashboard UI Updates
+
     - **Analytics summary** (last 7 days):
     - Total page views
     - Total album views
@@ -75,8 +72,6 @@
     - Views over time (sparkline/mini chart)
     - Top 5 albums by views
 
-
-
 #### Analytics Page
 
 **Purpose**: View detailed analytics about site usage, album performance, and photo downloads.
@@ -84,6 +79,7 @@
 **Route**: `/admin/analytics`
 
 **Layout**:
+
 ```
 ┌────────────────────────────────────────────┐
 │ Analytics                                  │
@@ -137,6 +133,7 @@ Timeline Chart
 ```
 
 **Features**:
+
 - [ ] Time period selector (last 7 days, 30 days, 90 days, all time)
 - [ ] Overview stats cards
   - Total views across all content
