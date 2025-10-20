@@ -1256,7 +1256,7 @@ Summary here:
 
 ### 5.3 Testing Strategy (Simplified)
 
-> **MVP Approach**: Start with pre-commit hooks + manual E2E testing. Add comprehensive automated testing in Phase 8.
+**MVP Approach**: Start with pre-commit hooks, automated unit testing, and manual end-to-end testing.
 
 **Initial Testing**:
 - **Pre-commit hooks**: Linting, formatting, type-checking (automated)
