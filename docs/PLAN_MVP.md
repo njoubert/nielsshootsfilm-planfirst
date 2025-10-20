@@ -19,14 +19,14 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 ### Phase Priority
 
 **Must Have (MVP)**:
-1. **Phase 1**: Setup (Bazel, repo structure, pre-commit hooks)
-2. **Phase 2**: Data Model (albums.json, site_config.json schemas)
-4. **Phase 3**: Frontend (portfolio page, album viewing, password protection)
-5. **Phase 4**: Backend (album CRUD, photo upload, admin auth)
-6. **Phase 5**: Testing (pre-commit hooks, unit tests, manual E2E checklist)
-7. **Phase 6**: Deployment (get it live!)
+1. **Phase 1**: Project Setup & Infrastructure (Bazel, repo structure, pre-commit hooks)
+2. **Phase 1.5**: Developer Experience & Code Quality (tooling, automation, quick start workflow)
+3. **Phase 2**: Data Model & JSON Schema (albums.json, site_config.json schemas)
+4. **Phase 3**: Frontend - Public Site (portfolio page, album viewing, password protection)
+5. **Phase 4**: Backend - Admin Server (album CRUD, photo upload, admin auth)
+6. **Phase 5**: Integration, Testing & Deployment (pre-commit hooks, unit tests, manual E2E checklist, release packaging)
 
-**Post-MVP Features (Phase 8)**:
+**Post-MVP Enhancements**:
 - Dark/Light Mode Theme System (system detection, manual toggle, per-album overrides)
 - Blog functionality
 - Download albums as ZIP
@@ -36,7 +36,7 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 - Client-side bcrypt password verification
 - Multiple image sizes for different screens
 
-**Developer Experience (Phase 9)**:
+**Developer Experience Backlog**:
 - CLI tools
 - Migration scripts
 - Enhanced monitoring
@@ -551,7 +551,7 @@ Add to `frontend/package.json`:
 - `unlisted`: Not shown in gallery list, but accessible via direct URL
 - `password_protected`: Requires password to view (bcrypt hash stored)
 
-**Album Customization** (Phase 8 - Advanced Features):
+**Album Customization** (Post-MVP Advanced Features):
 - `typography`: Optional per-album font customization (title, subtitle, body, caption fonts)
 - `layout_options`: Optional layout variations (masonry, grid, justified, carousel)
 - **MVP**: Leave these fields empty - albums use global settings from `site_config.json`
@@ -735,7 +735,7 @@ All Lit components should accept settings as properties. Settings gets injected 
 
 ### 3.3 Password-Protected & Unlisted Albums
 
-**MVP**: Server-side password check. Client-side bcrypt can be added in Phase 8.
+**MVP**: Server-side password check. Client-side bcrypt can be added post-MVP.
 
 **Password Entry Page**:
 - [ ] Clean, minimal password form
@@ -749,7 +749,7 @@ All Lit components should accept settings as properties. Settings gets injected 
 - [ ] Show expiration warning if applicable
 - [ ] Same photo grid and lightbox as public albums
 
-**Phase 8 Enhancement**: Client-side bcrypt verification (no server required)
+**Post-MVP Enhancement**: Client-side bcrypt verification (no server required)
 
 ### 3.5 Lit Web Components
 Create reusable Lit components for the public site:
@@ -1279,7 +1279,7 @@ Already configured in Phase 1.5:
 **Frontend** (`frontend/src/utils/`):
 - [ ] `api.test.ts` - Data fetching and error handling
 - [ ] `router.test.ts` - URL routing logic
-- [ ] `theme-manager.test.ts` - Theme detection, switching, and persistence (see Phase 2.5)
+- [ ] `theme-manager.test.ts` - Theme detection, switching, and persistence (see Phase 3)
 
 **Backend** (`backend/internal/`):
 - [ ] `models/album_test.go` - Album validation logic
