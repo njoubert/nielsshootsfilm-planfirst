@@ -134,8 +134,9 @@ export class Router {
    */
   private setupListeners(): void {
     window.addEventListener('popstate', () => {
-      this.currentPath = window.location.pathname;
-      this.notifyListeners();
+      const path = window.location.pathname;
+      // Handle back/forward navigation with guard check
+      void this.handlePopState(path);
     });
 
     // Handle link clicks
@@ -149,6 +150,27 @@ export class Router {
         void this.navigate(path);
       }
     });
+  }
+
+  /**
+   * Handle browser back/forward navigation.
+   */
+  private async handlePopState(path: string): Promise<void> {
+    // Check route guard
+    const match = this.matchRoute(path);
+    if (match?.route.guard) {
+      const allowed = await match.route.guard();
+      if (!allowed) {
+        // Redirect to login if guard fails
+        window.history.replaceState({}, '', '/admin/login');
+        this.currentPath = '/admin/login';
+        this.notifyListeners();
+        return;
+      }
+    }
+
+    this.currentPath = path;
+    this.notifyListeners();
   }
 
   /**

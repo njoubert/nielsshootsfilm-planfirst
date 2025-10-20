@@ -143,6 +143,51 @@ describe('Router', () => {
       expect(subscriber).toHaveBeenCalled();
       expect(router.getCurrentPath()).toBe('/albums');
     });
+
+    it('should check route guard on popstate', async () => {
+      const guard = vi.fn().mockResolvedValue(true);
+      const guardedRoutes: Route[] = [
+        { path: '/', component: 'home' },
+        { path: '/protected', component: 'protected-page', guard },
+      ];
+      const guardedRouter = new Router(guardedRoutes);
+
+      // Navigate to protected route (allowed)
+      await guardedRouter.navigate('/protected');
+      expect(guard).toHaveBeenCalled();
+
+      // Simulate back button
+      guard.mockClear();
+      window.history.pushState({}, '', '/protected');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+
+      // Wait for async guard check
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(guard).toHaveBeenCalled();
+    });
+
+    it('should redirect to login when guard fails on popstate', async () => {
+      const guard = vi.fn().mockResolvedValue(false);
+      const guardedRoutes: Route[] = [
+        { path: '/admin/login', component: 'login' },
+        { path: '/admin/albums', component: 'albums', guard },
+      ];
+      const guardedRouter = new Router(guardedRoutes);
+
+      const replaceStateSpy = vi.spyOn(window.history, 'replaceState');
+
+      // Simulate back button to protected route
+      window.history.pushState({}, '', '/admin/albums');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+
+      // Wait for async guard check
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(guard).toHaveBeenCalled();
+      expect(replaceStateSpy).toHaveBeenCalledWith({}, '', '/admin/login');
+      expect(guardedRouter.getCurrentPath()).toBe('/admin/login');
+    });
   });
 
   describe('link interception', () => {
