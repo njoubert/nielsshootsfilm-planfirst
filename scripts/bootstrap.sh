@@ -111,9 +111,9 @@ if [ ! -f "$PROJECT_ROOT/data/admin_config.json" ]; then
         exit 1
     fi
 
-    # Generate bcrypt hash using Node.js and bcryptjs (already installed in frontend)
+    # Generate bcrypt hash using Go from backend directory (where bcrypt is installed)
     echo "Generating password hash..."
-    HASH=$(cd "$PROJECT_ROOT/frontend" && node -e "const bcrypt = require('bcryptjs'); console.log(bcrypt.hashSync('$ADMIN_PASSWORD', 10));")
+    HASH=$(cd "$PROJECT_ROOT/backend" && go run "$PROJECT_ROOT/scripts/hash_password.go" "$ADMIN_PASSWORD")
 
     # Create admin_config.json
     cat > "$PROJECT_ROOT/data/admin_config.json" <<EOF

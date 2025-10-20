@@ -76,7 +76,6 @@ data/*.json
 *.dll
 *.so
 *.dylib
-go.sum
 backend/bin/
 
 # Temporary files
