@@ -84,6 +84,7 @@ export class AppShell extends LitElement {
       { path: '/admin/login', component: 'admin-login-page' },
       { path: '/admin', component: 'admin-albums-page', guard: checkAuth },
       { path: '/admin/albums', component: 'admin-albums-page', guard: checkAuth },
+      { path: '/admin/albums/new', component: 'admin-album-editor-page', guard: checkAuth },
       { path: '/admin/albums/:id/edit', component: 'admin-album-editor-page', guard: checkAuth },
 
       // Fallback
