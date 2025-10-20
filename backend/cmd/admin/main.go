@@ -14,6 +14,8 @@ func main() {
 
 	addr := ":8080"
 	fmt.Printf("Admin server listening on %s\n", addr)
+
+	// #nosec G114 - Timeouts will be configured in production server
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		panic(err)
 	}

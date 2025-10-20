@@ -1,9 +1,77 @@
 {
+  "version": "1.0",
+  "last_updated": "2024-01-01T00:00:00Z",
   "site": {
     "title": "Niels Shoots Film",
-    "tagline": "Coming soon"
+    "tagline": "Film Photography Portfolio",
+    "description": "A collection of film photography",
+    "language": "en",
+    "timezone": "America/Los_Angeles"
+  },
+  "owner": {
+    "name": "",
+    "bio": "",
+    "email": "",
+    "phone": "",
+    "location": ""
+  },
+  "social": {
+    "instagram": "",
+    "facebook": "",
+    "twitter": "",
+    "linkedin": "",
+    "youtube": "",
+    "pinterest": "",
+    "tiktok": "",
+    "custom_links": []
+  },
+  "branding": {
+    "logo_url": "",
+    "favicon_url": "",
+    "primary_color": "#1a1a1a",
+    "secondary_color": "#ffffff",
+    "accent_color": "#4a90e2",
+    "font_heading": "",
+    "font_body": "",
+    "custom_css_url": "",
+    "theme": {
+      "mode": "system",
+      "light": {
+        "background": "#ffffff",
+        "surface": "#f5f5f5",
+        "text_primary": "#1a1a1a",
+        "text_secondary": "#666666",
+        "border": "#e0e0e0"
+      },
+      "dark": {
+        "background": "#121212",
+        "surface": "#1e1e1e",
+        "text_primary": "#ffffff",
+        "text_secondary": "#b0b0b0",
+        "border": "#333333"
+      }
+    }
   },
   "portfolio": {
-    "main_album_id": null
+    "main_album_id": "",
+    "show_exif_data": true,
+    "default_photo_layout": "grid",
+    "enable_lightbox": true,
+    "show_photo_count": true
+  },
+  "navigation": {
+    "show_home": true,
+    "show_albums": true,
+    "show_blog": false,
+    "show_about": false,
+    "show_contact": false,
+    "custom_links": []
+  },
+  "features": {
+    "enable_blog": false,
+    "enable_contact_form": false,
+    "enable_newsletter": false,
+    "enable_comments": false,
+    "enable_analytics": false
   }
 }
