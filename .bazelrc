@@ -1,11 +1,47 @@
+# Bazel configuration for nielsshootsfilm-planfirst
+
+# Build configuration
 build --color=yes
 build --curses=yes
 build --show_timestamps
 build --verbose_failures
+build --enable_platform_specific_config
+build --incompatible_strict_action_env
 
+# Experimental features
 common --experimental_enable_bzlmod
 
+# Run configuration
 run --ui_event_filters=-info,-stdout
 run --experimental_ui
 
+# Test configuration
 test --test_output=errors
+test --test_summary=detailed
+
+# Coverage configuration
+coverage --combined_report=lcov
+coverage --instrumentation_filter="//..."
+
+# Performance optimizations
+build --jobs=auto
+build --local_cpu_resources=HOST_CPUS*.75
+
+# Development mode (fast, less optimized)
+build:dev --compilation_mode=fastbuild
+
+# Production mode (optimized)
+build:prod --compilation_mode=opt
+build:prod --strip=always
+
+# CI mode (strict, reproducible)
+build:ci --compilation_mode=opt
+build:ci --stamp
+build:ci --verbose_failures
+
+# Debug mode
+build:debug --compilation_mode=dbg
+build:debug --strip=never
+
+# Try to import user-specific configuration (gitignored)
+try-import %workspace%/.bazelrc.user

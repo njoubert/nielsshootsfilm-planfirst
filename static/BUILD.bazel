@@ -1,0 +1,22 @@
+package(default_visibility = ["//visibility:public"])
+
+# All static files including uploads
+filegroup(
+    name = "all",
+    srcs = glob([
+        "uploads/**/*",
+        "**/*.css",
+        "**/*.js",
+        "**/*.html",
+        "**/*.png",
+        "**/*.jpg",
+        "**/*.svg",
+        "**/*.ico",
+    ]),
+)
+
+# Upload directories
+filegroup(
+    name = "uploads",
+    srcs = glob(["uploads/**/*"]),
+)

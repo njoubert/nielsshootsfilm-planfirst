@@ -1,32 +1,104 @@
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@rules_nodejs//nodejs:defs.bzl", "nodejs_binary")
-
 package(default_visibility = ["//visibility:public"])
 
-# Type-check and transpile the frontend TypeScript sources.
-ts_project(
-    name = "frontend_ts",
-    srcs = glob(["src/**/*.ts"]),
-    tsconfig = "tsconfig.json",
-    deps = [
-        "@npm//@types/node",
-        "@npm//lit",
+# Frontend source files
+filegroup(
+    name = "frontend_srcs",
+    srcs = glob([
+        "src/**/*.ts",
+        "src/**/*.html",
+        "src/**/*.css",
+    ]),
+)
+
+# Configuration files
+filegroup(
+    name = "config_files",
+    srcs = [
+        "package.json",
+        "package-lock.json",
+        "tsconfig.json",
+        "vite.config.ts",
+        "vitest.config.ts",
     ],
 )
 
-# Convenience wrapper to invoke the Vite dev server via Bazel.
-nodejs_binary(
-    name = "dev_server",
+# Run Vite development server with hot module replacement
+# Usage: bazel run //frontend:dev
+sh_binary(
+    name = "dev",
+    srcs = ["dev.sh"],
     data = [
-        "vite.config.ts",
-        "vitest.config.ts",
-        ":frontend_ts",
+        ":config_files",
+        ":frontend_srcs",
         "//data:all",
     ],
-    entry_point = "@npm//:vite/bin/vite.js",
-    node_options = ["--no-warnings"],
-    templated_args = [
-        "--config",
-        "$(rootpath vite.config.ts)",
+)
+
+# Build frontend for production
+# Usage: bazel build //frontend:build
+sh_binary(
+    name = "build",
+    srcs = ["build.sh"],
+    data = [
+        ":config_files",
+        ":frontend_srcs",
+    ],
+)
+
+# Run all frontend unit tests (Vitest)
+# Usage: bazel test //frontend:test
+sh_test(
+    name = "test",
+    srcs = ["test.sh"],
+    data = [
+        ":config_files",
+        ":frontend_srcs",
+    ],
+    tags = ["unit"],
+)
+
+# Run tests in watch mode for development
+# Usage: bazel run //frontend:test-watch
+sh_binary(
+    name = "test-watch",
+    srcs = ["test-watch.sh"],
+    data = [
+        ":config_files",
+        ":frontend_srcs",
+    ],
+)
+
+# Type-check TypeScript without emitting files
+# Usage: bazel test //frontend:typecheck
+sh_test(
+    name = "typecheck",
+    srcs = ["typecheck.sh"],
+    data = [
+        ":config_files",
+        ":frontend_srcs",
+    ],
+    tags = ["typecheck"],
+)
+
+# Lint TypeScript/JavaScript files
+# Usage: bazel test //frontend:lint
+sh_test(
+    name = "lint",
+    srcs = ["lint.sh"],
+    data = [
+        ":config_files",
+        ":frontend_srcs",
+    ],
+    tags = ["lint"],
+)
+
+# Format code with Prettier
+# Usage: bazel run //frontend:format
+sh_binary(
+    name = "format",
+    srcs = ["format.sh"],
+    data = [
+        ":config_files",
+        ":frontend_srcs",
     ],
 )

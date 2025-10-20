@@ -1,6 +1,23 @@
 package(default_visibility = ["//visibility:public"])
 
+# All JSON data files
 filegroup(
     name = "all",
     srcs = glob(["*.json"]),
+)
+
+# Individual data files for granular dependencies
+filegroup(
+    name = "albums",
+    srcs = ["albums.json"],
+)
+
+filegroup(
+    name = "site_config",
+    srcs = ["site_config.json"],
+)
+
+filegroup(
+    name = "blog_posts",
+    srcs = ["blog_posts.json"],
 )

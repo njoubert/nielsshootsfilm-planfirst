@@ -8,6 +8,11 @@ build/
 bazel-*/
 coverage/
 *.coverage
+backend/coverage.html
+backend/coverage.out
+
+# Bazel user configuration
+.bazelrc.user
 
 # Environment variables
 .env

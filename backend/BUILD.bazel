@@ -2,8 +2,104 @@ load("@rules_go//go:def.bzl", "go_binary")
 
 package(default_visibility = ["//visibility:public"])
 
+# Backend source files
+filegroup(
+    name = "backend_srcs",
+    srcs = glob(
+        [
+            "cmd/**/*.go",
+            "internal/**/*.go",
+        ],
+        exclude = ["**/*_test.go"],
+    ),
+)
+
+# Backend test files
+filegroup(
+    name = "backend_tests",
+    srcs = glob(["**/*_test.go"]),
+)
+
+# Build and run the admin server
+# Usage: bazel run //backend:server
 go_binary(
-    name = "admin_server",
+    name = "server",
     srcs = ["cmd/admin/main.go"],
+    data = [
+        "//data:all",
+        "//static:all",
+    ],
     importpath = "github.com/njoubert/nielsshootsfilm-planfirst/backend/cmd/admin",
+    deps = [
+        "//backend/internal/handlers",
+        "//backend/internal/models",
+        "//backend/internal/services",
+    ],
+)
+
+# Alias for backward compatibility
+alias(
+    name = "admin_server",
+    actual = ":server",
+)
+
+# Run the admin server with hot-reload (using scripts/start-backend.sh)
+# Usage: bazel run //backend:dev
+sh_binary(
+    name = "dev",
+    srcs = ["dev.sh"],
+    data = [
+        ":backend_srcs",
+        "//data:all",
+        "//static:all",
+    ],
+)
+
+# Run all Go unit tests
+# Usage: bazel test //backend:test
+sh_test(
+    name = "test",
+    srcs = ["test.sh"],
+    data = [
+        ":backend_srcs",
+        ":backend_tests",
+        "//testdata:all",
+    ],
+    tags = ["unit"],
+)
+
+# Run Go tests with coverage
+# Usage: bazel run //backend:test-coverage
+sh_binary(
+    name = "test-coverage",
+    srcs = ["test-coverage.sh"],
+    data = [
+        ":backend_srcs",
+        ":backend_tests",
+        "//testdata:all",
+    ],
+)
+
+# Format Go code with gofmt
+# Usage: bazel run //backend:fmt
+sh_binary(
+    name = "fmt",
+    srcs = ["fmt.sh"],
+    data = [":backend_srcs"],
+)
+
+# Lint Go code with golangci-lint
+# Usage: bazel test //backend:lint
+sh_test(
+    name = "lint",
+    srcs = ["lint.sh"],
+    data = [":backend_srcs"],
+    tags = ["lint"],
+)
+
+# Tidy go.mod dependencies
+# Usage: bazel run //backend:tidy
+sh_binary(
+    name = "tidy",
+    srcs = ["tidy.sh"],
 )
