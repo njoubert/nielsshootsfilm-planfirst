@@ -65,10 +65,10 @@ repos:
         args: [-w]
       # Organize imports
       - id: go-imports
-      # Run go vet
-      - id: go-vet
       # Check go.mod is tidy
       - id: go-mod-tidy
+      # Note: go-vet from this repo doesn't work (runs from wrong directory)
+      # We use a custom local hook for go-vet instead (see below)
 
   # ====================
   # Bazel
@@ -124,6 +124,14 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-push]
+
+      # Run go vet on Go files
+      - id: go-vet-local
+        name: Go Vet
+        entry: bash -c 'cd backend && go vet ./...'
+        language: system
+        files: \.go$
+        pass_filenames: false
 
       # Run Go unit tests (on push only)
       - id: go-unit-tests
