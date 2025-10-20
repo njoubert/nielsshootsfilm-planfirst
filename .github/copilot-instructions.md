@@ -38,3 +38,8 @@
 
 - Always check the docs/MVP_PLAN.md for MVP priorities
 - Reference docs/DEVELOPMENT_SETUP.md for tool configuration details
+
+## You MAY NOT
+
+- You may not turn off tests without explicit permission
+- You may not remove checks from the pre-commit hooks.
