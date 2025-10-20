@@ -57,6 +57,11 @@ static/uploads/*
 data/*.json
 !data/.gitkeep
 
+# Backup files
+.backups/
+*.backup
+*.bak
+
 # Test artifacts
 *.test
 *.out
