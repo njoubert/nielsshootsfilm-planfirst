@@ -1,25 +1,18 @@
 # Scripts Directory
 
-Utility scripts for the nielsshootsfilm project. These can be run directly or via Bazel targets.
+Utility scripts for the nielsshootsfilm project.
 
 ## Running Scripts
 
-### With Bazel (Recommended)
+All scripts can be run directly from the command line:
 
 ```bash
-bazel run //:bootstrap               # Initialize project
-bazel run //:hash-password           # Hash a password
-bazel run //:test-api                # Run API tests
-bazel run //:download-sample-images  # Download test images
-```
-
-### Without Bazel (Direct)
-
-```bash
-./scripts/bootstrap.sh               # Initialize project
-go run scripts/hash_password.go      # Hash a password
-./scripts/test-api.sh                # Run API tests
-node scripts/download-sample-images.js  # Download test images
+./scripts/bootstrap.sh                      # Initialize project
+go run scripts/hash_password.go             # Hash a password
+./scripts/test-api.sh                       # Run API tests
+node scripts/download-sample-images.js      # Download test images
+./scripts/start-backend.sh                  # Start backend server
+./scripts/stop-backend.sh                   # Stop backend server
 ```
 
 ## Available Scripts
@@ -31,8 +24,6 @@ Initializes the project for first-time setup.
 **Usage:**
 
 ```bash
-bazel run //:bootstrap
-# OR
 ./scripts/bootstrap.sh
 ```
 
@@ -55,8 +46,6 @@ Generates bcrypt hashes for passwords.
 **Usage:**
 
 ```bash
-bazel run //:hash-password
-# OR
 go run scripts/hash_password.go
 ```
 
@@ -77,8 +66,6 @@ Runs comprehensive API integration tests against the backend server.
 **Usage:**
 
 ```bash
-bazel run //:test-api
-# OR
 ./scripts/test-api.sh
 ```
 
@@ -107,8 +94,8 @@ Starts the Go backend server with hot-reload support.
 
 ```bash
 ./scripts/start-backend.sh
-# OR use Bazel
-bazel run //backend:dev
+# OR use the backend script wrapper
+./backend/scripts/dev.sh
 ```
 
 **What it does:**
@@ -151,8 +138,6 @@ Downloads sample images from picsum.photos and saves them locally.
 **Usage:**
 
 ```bash
-bazel run //:download-sample-images
-# OR
 node scripts/download-sample-images.js
 ```
 
@@ -179,18 +164,6 @@ Picsum.photos returns random images on each request. By downloading and caching 
 
 ---
 
-### hash-password.sh (Wrapper)
-
-Bazel-compatible wrapper for `hash_password.go`.
-
----
-
-### download-sample-images.sh (Wrapper)
-
-Bazel-compatible wrapper for `download-sample-images.js`.
-
----
-
 ## Development Workflow
 
 ### First-Time Setup
@@ -201,39 +174,41 @@ cd frontend && npm install
 cd ../backend && go mod download
 
 # 2. Initialize project
-bazel run //:bootstrap
+./scripts/bootstrap.sh
 
 # 3. Download sample images (optional)
-bazel run //:download-sample-images
+node scripts/download-sample-images.js
 
 # 4. Start development servers
 # Terminal 1:
-bazel run //frontend:dev
+./frontend/scripts/dev.sh
 
 # Terminal 2:
-bazel run //backend:dev
+./backend/scripts/dev.sh
 ```
 
 ### Daily Development
 
 ```bash
 # Start servers (in separate terminals)
-bazel run //frontend:dev
-bazel run //backend:dev
+./frontend/scripts/dev.sh
+./backend/scripts/dev.sh
 
 # Run tests
-bazel test //:test-all
+./frontend/scripts/test.sh
+./backend/scripts/test.sh
 
 # Before committing
-bazel test //:lint
-bazel test //:typecheck
+./frontend/scripts/lint.sh
+./frontend/scripts/typecheck.sh
+./backend/scripts/lint.sh
 ```
 
 ### Testing Backend Changes
 
 ```bash
 # Run API integration tests
-bazel run //:test-api
+./scripts/test-api.sh
 
 # Or manually test with curl (use actual password) <!-- pragma: allowlist secret -->
 curl -X POST http://localhost:8080/api/admin/login \
@@ -243,7 +218,7 @@ curl -X POST http://localhost:8080/api/admin/login \
 
 ## See Also
 
-- [Bazel Setup Guide](../docs/BAZEL_SETUP.md) - Full Bazel documentation
-- [Bazel Cheatsheet](../docs/BAZEL_CHEATSHEET.md) - Quick reference
+- [Frontend Scripts](../frontend/scripts/README.md) - Frontend development scripts
+- [Backend Scripts](../backend/scripts/README.md) - Backend development scripts
 - [Development Setup](../docs/DEVELOPMENT_SETUP.md) - Complete dev environment guide
 - [API Test Results](../docs/reports/API_TEST_RESULTS.md) - Latest API test documentation
