@@ -148,7 +148,7 @@ export class AlbumListPage extends LitElement {
   }
 
   private handleAlbumClick(album: Album) {
-    window.location.href = `/album/${album.slug}`;
+    window.location.href = `/albums/${album.slug}`;
   }
 }
 
