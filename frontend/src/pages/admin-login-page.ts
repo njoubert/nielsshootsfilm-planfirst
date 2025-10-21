@@ -154,7 +154,7 @@ export class AdminLoginPage extends LitElement {
 
       // Redirect to admin dashboard after short delay
       setTimeout(() => {
-        window.location.href = '/admin/albums';
+        window.location.href = '/admin';
       }, 500);
     } catch (err) {
       this.error = err instanceof Error ? err.message : 'Login failed';
