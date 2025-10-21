@@ -291,8 +291,32 @@ install_vips() {
 }
 
 # Install optional tools
-install_optional_tools() {
+install_devex_tools() {
     print_header "Installing Optional Development Tools"
+
+    # Shell script linting tool (shellcheck)
+    if ! command_exists shellcheck; then
+        if [[ "$OS" == "macos" ]]; then
+            print_info "Installing shellcheck..."
+            brew install shellcheck
+            print_success "shellcheck installed"
+        elif [[ "$OS" == "linux" ]]; then
+            if command_exists apt-get; then
+                print_info "Installing shellcheck..."
+                sudo apt-get install -y shellcheck
+                print_success "shellcheck installed"
+            elif command_exists yum; then
+                print_info "Installing shellcheck..."
+                sudo yum install -y ShellCheck
+                print_success "shellcheck installed"
+            else
+                print_warning "shellcheck not installed (optional)"
+                print_info "Install from: https://github.com/koalaman/shellcheck#installing"
+            fi
+        fi
+    else
+        print_success "shellcheck already installed"
+    fi
 
     # golangci-lint for Go linting
     if ! command_exists golangci-lint; then
@@ -385,6 +409,13 @@ verify_installation() {
         print_warning "pre-commit: not found (optional but recommended)"
     fi
 
+    # Check shellcheck
+    if command_exists shellcheck; then
+        print_success "shellcheck: installed"
+    else
+        print_warning "shellcheck: not found (optional but recommended)"
+    fi
+
     # Check frontend dependencies
     if [ -d "frontend/node_modules" ]; then
         print_success "Frontend dependencies: installed"
@@ -463,7 +494,7 @@ main() {
     echo "  • Frontend npm packages"
     echo "  • Backend Go modules"
     echo "  • Pre-commit hooks"
-    echo "  • Optional development tools"
+    echo "  • Optional development tools (shellcheck, golangci-lint, jq)"
     echo ""
 
     read -p "Continue with installation? (Y/n): " -n 1 -r
@@ -485,7 +516,7 @@ main() {
     install_frontend_deps
     install_backend_deps
     install_precommit
-    install_optional_tools
+    install_devex_tools
 
     # Verify everything
     if verify_installation; then
