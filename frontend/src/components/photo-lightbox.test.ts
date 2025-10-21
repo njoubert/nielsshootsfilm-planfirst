@@ -426,4 +426,84 @@ describe('PhotoLightbox', () => {
 
     removeEventListenerSpy.restore();
   });
+
+  it('should disable body scroll when opened', async () => {
+    const el = await fixture<PhotoLightbox>(
+      html`<photo-lightbox .photos=${mockPhotos}></photo-lightbox>`
+    );
+
+    // Initially closed, body should have normal overflow
+    expect(document.body.style.overflow).to.equal('');
+
+    // Open the lightbox
+    el.open = true;
+    await el.updateComplete;
+
+    // Body should have overflow hidden
+    expect(document.body.style.overflow).to.equal('hidden');
+  });
+
+  it('should re-enable body scroll when closed', async () => {
+    const el = await fixture<PhotoLightbox>(
+      html`<photo-lightbox .photos=${mockPhotos} open></photo-lightbox>`
+    );
+
+    // Should start with overflow hidden when open
+    expect(document.body.style.overflow).to.equal('hidden');
+
+    // Close the lightbox
+    el.open = false;
+    await el.updateComplete;
+
+    // Body should have normal overflow restored
+    expect(document.body.style.overflow).to.equal('');
+  });
+
+  it('should disable mobile zoom when opened', async () => {
+    const el = await fixture<PhotoLightbox>(
+      html`<photo-lightbox .photos=${mockPhotos}></photo-lightbox>`
+    );
+
+    // Open the lightbox
+    el.open = true;
+    await el.updateComplete;
+
+    // Viewport meta should disable zoom
+    const viewport = document.querySelector('meta[name="viewport"]');
+    expect(viewport).to.exist;
+    const content = viewport?.getAttribute('content');
+    expect(content).to.include('user-scalable=no');
+    expect(content).to.include('maximum-scale=1.0');
+  });
+
+  it('should re-enable mobile zoom when closed', async () => {
+    const el = await fixture<PhotoLightbox>(
+      html`<photo-lightbox .photos=${mockPhotos} open></photo-lightbox>`
+    );
+
+    // Close the lightbox
+    el.open = false;
+    await el.updateComplete;
+
+    // Viewport meta should re-enable zoom
+    const viewport = document.querySelector('meta[name="viewport"]');
+    const content = viewport?.getAttribute('content');
+    expect(content).to.not.include('user-scalable=no');
+    expect(content).to.not.include('maximum-scale=1.0');
+  });
+
+  it('should clean up body styles on disconnect when open', async () => {
+    const el = await fixture<PhotoLightbox>(
+      html`<photo-lightbox .photos=${mockPhotos} open></photo-lightbox>`
+    );
+
+    // Body should have overflow hidden when open
+    expect(document.body.style.overflow).to.equal('hidden');
+
+    // Disconnect the component while it's open
+    el.disconnectedCallback();
+
+    // Body overflow should be restored
+    expect(document.body.style.overflow).to.equal('');
+  });
 });

@@ -10,7 +10,25 @@ export class PhotoLightbox extends LitElement {
   @property({ type: Array }) photos: Photo[] = [];
   @property({ type: Number }) currentIndex = 0;
   @property({ type: Boolean }) showExif = false;
-  @property({ type: Boolean }) open = false;
+
+  private _open = false;
+
+  @property({ type: Boolean })
+  get open() {
+    return this._open;
+  }
+
+  set open(value: boolean) {
+    const oldValue = this._open;
+    this._open = value;
+
+    // Handle scroll and zoom when open state changes
+    if (value !== oldValue) {
+      this.disableBodyScroll(value);
+      this.disableMobileZoom(value);
+      this.requestUpdate('open', oldValue);
+    }
+  }
 
   @state() private touchStartX = 0;
   @state() private touchEndX = 0;
@@ -186,6 +204,43 @@ export class PhotoLightbox extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     document.removeEventListener('keydown', this.handleKeyDown);
+    // Clean up body styles if component is removed while open
+    if (this.open) {
+      this.disableBodyScroll(false);
+      this.disableMobileZoom(false);
+    }
+  }
+
+  private disableBodyScroll(disable: boolean) {
+    if (disable) {
+      // Store original overflow style to restore later
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }
+
+  private disableMobileZoom(disable: boolean) {
+    // Find or create viewport meta tag
+    let viewport = document.querySelector('meta[name="viewport"]');
+
+    if (disable) {
+      if (!viewport) {
+        viewport = document.createElement('meta');
+        viewport.setAttribute('name', 'viewport');
+        document.head.appendChild(viewport);
+      }
+      // Disable user scaling
+      viewport.setAttribute(
+        'content',
+        'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
+      );
+    } else {
+      if (viewport) {
+        // Re-enable user scaling
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
+      }
+    }
   }
 
   private handleKeyDown = (e: KeyboardEvent) => {
