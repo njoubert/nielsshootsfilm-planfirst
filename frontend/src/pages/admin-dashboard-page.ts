@@ -30,10 +30,12 @@ export class AdminDashboardPage extends LitElement {
     }
 
     .page-title {
-      font-size: 1.75rem;
+      font-family: 'Raleway', sans-serif;
+      font-size: 52px;
       font-weight: 600;
       color: var(--color-text-primary, #333);
       margin: 0 0 0.5rem;
+      text-transform: uppercase;
     }
 
     .page-subtitle {
@@ -86,10 +88,12 @@ export class AdminDashboardPage extends LitElement {
     }
 
     .section-title {
+      font-family: 'Raleway', sans-serif;
       font-size: 1.125rem;
       font-weight: 600;
       color: var(--color-text-primary, #333);
       margin: 0 0 1rem;
+      text-transform: uppercase;
     }
 
     .actions-grid {
@@ -120,9 +124,11 @@ export class AdminDashboardPage extends LitElement {
     }
 
     .action-title {
+      font-family: 'Raleway', sans-serif;
       font-size: 1rem;
       font-weight: 600;
       margin: 0 0 0.25rem;
+      text-transform: uppercase;
     }
 
     .action-description {

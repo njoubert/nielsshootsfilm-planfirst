@@ -32,17 +32,22 @@ export class AdminLoginPage extends LitElement {
     }
 
     h1 {
+      font-family: 'Raleway', sans-serif;
       margin: 0 0 0.5rem;
       font-size: 1.75rem;
       color: var(--color-text-primary, #333);
       text-align: center;
+      text-transform: uppercase;
     }
 
     .subtitle {
+      font-family: 'Raleway', sans-serif;
       margin: 0 0 2rem;
       color: var(--color-text-secondary, #666);
       text-align: center;
-      font-size: 0.875rem;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     .form-group {

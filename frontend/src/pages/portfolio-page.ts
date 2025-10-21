@@ -45,10 +45,12 @@ export class PortfolioPage extends LitElement {
     }
 
     .about-title {
+      font-family: 'Raleway', sans-serif;
       font-size: 2rem;
       font-weight: 700;
       margin-bottom: 1rem;
       color: var(--color-text-primary);
+      text-transform: uppercase;
     }
 
     .about-bio {

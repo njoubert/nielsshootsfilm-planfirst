@@ -31,16 +31,21 @@ export class AlbumListPage extends LitElement {
     }
 
     .title {
-      font-size: 2.5rem;
+      font-family: 'Raleway', sans-serif;
+      font-size: 52px;
       font-weight: 700;
       margin: 0 0 1rem 0;
       color: var(--color-text-primary);
+      text-transform: uppercase;
     }
 
     .subtitle {
-      font-size: 1.1rem;
+      font-family: 'Raleway', sans-serif;
+      font-size: 14px;
       color: var(--color-text-secondary);
       margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 2px;
     }
 
     .loading-container,

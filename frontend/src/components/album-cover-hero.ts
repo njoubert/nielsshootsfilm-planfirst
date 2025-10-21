@@ -54,18 +54,23 @@ export class AlbumCoverHero extends LitElement {
     }
 
     .title {
-      font-size: clamp(2rem, 5vw, 4rem);
+      font-family: 'Raleway', sans-serif;
+      font-size: 52px;
       font-weight: 700;
       margin: 0 0 1rem 0;
       text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      text-transform: uppercase;
     }
 
     .subtitle {
-      font-size: clamp(1rem, 2.5vw, 1.5rem);
-      font-weight: 300;
+      font-family: 'Raleway', sans-serif;
+      font-size: 14px;
+      font-weight: 400;
       margin: 0;
       opacity: 0.9;
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      text-transform: uppercase;
+      letter-spacing: 2px;
     }
 
     .scroll-indicator {
