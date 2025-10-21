@@ -32,10 +32,12 @@ export class AdminAlbumsPage extends LitElement {
     }
 
     .page-title {
-      font-size: 1.5rem;
+      font-family: 'Raleway', sans-serif;
+      font-size: 52px;
       font-weight: 600;
       color: var(--color-text-primary, #333);
       margin: 0;
+      text-transform: uppercase;
     }
 
     .btn {
@@ -131,10 +133,12 @@ export class AdminAlbumsPage extends LitElement {
     }
 
     .album-title {
+      font-family: 'Raleway', sans-serif;
       margin: 0 0 0.25rem;
       font-size: 1.125rem;
       font-weight: 600;
       color: var(--color-text-primary, #333);
+      text-transform: uppercase;
     }
 
     .album-subtitle {
@@ -203,8 +207,10 @@ export class AdminAlbumsPage extends LitElement {
     }
 
     .empty-state h2 {
+      font-family: 'Raleway', sans-serif;
       margin: 0 0 0.5rem;
       color: var(--color-text-primary, #333);
+      text-transform: uppercase;
     }
 
     .empty-state p {
@@ -234,8 +240,10 @@ export class AdminAlbumsPage extends LitElement {
     }
 
     .modal h2 {
+      font-family: 'Raleway', sans-serif;
       margin: 0 0 1rem;
       font-size: 1.25rem;
+      text-transform: uppercase;
     }
 
     .modal p {

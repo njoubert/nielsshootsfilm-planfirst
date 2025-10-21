@@ -30,18 +30,23 @@ export class PasswordForm extends LitElement {
     }
 
     .title {
+      font-family: 'Raleway', sans-serif;
       font-size: 1.5rem;
       font-weight: 600;
       margin: 0 0 0.5rem 0;
       color: var(--color-text-primary);
       text-align: center;
+      text-transform: uppercase;
     }
 
     .subtitle {
-      font-size: 0.9rem;
+      font-family: 'Raleway', sans-serif;
+      font-size: 14px;
       color: var(--color-text-secondary);
       margin: 0 0 2rem 0;
       text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     .form-group {

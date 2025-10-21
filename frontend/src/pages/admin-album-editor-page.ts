@@ -33,10 +33,12 @@ export class AdminAlbumEditorPage extends LitElement {
     }
 
     .page-title {
+      font-family: 'Raleway', sans-serif;
       margin: 0;
-      font-size: 1.5rem;
+      font-size: 52px;
       font-weight: 600;
       color: var(--color-text-primary, #333);
+      text-transform: uppercase;
     }
 
     .btn {
@@ -103,9 +105,11 @@ export class AdminAlbumEditorPage extends LitElement {
     }
 
     .form-section h2 {
+      font-family: 'Raleway', sans-serif;
       margin: 0 0 1rem;
       font-size: 1.125rem;
       color: var(--color-text-primary, #333);
+      text-transform: uppercase;
     }
 
     .form-group {

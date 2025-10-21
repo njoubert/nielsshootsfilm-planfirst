@@ -35,10 +35,12 @@ export class AdminSettingsPage extends LitElement {
     }
 
     .page-title {
-      font-size: 1.75rem;
+      font-family: 'Raleway', sans-serif;
+      font-size: 52px;
       font-weight: 600;
       color: var(--color-text-primary, #333);
       margin: 0 0 0.5rem;
+      text-transform: uppercase;
     }
 
     .page-subtitle {
@@ -55,11 +57,13 @@ export class AdminSettingsPage extends LitElement {
     }
 
     .section-title {
+      font-family: 'Raleway', sans-serif;
       font-size: 1.125rem;
       font-weight: 600;
       color: var(--color-text-primary, #333);
       margin: 0 0 1rem;
       padding-bottom: 0.75rem;
+      text-transform: uppercase;
       border-bottom: 2px solid var(--color-border, #ddd);
     }
 
