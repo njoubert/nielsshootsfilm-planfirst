@@ -19,7 +19,7 @@ export class AlbumCard extends LitElement {
 
     .card {
       cursor: pointer;
-      border-radius: 8px;
+      border-radius: 0;
       overflow: hidden;
       transition:
         transform 0.2s,
@@ -88,7 +88,7 @@ export class AlbumCard extends LitElement {
 
     .visibility-badge {
       padding: 0.25rem 0.5rem;
-      border-radius: 4px;
+      border-radius: 0;
       font-size: 0.75rem;
       background-color: var(--color-border);
       color: var(--color-text-secondary);
@@ -120,20 +120,16 @@ export class AlbumCard extends LitElement {
         <div class="info">
           <h3 class="title">${this.album.title}</h3>
           ${this.album.subtitle ? html`<p class="subtitle">${this.album.subtitle}</p>` : ''}
-          <div class="meta">
-            ${this.showPhotoCount
-              ? html`<div class="photo-count">
-                  📷 ${this.album.photos.length}
-                  ${this.album.photos.length === 1 ? 'photo' : 'photos'}
-                </div>`
-              : ''}
-            ${this.album.visibility === 'password_protected'
-              ? html`<span class="visibility-badge password">🔒 Protected</span>`
-              : ''}
-            ${this.album.visibility === 'unlisted'
-              ? html`<span class="visibility-badge">Unlisted</span>`
-              : ''}
-          </div>
+          ${this.album.visibility === 'password_protected' || this.album.visibility === 'unlisted'
+            ? html`<div class="meta">
+                ${this.album.visibility === 'password_protected'
+                  ? html`<span class="visibility-badge password">🔒 Protected</span>`
+                  : ''}
+                ${this.album.visibility === 'unlisted'
+                  ? html`<span class="visibility-badge">Unlisted</span>`
+                  : ''}
+              </div>`
+            : ''}
         </div>
       </div>
     `;
