@@ -49,6 +49,16 @@ echo "🖼️  Copying uploads directory..."
 mkdir -p "$FINAL_BUILD_DIR/uploads"
 cp -r "$PROJECT_ROOT/static/uploads/"* "$FINAL_BUILD_DIR/uploads/" 2>/dev/null || true
 
+# Load deployment configuration from .env if available
+if [ -f "$PROJECT_ROOT/.env" ]; then
+  # Source only the DEPLOY_* variables from .env
+  # shellcheck disable=SC2046
+  export $(grep -E "^DEPLOY_(USER|HOST|PATH)=" "$PROJECT_ROOT/.env" | xargs)
+fi
+DEPLOY_USER="${DEPLOY_USER:-njoubert}"
+DEPLOY_HOST="${DEPLOY_HOST:-njoubert.com}"
+DEPLOY_PATH="${DEPLOY_PATH:-/var/www/nielsshootsfilm.com/}"
+
 echo ""
 echo "✅ Build complete!"
 echo "Production files are in: $FINAL_BUILD_DIR"
@@ -60,9 +70,9 @@ echo "  ├── assets/          (JS and CSS)"
 echo "  ├── data/            (JSON data files)"
 echo "  └── uploads/         (images)"
 echo ""
-echo "�📦 Deployment:"
+echo " Deployment:"
 echo "  1. Copy build-bin/frontend/ contents to your web server:"
-echo "     rsync -avz --delete $FINAL_BUILD_DIR/ user@server:/var/www/nielsshootsfilm.com/"
+echo "     rsync -avz --delete $FINAL_BUILD_DIR/ $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH"
 echo ""
 echo "  2. Generate Apache configuration (if needed):"
 echo "     cd $PROJECT_ROOT"
