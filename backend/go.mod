@@ -3,7 +3,7 @@ module github.com/njoubert/nielsshootsfilm-planfirst/backend
 go 1.24.0
 
 require (
-	github.com/disintegration/imaging v1.6.2
+	github.com/davidbyttow/govips/v2 v2.16.0
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-chi/cors v1.2.2
 	github.com/google/uuid v1.6.0
@@ -14,8 +14,6 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/davidbyttow/govips v0.0.0-20201026223743-b1b72c7305d9 // indirect
-	github.com/davidbyttow/govips/v2 v2.16.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/image v0.18.0 // indirect
 	golang.org/x/net v0.45.0 // indirect

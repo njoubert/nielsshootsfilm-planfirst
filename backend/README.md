@@ -14,11 +14,14 @@ Copy the generated hash.
 
 ### 2. Set Environment Variables
 
-Create a `.env` file (copy from `.env.example`):
+Create a `.env` file in the project root (copy from `.env.example`):
 
 ```bash
+cd /path/to/nielsshootsfilm
 cp .env.example .env
 ```
+
+**Note:** There's a symlink at `backend/.env` that points to the root `.env` file, so you only need to maintain one `.env` file at the project root.
 
 Edit `.env` and set your password hash:
 

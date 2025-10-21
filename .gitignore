@@ -5,6 +5,7 @@ frontend/node_modules/
 # Build outputs
 dist/
 build/
+build-bin/
 bazel-*/
 coverage/
 *.coverage

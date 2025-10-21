@@ -20,6 +20,33 @@ mkdir -p "$PROJECT_ROOT/static/uploads/display"
 mkdir -p "$PROJECT_ROOT/static/uploads/thumbnails"
 echo -e "${GREEN}✓ Directories created${NC}\n"
 
+# Setup .env file
+if [ ! -f "$PROJECT_ROOT/.env" ]; then
+    echo "Creating .env file from template..."
+    cp "$PROJECT_ROOT/.env.example" "$PROJECT_ROOT/.env"
+    echo -e "${GREEN}✓ .env file created${NC}"
+    echo -e "${YELLOW}  → Edit .env to customize your configuration${NC}\n"
+else
+    echo -e "${YELLOW}⚠ .env already exists, skipping${NC}\n"
+fi
+
+# Create symlinks for .env in backend and frontend if they don't exist
+echo "Setting up .env symlinks..."
+if [ ! -L "$PROJECT_ROOT/backend/.env" ]; then
+    ln -s ../.env "$PROJECT_ROOT/backend/.env"
+    echo -e "${GREEN}✓ Created backend/.env symlink${NC}"
+else
+    echo -e "${YELLOW}⚠ backend/.env symlink already exists${NC}"
+fi
+
+if [ ! -L "$PROJECT_ROOT/frontend/.env" ]; then
+    ln -s ../.env "$PROJECT_ROOT/frontend/.env"
+    echo -e "${GREEN}✓ Created frontend/.env symlink${NC}"
+else
+    echo -e "${YELLOW}⚠ frontend/.env symlink already exists${NC}"
+fi
+echo ""
+
 # Initialize albums.json if it doesn't exist
 if [ ! -f "$PROJECT_ROOT/data/albums.json" ]; then
     echo "Initializing albums.json..."
@@ -122,7 +149,39 @@ if [ ! -f "$PROJECT_ROOT/data/admin_config.json" ]; then
   "password_hash": "$HASH"
 }
 EOF
-    echo -e "${GREEN}✓ admin_config.json created${NC}\n"
+    echo -e "${GREEN}✓ admin_config.json created${NC}"
+
+    # Update .env file with admin credentials and session secret if it exists
+    if [ -f "$PROJECT_ROOT/.env" ]; then
+        echo "Updating .env with admin credentials..."
+        # Update or add ADMIN_USERNAME
+        if grep -q "^ADMIN_USERNAME=" "$PROJECT_ROOT/.env"; then
+            sed -i.bak "s/^ADMIN_USERNAME=.*/ADMIN_USERNAME=admin/" "$PROJECT_ROOT/.env"
+        else
+            echo "ADMIN_USERNAME=admin" >> "$PROJECT_ROOT/.env"
+        fi
+        # Update or add ADMIN_PASSWORD_HASH
+        if grep -q "^ADMIN_PASSWORD_HASH=" "$PROJECT_ROOT/.env"; then
+            sed -i.bak "s|^ADMIN_PASSWORD_HASH=.*|ADMIN_PASSWORD_HASH=$HASH|" "$PROJECT_ROOT/.env"
+        else
+            echo "ADMIN_PASSWORD_HASH=$HASH" >> "$PROJECT_ROOT/.env"
+        fi
+
+        # Generate session secret if not set or is the default placeholder
+        if ! grep -q "^SESSION_SECRET=" "$PROJECT_ROOT/.env" || grep -q "^SESSION_SECRET=your-secret-key-here" "$PROJECT_ROOT/.env"; then
+            echo "Generating session secret..."
+            SESSION_SECRET=$(openssl rand -hex 32)
+            if grep -q "^SESSION_SECRET=" "$PROJECT_ROOT/.env"; then
+                sed -i.bak "s|^SESSION_SECRET=.*|SESSION_SECRET=$SESSION_SECRET|" "$PROJECT_ROOT/.env"
+            else
+                echo "SESSION_SECRET=$SESSION_SECRET" >> "$PROJECT_ROOT/.env"
+            fi
+            echo -e "${GREEN}✓ Generated secure session secret${NC}"
+        fi
+
+        rm -f "$PROJECT_ROOT/.env.bak"
+        echo -e "${GREEN}✓ .env updated with admin credentials${NC}\n"
+    fi
 else
     echo -e "${YELLOW}⚠ admin_config.json already exists, skipping${NC}\n"
 fi
