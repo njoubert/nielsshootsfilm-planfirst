@@ -27,6 +27,13 @@ export class PhotoGrid extends LitElement {
     .grid.masonry {
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       grid-auto-rows: 10px;
+      max-width: 100%;
+    }
+
+    @media (min-width: 1400px) {
+      .grid.masonry {
+        grid-template-columns: repeat(4, 1fr);
+      }
     }
 
     .grid.masonry .photo-item {
@@ -38,9 +45,21 @@ export class PhotoGrid extends LitElement {
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     }
 
+    @media (min-width: 1400px) {
+      .grid.standard {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
     /* Square grid layout */
     .grid.square {
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+
+    @media (min-width: 1400px) {
+      .grid.square {
+        grid-template-columns: repeat(4, 1fr);
+      }
     }
 
     .grid.square .photo-item {

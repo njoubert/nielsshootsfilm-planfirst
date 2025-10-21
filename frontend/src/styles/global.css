@@ -1,12 +1,13 @@
 :root {
   color-scheme: light dark;
-  font-family: system-ui, sans-serif;
+  font-family: 'Raleway', sans-serif;
 }
 
 body {
   margin: 0;
   background: #111;
   color: #f5f5f5;
+  font-family: 'Raleway', sans-serif;
 }
 
 /* Typography improvements: Raleway for titles, subtitles, headers */

@@ -6,8 +6,10 @@
 /* Light mode colors (default) */
 :root {
   --color-background: #f5f5f5;
+  --color-background-rgb: 245, 245, 245;
   --color-surface: #ffffff;
   --color-border: #e0e0e0;
+  --color-border-rgb: 224, 224, 224;
 
   --color-text-primary: #212121;
   --color-text-secondary: #666666;
@@ -49,8 +51,10 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --color-background: #1a1a1a;
+    --color-background-rgb: 26, 26, 26;
     --color-surface: #2d2d2d;
     --color-border: #404040;
+    --color-border-rgb: 64, 64, 64;
 
     --color-text-primary: #e0e0e0;
     --color-text-secondary: #b0b0b0;

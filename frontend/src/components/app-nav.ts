@@ -20,13 +20,22 @@ export class AppNav extends LitElement {
       justify-content: space-between;
       align-items: center;
       padding: 1rem 2rem;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
+      border-bottom: none;
+      transition: background 0.3s ease;
+    }
+
+    :host(.opaque) nav {
       background-color: var(--color-background);
       border-bottom: 1px solid var(--color-border);
     }
 
     .logo {
-      font-size: 1.5rem;
-      font-weight: bold;
+      font-family: 'Raleway', sans-serif;
+      font-size: 16px;
+      font-weight: 300;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
       color: var(--color-text-primary);
       text-decoration: none;
     }

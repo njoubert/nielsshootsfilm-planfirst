@@ -46,16 +46,12 @@ export class AppShell extends LitElement {
       z-index: 10;
     }
 
-    .nav-wrapper.sticky-nav {
-      position: sticky;
-      top: 0;
-    }
-
-    .nav-wrapper.below-fold {
+    .nav-wrapper.floating-nav {
       position: absolute;
-      top: 100vh;
+      top: 0;
       left: 0;
       right: 0;
+      z-index: 100;
     }
 
     main {
@@ -155,11 +151,13 @@ export class AppShell extends LitElement {
       `;
     }
 
-    // Check if we're on an album detail page - use router match to determine
+    // Check if we're on a page with hero image that navbar should float over
     const match = this.router?.getCurrentRoute();
     const isAlbumDetailPage = match?.route.path === '/albums/:slug';
-    const navClass = isAlbumDetailPage ? 'below-fold sticky-nav' : '';
-    const mainClass = isAlbumDetailPage ? 'with-hero' : '';
+    const isPortfolioPage = match?.route.path === '/';
+    const hasHeroImage = isAlbumDetailPage || isPortfolioPage;
+    const navClass = hasHeroImage ? 'floating-nav' : '';
+    const mainClass = hasHeroImage ? 'with-hero' : '';
 
     return html`
       <div class="nav-wrapper ${navClass}">

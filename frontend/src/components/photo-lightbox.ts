@@ -12,6 +12,7 @@ export class PhotoLightbox extends LitElement {
   @property({ type: Boolean }) showExif = false;
 
   private _open = false;
+  @state() private hasNavigated = false;
 
   @property({ type: Boolean })
   get open() {
@@ -21,6 +22,11 @@ export class PhotoLightbox extends LitElement {
   set open(value: boolean) {
     const oldValue = this._open;
     this._open = value;
+
+    // Reset navigation state when opening
+    if (value && !oldValue) {
+      this.hasNavigated = false;
+    }
 
     // Handle scroll and zoom when open state changes
     if (value !== oldValue) {
@@ -283,12 +289,14 @@ export class PhotoLightbox extends LitElement {
 
   next() {
     if (this.currentIndex < this.photos.length - 1) {
+      this.hasNavigated = true;
       this.currentIndex++;
     }
   }
 
   prev() {
     if (this.currentIndex > 0) {
+      this.hasNavigated = true;
       this.currentIndex--;
     }
   }
