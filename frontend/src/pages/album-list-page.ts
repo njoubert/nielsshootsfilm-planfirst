@@ -60,11 +60,20 @@ export class AlbumListPage extends LitElement {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 2rem;
-      grid-auto-rows: 1fr;
     }
 
-    .albums-grid > * {
-      aspect-ratio: 1;
+    .album-wrapper {
+      position: relative;
+      width: 100%;
+      padding-bottom: 100%; /* Creates 1:1 aspect ratio */
+    }
+
+    .album-wrapper > album-card {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
     }
 
     .empty-state {
@@ -87,8 +96,8 @@ export class AlbumListPage extends LitElement {
         gap: 1.5rem;
       }
 
-      .albums-grid > * {
-        aspect-ratio: 1;
+      .album-wrapper {
+        padding-bottom: 100%;
       }
     }
   `;
@@ -139,10 +148,12 @@ export class AlbumListPage extends LitElement {
               <div class="albums-grid">
                 ${this.albums.map(
                   (album) => html`
-                    <album-card
-                      .album=${album}
-                      @album-click=${() => this.handleAlbumClick(album)}
-                    ></album-card>
+                    <div class="album-wrapper">
+                      <album-card
+                        .album=${album}
+                        @album-click=${() => this.handleAlbumClick(album)}
+                      ></album-card>
+                    </div>
                   `
                 )}
               </div>

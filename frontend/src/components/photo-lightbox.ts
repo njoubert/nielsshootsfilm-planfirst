@@ -121,12 +121,27 @@ export class PhotoLightbox extends LitElement {
       color: white;
       font-size: 0.85rem;
       line-height: 1.6;
+      min-height: 96px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .exif-panel.with-data {
+      justify-content: flex-start;
+    }
+
+    .exif-panel.empty {
+      align-items: center;
     }
 
     .exif-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 0.5rem;
+      width: 100%;
     }
 
     .exif-item {
@@ -269,36 +284,40 @@ export class PhotoLightbox extends LitElement {
           </button>
         </div>
 
-        ${this.showExif && currentPhoto.exif ? this.renderExif(currentPhoto) : ''}
+        ${this.showExif ? this.renderExif(currentPhoto) : ''}
       </div>
     `;
   }
 
   private renderExif(photo: Photo) {
-    if (!photo.exif) return '';
-
     const exif = photo.exif;
     const items = [];
 
-    if (exif.camera) items.push({ label: 'Camera', value: exif.camera });
-    if (exif.lens) items.push({ label: 'Lens', value: exif.lens });
-    if (exif.iso) items.push({ label: 'ISO', value: exif.iso.toString() });
-    if (exif.aperture) items.push({ label: 'Aperture', value: exif.aperture });
-    if (exif.shutter_speed) items.push({ label: 'Shutter', value: exif.shutter_speed });
-    if (exif.focal_length) items.push({ label: 'Focal Length', value: exif.focal_length });
+    if (exif) {
+      if (exif.camera) items.push({ label: 'Camera', value: exif.camera });
+      if (exif.lens) items.push({ label: 'Lens', value: exif.lens });
+      if (exif.iso) items.push({ label: 'ISO', value: exif.iso.toString() });
+      if (exif.aperture) items.push({ label: 'Aperture', value: exif.aperture });
+      if (exif.shutter_speed) items.push({ label: 'Shutter', value: exif.shutter_speed });
+      if (exif.focal_length) items.push({ label: 'Focal Length', value: exif.focal_length });
+    }
+
+    const hasItems = items.length > 0;
 
     return html`
-      <div class="exif-panel">
-        <div class="exif-grid">
-          ${items.map(
-            (item) => html`
-              <div class="exif-item">
-                <span class="exif-label">${item.label}:</span>
-                <span class="exif-value">${item.value}</span>
-              </div>
-            `
-          )}
-        </div>
+      <div class="exif-panel ${hasItems ? 'with-data' : 'empty'}">
+        ${hasItems
+          ? html`<div class="exif-grid">
+              ${items.map(
+                (item) => html`
+                  <div class="exif-item">
+                    <span class="exif-label">${item.label}:</span>
+                    <span class="exif-value">${item.value}</span>
+                  </div>
+                `
+              )}
+            </div>`
+          : ''}
       </div>
     `;
   }

@@ -166,6 +166,17 @@ describe('PhotoGrid', () => {
     expect(lazyImages?.[2]?.getAttribute('aspectRatio')).to.equal('1920/1280');
   });
 
+  it('should force square aspect ratio when layout="square"', async () => {
+    const el = await fixture<PhotoGrid>(
+      html`<photo-grid .photos=${mockPhotos} layout="square"></photo-grid>`
+    );
+    const lazyImages = el.shadowRoot?.querySelectorAll('lazy-image');
+
+    lazyImages?.forEach((lazyImage) => {
+      expect(lazyImage.getAttribute('aspectRatio')).to.equal('1/1');
+    });
+  });
+
   it('should emit photo-click event when photo is clicked', async () => {
     const el = await fixture<PhotoGrid>(html`<photo-grid .photos=${mockPhotos}></photo-grid>`);
     const photoItem = el.shadowRoot?.querySelectorAll('.photo-item')?.[0] as HTMLElement;

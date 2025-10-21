@@ -10,7 +10,7 @@ import './lazy-image';
 @customElement('photo-grid')
 export class PhotoGrid extends LitElement {
   @property({ type: Array }) photos: Photo[] = [];
-  @property({ type: String }) layout: 'masonry' | 'grid' | 'justified' = 'masonry';
+  @property({ type: String }) layout: 'masonry' | 'grid' | 'justified' | 'square' = 'masonry';
 
   static styles = css`
     :host {
@@ -38,10 +38,19 @@ export class PhotoGrid extends LitElement {
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     }
 
+    /* Square grid layout */
+    .grid.square {
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+
+    .grid.square .photo-item {
+      aspect-ratio: 1 / 1;
+    }
+
     .photo-item {
       cursor: pointer;
       overflow: hidden;
-      border-radius: 4px;
+      border-radius: 0px;
       transition:
         transform 0.2s,
         box-shadow 0.2s;
@@ -67,7 +76,7 @@ export class PhotoGrid extends LitElement {
   `;
 
   render() {
-    const gridClass = this.layout === 'masonry' ? 'masonry' : 'standard';
+    const gridClass = this.getGridClass();
 
     return html`
       <div class="grid ${gridClass}">
@@ -76,20 +85,34 @@ export class PhotoGrid extends LitElement {
     `;
   }
 
+  private getGridClass() {
+    switch (this.layout) {
+      case 'masonry':
+        return 'masonry';
+      case 'square':
+        return 'square';
+      default:
+        return 'standard';
+    }
+  }
+
   private renderPhoto(photo: Photo, index: number) {
-    const aspectRatio = `${photo.width}/${photo.height}`;
+    const hasDimensions = Boolean(photo.width && photo.height);
+    const aspectRatio =
+      this.layout === 'square' ? '1/1' : hasDimensions ? `${photo.width}/${photo.height}` : '3/2';
 
     // Calculate row span for masonry layout
-    let rowSpan = 20; // Default
-    if (this.layout === 'masonry') {
+    let styleAttr = '';
+    if (this.layout === 'masonry' && hasDimensions) {
       const ratio = photo.height / photo.width;
-      rowSpan = Math.ceil(ratio * 30); // Adjust multiplier as needed
+      const rowSpan = Math.ceil(ratio * 30);
+      styleAttr = `--row-span: ${rowSpan}`;
     }
 
     return html`
       <div
         class="photo-item"
-        style="--row-span: ${rowSpan}"
+        style="${styleAttr}"
         @click=${() => this.handlePhotoClick(photo, index)}
       >
         <lazy-image

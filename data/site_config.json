@@ -37,7 +37,7 @@
   "portfolio": {
     "main_album_id": "eac2ada4-6727-4ca9-9f71-307d7f7f9b73",
     "show_exif_data": true,
-    "default_photo_layout": "grid",
+    "default_photo_layout": "square",
     "enable_lightbox": true,
     "show_photo_count": true
   },

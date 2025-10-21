@@ -307,13 +307,15 @@ describe('PhotoLightbox', () => {
     expect(exifItems?.length).to.be.greaterThan(0);
   });
 
-  it('should not render EXIF when photo has no EXIF data', async () => {
+  it('should reserve EXIF space when photo has no EXIF data', async () => {
     const el = await fixture<PhotoLightbox>(
       html`<photo-lightbox .photos=${mockPhotos} open showExif currentIndex=${1}></photo-lightbox>`
     );
     const exifPanel = el.shadowRoot?.querySelector('.exif-panel');
 
-    expect(exifPanel).to.not.exist;
+    expect(exifPanel).to.exist;
+    expect(exifPanel?.classList.contains('empty')).to.be.true;
+    expect(exifPanel?.textContent?.trim()).to.equal('');
   });
 
   it('should fallback to caption when no alt_text', async () => {
