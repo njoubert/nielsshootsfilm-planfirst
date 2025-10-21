@@ -198,15 +198,22 @@ export class AdminAlbumEditorPage extends LitElement {
 
     .photo-item {
       position: relative;
-      border-radius: 4px;
+      border-radius: 0;
       overflow: hidden;
-      background: var(--color-border, #ddd);
+      background: var(--color-background);
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.45rem;
     }
 
     .photo-item img {
-      width: 100%;
-      aspect-ratio: 1;
-      object-fit: cover;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
       display: block;
     }
 
