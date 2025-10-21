@@ -375,7 +375,7 @@ export class AdminAlbumsPage extends LitElement {
 
       <div class="container">
         <div class="page-header">
-          <h1 class="page-title">Albums (${this.albums.length})</h1>
+          <h1 class="page-title">Albums</h1>
           <a href="/admin/albums/new" class="btn btn-primary">New Album</a>
         </div>
         ${this.albums.length === 0

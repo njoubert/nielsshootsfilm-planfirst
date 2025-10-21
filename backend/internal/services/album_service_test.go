@@ -370,3 +370,124 @@ func TestAlbumService_PhotoOrdering(t *testing.T) {
 	assert.Equal(t, "First", updated.Photos[0].Caption)
 	assert.Equal(t, "Second", updated.Photos[1].Caption)
 }
+
+func TestAlbumService_ReorderPhotos(t *testing.T) {
+	service, _ := setupAlbumService(t)
+
+	// Create album
+	album := &models.Album{Title: "Test Album", Visibility: "public"}
+	err := service.Create(album)
+	require.NoError(t, err)
+
+	// Add three photos
+	photo1 := &models.Photo{
+		FilenameOriginal: "1.jpg",
+		URLOriginal:      "/1.jpg",
+		URLDisplay:       "/1.jpg",
+		URLThumbnail:     "/1.jpg",
+		Caption:          "First",
+	}
+	photo2 := &models.Photo{
+		FilenameOriginal: "2.jpg",
+		URLOriginal:      "/2.jpg",
+		URLDisplay:       "/2.jpg",
+		URLThumbnail:     "/2.jpg",
+		Caption:          "Second",
+	}
+	photo3 := &models.Photo{
+		FilenameOriginal: "3.jpg",
+		URLOriginal:      "/3.jpg",
+		URLDisplay:       "/3.jpg",
+		URLThumbnail:     "/3.jpg",
+		Caption:          "Third",
+	}
+
+	err = service.AddPhoto(album.ID, photo1)
+	require.NoError(t, err)
+	err = service.AddPhoto(album.ID, photo2)
+	require.NoError(t, err)
+	err = service.AddPhoto(album.ID, photo3)
+	require.NoError(t, err)
+
+	// Get the album to get photo IDs
+	updated, err := service.GetByID(album.ID)
+	require.NoError(t, err)
+	require.Len(t, updated.Photos, 3)
+
+	// Original order: photo1, photo2, photo3
+	assert.Equal(t, "First", updated.Photos[0].Caption)
+	assert.Equal(t, "Second", updated.Photos[1].Caption)
+	assert.Equal(t, "Third", updated.Photos[2].Caption)
+
+	// Store photo IDs
+	photo1ID := updated.Photos[0].ID
+	photo2ID := updated.Photos[1].ID
+	photo3ID := updated.Photos[2].ID
+
+	// Reorder: photo3, photo1, photo2
+	err = service.ReorderPhotos(album.ID, []string{photo3ID, photo1ID, photo2ID})
+	require.NoError(t, err)
+
+	// Verify new order
+	reordered, err := service.GetByID(album.ID)
+	require.NoError(t, err)
+	require.Len(t, reordered.Photos, 3)
+
+	assert.Equal(t, "Third", reordered.Photos[0].Caption)
+	assert.Equal(t, photo3ID, reordered.Photos[0].ID)
+	assert.Equal(t, 1, reordered.Photos[0].Order)
+
+	assert.Equal(t, "First", reordered.Photos[1].Caption)
+	assert.Equal(t, photo1ID, reordered.Photos[1].ID)
+	assert.Equal(t, 2, reordered.Photos[1].Order)
+
+	assert.Equal(t, "Second", reordered.Photos[2].Caption)
+	assert.Equal(t, photo2ID, reordered.Photos[2].ID)
+	assert.Equal(t, 3, reordered.Photos[2].Order)
+}
+
+func TestAlbumService_ReorderPhotos_InvalidCount(t *testing.T) {
+	service, _ := setupAlbumService(t)
+
+	// Create album with one photo
+	album := &models.Album{Title: "Test Album", Visibility: "public"}
+	err := service.Create(album)
+	require.NoError(t, err)
+
+	photo := &models.Photo{
+		FilenameOriginal: "1.jpg",
+		URLOriginal:      "/1.jpg",
+		URLDisplay:       "/1.jpg",
+		URLThumbnail:     "/1.jpg",
+	}
+	err = service.AddPhoto(album.ID, photo)
+	require.NoError(t, err)
+
+	// Try to reorder with wrong count
+	err = service.ReorderPhotos(album.ID, []string{"fake-id-1", "fake-id-2"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "photo ID count does not match")
+}
+
+func TestAlbumService_ReorderPhotos_InvalidPhotoID(t *testing.T) {
+	service, _ := setupAlbumService(t)
+
+	// Create album with one photo
+	album := &models.Album{Title: "Test Album", Visibility: "public"}
+	err := service.Create(album)
+	require.NoError(t, err)
+
+	photo := &models.Photo{
+		FilenameOriginal: "1.jpg",
+		URLOriginal:      "/1.jpg",
+		URLDisplay:       "/1.jpg",
+		URLThumbnail:     "/1.jpg",
+	}
+	err = service.AddPhoto(album.ID, photo)
+	require.NoError(t, err)
+
+	// Try to reorder with invalid photo ID
+	err = service.ReorderPhotos(album.ID, []string{"fake-photo-id"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "not found in album")
+}

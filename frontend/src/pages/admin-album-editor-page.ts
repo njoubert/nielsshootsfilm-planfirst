@@ -10,6 +10,7 @@ import {
   createAlbum,
   deletePhoto,
   fetchAlbumById,
+  reorderPhotos,
   setCoverPhoto,
   updateAlbum,
   uploadPhotos,
@@ -206,6 +207,24 @@ export class AdminAlbumEditorPage extends LitElement {
       align-items: center;
       justify-content: center;
       padding: 0.45rem;
+      cursor: move;
+      transition:
+        transform 0.2s,
+        box-shadow 0.2s;
+    }
+
+    .photo-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .photo-item.dragging {
+      opacity: 0.4;
+    }
+
+    .photo-item.drag-over {
+      border: 2px solid var(--color-primary, #007bff);
+      box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
     }
 
     .photo-item img {
@@ -219,17 +238,16 @@ export class AdminAlbumEditorPage extends LitElement {
 
     .photo-overlay {
       position: absolute;
-      top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
       opacity: 0;
       transition: opacity 0.2s;
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
       gap: 0.5rem;
+      padding: 0.75rem 0.5rem;
     }
 
     .photo-item:hover .photo-overlay {
@@ -239,6 +257,7 @@ export class AdminAlbumEditorPage extends LitElement {
     .photo-overlay button {
       padding: 0.375rem 0.75rem;
       font-size: 0.75rem;
+      flex-shrink: 0;
     }
 
     .cover-badge {
@@ -307,6 +326,12 @@ export class AdminAlbumEditorPage extends LitElement {
 
   @state()
   private dragging = false;
+
+  @state()
+  private draggedPhotoId: string | null = null;
+
+  @state()
+  private dragOverPhotoId: string | null = null;
 
   @state()
   private siteConfig: SiteConfig | null = null;
@@ -475,6 +500,92 @@ export class AdminAlbumEditorPage extends LitElement {
     }
   }
 
+  // Drag-and-drop handlers for photo reordering
+  private handlePhotoDragStart(e: DragEvent, photoId: string) {
+    // Stop propagation to prevent file upload drag handler from triggering
+    e.stopPropagation();
+
+    this.draggedPhotoId = photoId;
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', photoId);
+    }
+  }
+
+  private handlePhotoDragEnd(e: DragEvent) {
+    e.stopPropagation();
+    this.draggedPhotoId = null;
+    this.dragOverPhotoId = null;
+  }
+
+  private handlePhotoDragOver(e: DragEvent, photoId: string) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = 'move';
+    }
+
+    if (this.draggedPhotoId && this.draggedPhotoId !== photoId) {
+      this.dragOverPhotoId = photoId;
+    }
+  }
+
+  private handlePhotoDragLeave(e: DragEvent, photoId: string) {
+    e.stopPropagation();
+
+    if (this.dragOverPhotoId === photoId) {
+      this.dragOverPhotoId = null;
+    }
+  }
+
+  private async handlePhotoDrop(e: DragEvent, targetPhotoId: string) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    this.dragOverPhotoId = null;
+
+    if (!this.draggedPhotoId || !this.albumId || this.draggedPhotoId === targetPhotoId) {
+      return;
+    }
+
+    const draggedId = this.draggedPhotoId;
+    this.draggedPhotoId = null;
+
+    // Find the indices of the dragged and target photos
+    const photos = this.album.photos || [];
+    const draggedIndex = photos.findIndex((p) => p.id === draggedId);
+    const targetIndex = photos.findIndex((p) => p.id === targetPhotoId);
+
+    if (draggedIndex === -1 || targetIndex === -1) {
+      return;
+    }
+
+    // Reorder photos array
+    const newPhotos = [...photos];
+    const [draggedPhoto] = newPhotos.splice(draggedIndex, 1);
+    newPhotos.splice(targetIndex, 0, draggedPhoto);
+
+    // Update local state immediately for responsive UX
+    this.album = { ...this.album, photos: newPhotos };
+
+    // Save to backend
+    try {
+      const photoIds = newPhotos.map((p) => p.id);
+      await reorderPhotos(this.albumId, photoIds);
+      this.success = 'Photos reordered';
+
+      // Clear success message after 2 seconds
+      setTimeout(() => {
+        this.success = '';
+      }, 2000);
+    } catch (err) {
+      this.error = err instanceof Error ? err.message : 'Failed to reorder photos';
+      // Reload album to revert to saved state
+      await this.loadAlbum();
+    }
+  }
+
   private updateField<K extends keyof Album>(field: K, value: Album[K]) {
     this.album = { ...this.album, [field]: value };
   }
@@ -630,7 +741,17 @@ export class AdminAlbumEditorPage extends LitElement {
                       <div class="photos-grid">
                         ${this.album.photos.map(
                           (photo) => html`
-                            <div class="photo-item">
+                            <div
+                              class="photo-item ${this.draggedPhotoId === photo.id
+                                ? 'dragging'
+                                : ''} ${this.dragOverPhotoId === photo.id ? 'drag-over' : ''}"
+                              draggable="true"
+                              @dragstart=${(e: DragEvent) => this.handlePhotoDragStart(e, photo.id)}
+                              @dragend=${(e: DragEvent) => this.handlePhotoDragEnd(e)}
+                              @dragover=${(e: DragEvent) => this.handlePhotoDragOver(e, photo.id)}
+                              @dragleave=${(e: DragEvent) => this.handlePhotoDragLeave(e, photo.id)}
+                              @drop=${(e: DragEvent) => this.handlePhotoDrop(e, photo.id)}
+                            >
                               ${photo.id === this.album.cover_photo_id
                                 ? html`<span class="cover-badge">COVER</span>`
                                 : ''}

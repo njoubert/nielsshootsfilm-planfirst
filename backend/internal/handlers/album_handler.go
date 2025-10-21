@@ -324,6 +324,32 @@ func (h *AlbumHandler) SetCoverPhoto(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// ReorderPhotos reorders photos in an album.
+func (h *AlbumHandler) ReorderPhotos(w http.ResponseWriter, r *http.Request) {
+	albumID := chi.URLParam(r, "id")
+
+	var req struct {
+		PhotoIDs []string `json:"photo_ids"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if len(req.PhotoIDs) == 0 {
+		http.Error(w, "photo_ids array is required", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.albumService.ReorderPhotos(albumID, req.PhotoIDs); err != nil {
+		h.logger.Error("failed to reorder photos", slog.String("error", err.Error()))
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // respondJSON writes a JSON response.
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")

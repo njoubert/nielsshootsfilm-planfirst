@@ -256,6 +256,25 @@ export async function setCoverPhoto(albumId: string, photoId: string): Promise<v
 }
 
 /**
+ * Reorder photos in an album.
+ */
+export async function reorderPhotos(albumId: string, photoIds: string[]): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/albums/${albumId}/reorder-photos`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ photo_ids: photoIds }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error || 'Failed to reorder photos');
+  }
+}
+
+/**
  * Set password for password-protected album.
  */
 export async function setAlbumPassword(albumId: string, password: string): Promise<void> {

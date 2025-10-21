@@ -285,6 +285,40 @@ func (s *AlbumService) SetCoverPhoto(albumID, photoID string) error {
 	return s.Update(albumID, album)
 }
 
+// ReorderPhotos reorders photos in an album based on the provided photo IDs.
+func (s *AlbumService) ReorderPhotos(albumID string, photoIDs []string) error {
+	album, err := s.GetByID(albumID)
+	if err != nil {
+		return err
+	}
+
+	// Verify all photo IDs exist in the album
+	if len(photoIDs) != len(album.Photos) {
+		return errors.New("photo ID count does not match album photo count")
+	}
+
+	photoMap := make(map[string]models.Photo)
+	for _, photo := range album.Photos {
+		photoMap[photo.ID] = photo
+	}
+
+	// Build new photos array in the requested order
+	newPhotos := make([]models.Photo, 0, len(photoIDs))
+	for i, photoID := range photoIDs {
+		photo, exists := photoMap[photoID]
+		if !exists {
+			return fmt.Errorf("photo ID %s not found in album", photoID)
+		}
+		// Update the order field
+		photo.Order = i + 1
+		newPhotos = append(newPhotos, photo)
+	}
+
+	album.Photos = newPhotos
+
+	return s.Update(albumID, album)
+}
+
 // generateSlug creates a URL-friendly slug from a title.
 func generateSlug(title string) string {
 	// Convert to lowercase

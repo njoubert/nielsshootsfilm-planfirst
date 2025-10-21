@@ -132,10 +132,9 @@ func main() {
 			r.Post("/albums/{id}/photos/upload", albumHandler.UploadPhotos)
 			r.Delete("/albums/{id}/photos/{photoId}", albumHandler.DeletePhoto)
 			r.Post("/albums/{id}/set-cover", albumHandler.SetCoverPhoto)
+			r.Post("/albums/{id}/reorder-photos", albumHandler.ReorderPhotos)
 			r.Post("/albums/{id}/set-password", albumHandler.SetPassword)
-			r.Delete("/albums/{id}/password", albumHandler.RemovePassword)
-
-			// Site configuration
+			r.Delete("/albums/{id}/password", albumHandler.RemovePassword) // Site configuration
 			r.Put("/config", configHandler.Update)
 			r.Put("/config/main-portfolio-album", configHandler.SetMainPortfolioAlbum)
 
