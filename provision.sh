@@ -326,14 +326,14 @@ install_optional_tools() {
 run_bootstrap() {
     print_header "Running Project Bootstrap"
 
-    if [ -f "scripts/bootstrap.sh" ]; then
+    if [ -f "bootstrap.sh" ]; then
         print_info "This will set up data files and admin credentials"
         read -p "Run bootstrap script now? (y/N): " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            ./scripts/bootstrap.sh
+            ./bootstrap.sh
         else
-            print_warning "Skipped bootstrap - run './scripts/bootstrap.sh' manually later"
+            print_warning "Skipped bootstrap - run './bootstrap.sh' manually later"
         fi
     else
         print_warning "Bootstrap script not found"
@@ -443,7 +443,7 @@ print_next_steps() {
     echo ""
     echo -e "${GREEN}🔑 Setup admin credentials:${NC}"
     if [ ! -f "admin_config.json" ]; then
-        echo "   ./scripts/bootstrap.sh"
+        echo "   ./bootstrap.sh"
     else
         echo "   ✓ Already configured"
     fi

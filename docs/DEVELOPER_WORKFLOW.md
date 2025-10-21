@@ -56,8 +56,7 @@ cp .env.example .env
 
 ```bash
 # This will create data/ directory structure and initial JSON files
-# Script to be created in Phase 2
-./scripts/bootstrap.sh
+./bootstrap.sh
 ```
 
 ---

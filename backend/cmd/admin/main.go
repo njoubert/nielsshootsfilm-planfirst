@@ -38,7 +38,7 @@ func main() {
 	if err := fileService.ReadJSON("admin_config.json", &adminConfig); err != nil {
 		logger.Error("failed to load admin config",
 			slog.String("error", err.Error()),
-			slog.String("hint", "run ./scripts/bootstrap.sh to create admin_config.json"),
+			slog.String("hint", "run ./bootstrap.sh to create admin_config.json"),
 		)
 		os.Exit(1)
 	}
@@ -49,7 +49,7 @@ func main() {
 
 	if adminPasswordHash == "" {
 		logger.Error("admin password hash not configured",
-			slog.String("hint", "run ./scripts/bootstrap.sh to set admin password"),
+			slog.String("hint", "run ./bootstrap.sh to set admin password"),
 		)
 		os.Exit(1)
 	}

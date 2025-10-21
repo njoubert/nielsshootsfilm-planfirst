@@ -97,7 +97,7 @@ cd ../backend && go mod download
 pre-commit install
 
 # Bootstrap project (create data files, set admin password)
-./scripts/bootstrap.sh
+./bootstrap.sh
 ```
 
 ### Development
