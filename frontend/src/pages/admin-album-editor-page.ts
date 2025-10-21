@@ -68,11 +68,11 @@ export class AdminAlbumEditorPage extends LitElement {
     }
 
     .btn-secondary:hover {
-      background: #ccc;
+      background: var(--color-border, #ccc);
     }
 
     .btn-danger {
-      background: #dc3545;
+      background: var(--color-danger, #dc3545);
       color: white;
     }
 
@@ -94,7 +94,7 @@ export class AdminAlbumEditorPage extends LitElement {
     }
 
     .error {
-      color: #dc3545;
+      color: var(--color-danger, #dc3545);
     }
 
     .form-section {
@@ -184,9 +184,9 @@ export class AdminAlbumEditorPage extends LitElement {
     .upload-progress {
       margin-top: 1rem;
       padding: 0.75rem;
-      background: #e7f3ff;
+      background: var(--color-info-bg, #e7f3ff);
       border-radius: 4px;
-      color: #004085;
+      color: var(--color-info-text, #004085);
     }
 
     .photos-grid {
@@ -248,10 +248,10 @@ export class AdminAlbumEditorPage extends LitElement {
 
     .success-message {
       padding: 0.75rem;
-      background: #d4edda;
-      border: 1px solid #c3e6cb;
+      background: var(--color-success-bg, #d4edda);
+      border: 1px solid var(--color-success, #c3e6cb);
       border-radius: 4px;
-      color: #155724;
+      color: var(--color-success-text, #155724);
       margin-bottom: 1rem;
       white-space: pre-wrap;
       word-break: break-word;
@@ -259,10 +259,10 @@ export class AdminAlbumEditorPage extends LitElement {
 
     .error-message {
       padding: 0.75rem;
-      background: #f8d7da;
-      border: 1px solid #f5c6cb;
+      background: var(--color-danger-bg, #f8d7da);
+      border: 1px solid var(--color-danger, #f5c6cb);
       border-radius: 4px;
-      color: #721c24;
+      color: var(--color-danger-text, #721c24);
       margin-bottom: 1rem;
       white-space: pre-wrap;
       word-break: break-word;
@@ -602,7 +602,9 @@ export class AdminAlbumEditorPage extends LitElement {
                     @drop=${(e: DragEvent) => this.handleDrop(e)}
                   >
                     <p>📸 Drag photos here or click to browse</p>
-                    <p style="font-size: 0.875rem; color: #666;">JPG, PNG, WEBP up to 50MB each</p>
+                    <p style="font-size: 0.875rem; color: var(--color-text-secondary, #666);">
+                      JPG, PNG, WEBP up to 50MB each
+                    </p>
                   </div>
                   <input
                     type="file"

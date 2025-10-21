@@ -145,7 +145,7 @@ export class AdminDashboardPage extends LitElement {
     }
 
     .error {
-      color: #dc3545;
+      color: var(--color-danger, #dc3545);
     }
 
     @media (max-width: 768px) {

@@ -81,20 +81,20 @@ export class AdminLoginPage extends LitElement {
     .error-message {
       margin-top: 1rem;
       padding: 0.75rem;
-      background: #fee;
-      border: 1px solid #fcc;
+      background: var(--color-danger-bg, #fee);
+      border: 1px solid var(--color-danger, #fcc);
       border-radius: 4px;
-      color: #c00;
+      color: var(--color-danger-text, #c00);
       font-size: 0.875rem;
     }
 
     .success-message {
       margin-top: 1rem;
       padding: 0.75rem;
-      background: #efe;
-      border: 1px solid #cfc;
+      background: var(--color-success-bg, #efe);
+      border: 1px solid var(--color-success, #cfc);
       border-radius: 4px;
-      color: #060;
+      color: var(--color-success-text, #060);
       font-size: 0.875rem;
     }
 

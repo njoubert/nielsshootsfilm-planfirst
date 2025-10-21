@@ -67,16 +67,16 @@ export class AdminAlbumsPage extends LitElement {
     }
 
     .btn-secondary:hover {
-      background: #ccc;
+      background: var(--color-border, #ccc);
     }
 
     .btn-danger {
-      background: #dc3545;
+      background: var(--color-danger, #dc3545);
       color: white;
     }
 
     .btn-danger:hover {
-      background: #c82333;
+      background: var(--color-danger-hover, #c82333);
     }
 
     .loading,
@@ -87,7 +87,7 @@ export class AdminAlbumsPage extends LitElement {
     }
 
     .error {
-      color: #dc3545;
+      color: var(--color-danger, #dc3545);
     }
 
     .albums-grid {
@@ -170,18 +170,18 @@ export class AdminAlbumsPage extends LitElement {
     }
 
     .visibility-public {
-      background: #d4edda;
-      color: #155724;
+      background: var(--color-success-bg, #d4edda);
+      color: var(--color-success-text, #155724);
     }
 
     .visibility-unlisted {
-      background: #fff3cd;
-      color: #856404;
+      background: var(--color-warning-bg, #fff3cd);
+      color: var(--color-warning-text, #856404);
     }
 
     .visibility-password_protected {
-      background: #f8d7da;
-      color: #721c24;
+      background: var(--color-danger-bg, #f8d7da);
+      color: var(--color-danger-text, #721c24);
     }
 
     .album-actions {

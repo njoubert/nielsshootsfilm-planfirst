@@ -136,19 +136,19 @@ export class AdminSettingsPage extends LitElement {
 
     .success-message {
       padding: 0.75rem;
-      background: #d4edda;
-      border: 1px solid #c3e6cb;
+      background: var(--color-success-bg, #d4edda);
+      border: 1px solid var(--color-success, #c3e6cb);
       border-radius: 4px;
-      color: #155724;
+      color: var(--color-success-text, #155724);
       margin-bottom: 1rem;
     }
 
     .error-message {
       padding: 0.75rem;
-      background: #f8d7da;
-      border: 1px solid #f5c6cb;
+      background: var(--color-danger-bg, #f8d7da);
+      border: 1px solid var(--color-danger, #f5c6cb);
       border-radius: 4px;
-      color: #721c24;
+      color: var(--color-danger-text, #721c24);
       margin-bottom: 1rem;
     }
 
@@ -166,7 +166,7 @@ export class AdminSettingsPage extends LitElement {
     }
 
     .error {
-      color: #dc3545;
+      color: var(--color-danger, #dc3545);
     }
 
     @media (max-width: 768px) {

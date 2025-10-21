@@ -4,6 +4,7 @@
  */
 
 import './components/app-shell';
+import './styles/admin-theme.css';
 import './styles/global.css';
 
 // Bootstrap the application

@@ -64,7 +64,7 @@ export class AdminHeader extends LitElement {
     }
 
     .logout-btn:hover {
-      background: #ccc;
+      background: var(--color-border, #ccc);
     }
 
     .nav-tabs {
