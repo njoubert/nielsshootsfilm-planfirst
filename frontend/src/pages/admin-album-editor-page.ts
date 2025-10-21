@@ -219,12 +219,13 @@ export class AdminAlbumEditorPage extends LitElement {
     }
 
     .photo-item.dragging {
-      opacity: 0.4;
+      opacity: 0;
     }
 
     .photo-item.drag-over {
       border: 2px solid var(--color-primary, #007bff);
       box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+      background: rgba(0, 123, 255, 0.05);
     }
 
     .photo-item img {
