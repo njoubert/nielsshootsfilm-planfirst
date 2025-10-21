@@ -73,7 +73,6 @@ export class AppNav extends LitElement {
           ${this.config?.custom_links?.map(
             (link: CustomLink) => html`<li><a href="${link.url}">${link.label}</a></li>`
           )}
-          <li><a href="/admin">Admin</a></li>
         </ul>
       </nav>
     `;
