@@ -38,6 +38,7 @@ export class PhotoLightbox extends LitElement {
 
   @state() private touchStartX = 0;
   @state() private touchEndX = 0;
+  @state() private touchStartTime = 0;
 
   static styles = css`
     :host {
@@ -232,6 +233,7 @@ export class PhotoLightbox extends LitElement {
 
   private handleTouchStart = (e: TouchEvent) => {
     this.touchStartX = e.changedTouches[0].screenX;
+    this.touchStartTime = Date.now();
   };
 
   private handleTouchEnd = (e: TouchEvent) => {
@@ -251,6 +253,16 @@ export class PhotoLightbox extends LitElement {
       }
     }
   }
+
+  private handleImageTap = (e: TouchEvent) => {
+    const touchDuration = Date.now() - this.touchStartTime;
+    const touchDistance = Math.abs(this.touchStartX - e.changedTouches[0].screenX);
+
+    // Only treat as tap if touch was quick and didn't move much (not a swipe)
+    if (touchDuration < 300 && touchDistance < 10) {
+      this.next();
+    }
+  };
 
   next() {
     this.hasNavigated = true;
@@ -299,6 +311,8 @@ export class PhotoLightbox extends LitElement {
           <img
             src="${currentPhoto.url_display}"
             alt="${currentPhoto.alt_text || currentPhoto.caption || 'Photo'}"
+            @touchstart=${(e: TouchEvent) => this.handleTouchStart(e)}
+            @touchend=${(e: TouchEvent) => this.handleImageTap(e)}
           />
 
           <button class="nav-button next" @click=${() => this.next()} aria-label="Next photo">
