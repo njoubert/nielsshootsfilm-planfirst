@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2024-01-01T00:00:00Z",
+  "last_updated": "2025-10-21T00:08:49.986883Z",
   "site": {
     "title": "Niels Shoots Film",
     "tagline": "Film Photography Portfolio",
@@ -8,32 +8,14 @@
     "language": "en",
     "timezone": "America/Los_Angeles"
   },
-  "owner": {
-    "name": "",
-    "bio": "",
-    "email": "",
-    "phone": "",
-    "location": ""
-  },
+  "owner": {},
   "social": {
-    "instagram": "https://www.instagram.com/niels.shoots.film/",
-    "facebook": "",
-    "twitter": "",
-    "linkedin": "",
-    "youtube": "",
-    "pinterest": "",
-    "tiktok": "",
-    "custom_links": []
+    "instagram": "https://www.instagram.com/niels.shoots.film/"
   },
   "branding": {
-    "logo_url": "",
-    "favicon_url": "",
     "primary_color": "#1a1a1a",
     "secondary_color": "#ffffff",
     "accent_color": "#4a90e2",
-    "font_heading": "",
-    "font_body": "",
-    "custom_css_url": "",
     "theme": {
       "mode": "system",
       "light": {
@@ -53,7 +35,7 @@
     }
   },
   "portfolio": {
-    "main_album_id": "sample-portfolio",
+    "main_album_id": "29fd1b3b-31d6-4ea5-a538-b3ce3475409a",
     "show_exif_data": true,
     "default_photo_layout": "grid",
     "enable_lightbox": true,
@@ -62,16 +44,8 @@
   "navigation": {
     "show_home": true,
     "show_albums": true,
-    "show_blog": false,
     "show_about": false,
-    "show_contact": false,
-    "custom_links": []
+    "show_contact": false
   },
-  "features": {
-    "enable_blog": false,
-    "enable_contact_form": false,
-    "enable_newsletter": false,
-    "enable_comments": false,
-    "enable_analytics": false
-  }
+  "features": {}
 }

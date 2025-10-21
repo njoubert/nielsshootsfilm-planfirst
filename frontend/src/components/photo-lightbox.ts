@@ -70,13 +70,18 @@ export class PhotoLightbox extends LitElement {
       align-items: center;
       justify-content: center;
       position: relative;
-      padding: 2rem;
+      padding: 3rem;
+      overflow: hidden;
+      min-height: 0; /* Important for flex children */
     }
 
     .photo-container img {
-      max-width: 100%;
+      max-width: calc(100% - 8rem); /* Account for nav buttons */
       max-height: 100%;
+      width: auto;
+      height: auto;
       object-fit: contain;
+      display: block;
     }
 
     .nav-button {
@@ -137,6 +142,10 @@ export class PhotoLightbox extends LitElement {
       .toolbar,
       .photo-container {
         padding: 1rem;
+      }
+
+      .photo-container img {
+        max-width: calc(100% - 4rem); /* Account for smaller nav buttons on mobile */
       }
 
       .nav-button {
