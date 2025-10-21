@@ -41,9 +41,30 @@ export class AppShell extends LitElement {
       min-height: 100vh;
     }
 
+    .nav-wrapper {
+      position: relative;
+      z-index: 10;
+    }
+
+    .nav-wrapper.sticky-nav {
+      position: sticky;
+      top: 0;
+    }
+
+    .nav-wrapper.below-fold {
+      position: absolute;
+      top: 100vh;
+      left: 0;
+      right: 0;
+    }
+
     main {
       flex: 1;
       width: 100%;
+    }
+
+    main.with-hero {
+      padding-top: 0;
     }
 
     .loading {
@@ -94,6 +115,10 @@ export class AppShell extends LitElement {
       { path: '*', component: 'portfolio-page' },
     ]);
 
+    // Set initial path from browser location
+    // The router navigate() is async and voided in constructor, so we use window.location directly
+    this.currentPath = window.location.pathname;
+
     // Subscribe to route changes
     this.router.subscribe((path) => {
       this.currentPath = path;
@@ -130,10 +155,18 @@ export class AppShell extends LitElement {
       `;
     }
 
-    return html`
-      <app-nav .config=${this.config.navigation} .siteTitle=${this.config.site.title}></app-nav>
+    // Check if we're on an album detail page - use router match to determine
+    const match = this.router?.getCurrentRoute();
+    const isAlbumDetailPage = match?.route.path === '/albums/:slug';
+    const navClass = isAlbumDetailPage ? 'below-fold sticky-nav' : '';
+    const mainClass = isAlbumDetailPage ? 'with-hero' : '';
 
-      <main>${this.renderPage()}</main>
+    return html`
+      <div class="nav-wrapper ${navClass}">
+        <app-nav .config=${this.config.navigation} .siteTitle=${this.config.site.title}></app-nav>
+      </div>
+
+      <main class="${mainClass}">${this.renderPage()}</main>
 
       <app-footer
         .social=${this.config.social}
