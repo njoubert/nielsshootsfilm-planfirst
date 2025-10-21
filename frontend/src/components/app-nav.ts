@@ -75,8 +75,7 @@ export class AppNav extends LitElement {
       <nav>
         <a href="/" class="logo">${this.siteTitle}</a>
         <ul class="nav-links">
-          ${this.config?.show_home ? html`<li><a href="/">Home</a></li>` : ''}
-          ${this.config?.show_albums ? html`<li><a href="/albums">Albums</a></li>` : ''}
+          ${this.config?.show_albums ? html`<li><a href="/albums">Galleries</a></li>` : ''}
           ${this.config?.show_about ? html`<li><a href="/about">About</a></li>` : ''}
           ${this.config?.show_contact ? html`<li><a href="/contact">Contact</a></li>` : ''}
           ${this.config?.custom_links?.map(

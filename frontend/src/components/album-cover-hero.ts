@@ -166,7 +166,7 @@ export class AlbumCoverHero extends LitElement {
     const targetY = window.innerHeight;
     const startY = window.scrollY;
     const distance = targetY - startY;
-    const duration = 1000; // ms
+    const duration = 700; // ms
     let startTime: number | null = null;
 
     // Ease-in-out quadratic - gentler than cubic but smoother than smoothstep at the ends
