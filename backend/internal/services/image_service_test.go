@@ -1,7 +1,13 @@
 package services
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/models"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDetectContentType(t *testing.T) {
@@ -164,4 +170,78 @@ func TestFormatBytes(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestImageService_DeletePhoto(t *testing.T) {
+	// Create a temporary directory for uploads
+	tmpDir := t.TempDir()
+
+	// Create subdirectories
+	require.NoError(t, os.MkdirAll(filepath.Join(tmpDir, "originals"), 0750))
+	require.NoError(t, os.MkdirAll(filepath.Join(tmpDir, "display"), 0750))
+	require.NoError(t, os.MkdirAll(filepath.Join(tmpDir, "thumbnails"), 0750))
+
+	// Create test files
+	originalFile := filepath.Join(tmpDir, "originals", "test-photo.jpg")
+	displayFile := filepath.Join(tmpDir, "display", "test-photo.jpg")
+	thumbnailFile := filepath.Join(tmpDir, "thumbnails", "test-photo.jpg")
+
+	require.NoError(t, os.WriteFile(originalFile, []byte("original"), 0600))
+	require.NoError(t, os.WriteFile(displayFile, []byte("display"), 0600))
+	require.NoError(t, os.WriteFile(thumbnailFile, []byte("thumbnail"), 0600))
+
+	// Verify files exist
+	_, err := os.Stat(originalFile)
+	require.NoError(t, err, "original file should exist")
+	_, err = os.Stat(displayFile)
+	require.NoError(t, err, "display file should exist")
+	_, err = os.Stat(thumbnailFile)
+	require.NoError(t, err, "thumbnail file should exist")
+
+	// Create image service
+	imageService, err := NewImageService(tmpDir)
+	require.NoError(t, err, "NewImageService should succeed")
+
+	// Create photo model
+	photo := &models.Photo{
+		ID:               "test-photo",
+		FilenameOriginal: "test-photo.jpg",
+		URLOriginal:      "/uploads/originals/test-photo.jpg",
+		URLDisplay:       "/uploads/display/test-photo.jpg",
+		URLThumbnail:     "/uploads/thumbnails/test-photo.jpg",
+	}
+
+	// Delete the photo
+	err = imageService.DeletePhoto(photo)
+	assert.NoError(t, err, "DeletePhoto should succeed")
+
+	// Verify files are deleted
+	_, err = os.Stat(originalFile)
+	assert.True(t, os.IsNotExist(err), "original file should be deleted")
+	_, err = os.Stat(displayFile)
+	assert.True(t, os.IsNotExist(err), "display file should be deleted")
+	_, err = os.Stat(thumbnailFile)
+	assert.True(t, os.IsNotExist(err), "thumbnail file should be deleted")
+}
+
+func TestImageService_DeletePhoto_NonexistentFiles(t *testing.T) {
+	// Create a temporary directory for uploads
+	tmpDir := t.TempDir()
+
+	// Create image service
+	imageService, err := NewImageService(tmpDir)
+	require.NoError(t, err, "NewImageService should succeed")
+
+	// Create photo model pointing to nonexistent files
+	photo := &models.Photo{
+		ID:               "test-photo",
+		FilenameOriginal: "nonexistent.jpg",
+		URLOriginal:      "/uploads/originals/nonexistent.jpg",
+		URLDisplay:       "/uploads/display/nonexistent.jpg",
+		URLThumbnail:     "/uploads/thumbnails/nonexistent.jpg",
+	}
+
+	// Delete the photo (should not error on nonexistent files)
+	err = imageService.DeletePhoto(photo)
+	assert.NoError(t, err, "DeletePhoto should succeed even if files don't exist")
 }
