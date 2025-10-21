@@ -6,11 +6,11 @@
       "title": "Fleet Week Air Show from the Rooftop!",
       "subtitle": "October 12th at Treat Ave",
       "cover_photo_id": "c77b67ad-42f7-420b-b988-29a870633a5d",
-      "visibility": "public",
+      "visibility": "unlisted",
       "allow_downloads": true,
       "order": 0,
       "created_at": "2025-10-20T23:09:21.940587Z",
-      "updated_at": "2025-10-21T01:08:16.30324Z",
+      "updated_at": "2025-10-21T05:08:11.934084Z",
       "photos": [
         {
           "id": "021eb922-141d-4984-a951-964b1beefe01",
@@ -1302,11 +1302,11 @@
       "subtitle": "As of Monday October 20th",
       "description": "Poems. ",
       "cover_photo_id": "f04a87c9-bcf2-4148-9311-07df5fa5bc80",
-      "visibility": "public",
+      "visibility": "unlisted",
       "allow_downloads": true,
       "order": 0,
       "created_at": "2025-10-21T02:06:52.371526Z",
-      "updated_at": "2025-10-21T02:07:49.01911Z",
+      "updated_at": "2025-10-21T05:08:00.817248Z",
       "photos": [
         {
           "id": "f4657f45-baab-4615-bc71-4526a810a566",
@@ -1991,6 +1991,249 @@
             "date_taken": "2025-01-18T00:00:00-08:00"
           },
           "uploaded_at": "2025-10-21T02:07:37.317864Z"
+        }
+      ]
+    },
+    {
+      "id": "cca0a90d-7bb9-465d-a3f9-ab0a5eea9008",
+      "slug": "matt-is-a-cool-dude",
+      "title": "Matt is a cool dude",
+      "subtitle": "The coolest",
+      "description": "You should have seen him!",
+      "cover_photo_id": "f2701a99-9d8c-42ac-9729-7929fb1fc2f7",
+      "visibility": "unlisted",
+      "allow_downloads": true,
+      "order": 0,
+      "created_at": "2025-10-21T05:00:14.280211Z",
+      "updated_at": "2025-10-21T05:08:19.601036Z",
+      "photos": [
+        {
+          "id": "f2701a99-9d8c-42ac-9729-7929fb1fc2f7",
+          "filename_original": "000304970001.jpg",
+          "url_original": "/uploads/originals/efcd499e-4e9e-4d06-8613-9ca6e21eed9f.jpg",
+          "url_display": "/uploads/display/efcd499e-4e9e-4d06-8613-9ca6e21eed9f_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/efcd499e-4e9e-4d06-8613-9ca6e21eed9f_thumbnail.webp",
+          "order": 1,
+          "width": 4796,
+          "height": 4725,
+          "file_size_original": 25328501,
+          "file_size_display": 3409212,
+          "file_size_thumbnail": 123554,
+          "exif": {
+            "camera": "Hasselblad 555ELD",
+            "iso": 400,
+            "date_taken": "2025-01-19T14:54:26-08:00"
+          },
+          "uploaded_at": "2025-10-21T05:00:43.228448Z"
+        },
+        {
+          "id": "d4f1a604-29bf-46b3-a2b8-514c2989f27f",
+          "filename_original": "000304970002.jpg",
+          "url_original": "/uploads/originals/4d1c0f52-e403-48da-a0b9-dfdcfc2843a6.jpg",
+          "url_display": "/uploads/display/4d1c0f52-e403-48da-a0b9-dfdcfc2843a6_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/4d1c0f52-e403-48da-a0b9-dfdcfc2843a6_thumbnail.webp",
+          "order": 2,
+          "width": 4781,
+          "height": 4710,
+          "file_size_original": 25982087,
+          "file_size_display": 3488610,
+          "file_size_thumbnail": 70848,
+          "exif": {
+            "camera": "Hasselblad 555ELD",
+            "iso": 400,
+            "date_taken": "2025-01-19T14:54:26-08:00"
+          },
+          "uploaded_at": "2025-10-21T05:00:44.687714Z"
+        },
+        {
+          "id": "d41ab24a-7922-4995-a812-7c0743a4e9b6",
+          "filename_original": "000304970003.jpg",
+          "url_original": "/uploads/originals/f78ec32e-49c2-4b3d-a18c-465b4036d557.jpg",
+          "url_display": "/uploads/display/f78ec32e-49c2-4b3d-a18c-465b4036d557_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/f78ec32e-49c2-4b3d-a18c-465b4036d557_thumbnail.webp",
+          "order": 3,
+          "width": 4795,
+          "height": 4724,
+          "file_size_original": 25784769,
+          "file_size_display": 3248166,
+          "file_size_thumbnail": 77654,
+          "exif": {
+            "camera": "Hasselblad 555ELD",
+            "iso": 400,
+            "date_taken": "2025-01-19T14:54:26-08:00"
+          },
+          "uploaded_at": "2025-10-21T05:00:46.125381Z"
+        },
+        {
+          "id": "03e9a66a-24ae-4d9a-a83d-a7ba1bf563e4",
+          "filename_original": "000304970004.jpg",
+          "url_original": "/uploads/originals/53cc9962-489c-4775-ab28-f640a6771388.jpg",
+          "url_display": "/uploads/display/53cc9962-489c-4775-ab28-f640a6771388_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/53cc9962-489c-4775-ab28-f640a6771388_thumbnail.webp",
+          "order": 4,
+          "width": 4797,
+          "height": 4726,
+          "file_size_original": 28557351,
+          "file_size_display": 4217486,
+          "file_size_thumbnail": 131256,
+          "exif": {
+            "camera": "Hasselblad 555ELD",
+            "iso": 400,
+            "date_taken": "2025-01-19T14:54:26-08:00"
+          },
+          "uploaded_at": "2025-10-21T05:00:47.7048Z"
+        },
+        {
+          "id": "168a1405-5584-40f5-bdbc-bc0fa5ce084d",
+          "filename_original": "000304970005.jpg",
+          "url_original": "/uploads/originals/79c2e9bb-05a5-4f6e-9fbd-e2680303bc1a.jpg",
+          "url_display": "/uploads/display/79c2e9bb-05a5-4f6e-9fbd-e2680303bc1a_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/79c2e9bb-05a5-4f6e-9fbd-e2680303bc1a_thumbnail.webp",
+          "order": 5,
+          "width": 4782,
+          "height": 4711,
+          "file_size_original": 21330225,
+          "file_size_display": 2441624,
+          "file_size_thumbnail": 72650,
+          "exif": {
+            "camera": "Hasselblad 555ELD",
+            "iso": 400,
+            "date_taken": "2025-01-19T14:54:26-08:00"
+          },
+          "uploaded_at": "2025-10-21T05:00:49.001912Z"
+        },
+        {
+          "id": "accbf9bd-897d-4b22-9854-9c9a87268deb",
+          "filename_original": "000304970006.jpg",
+          "url_original": "/uploads/originals/c7ed566f-b440-4576-81ec-a1dc28d1e47e.jpg",
+          "url_display": "/uploads/display/c7ed566f-b440-4576-81ec-a1dc28d1e47e_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/c7ed566f-b440-4576-81ec-a1dc28d1e47e_thumbnail.webp",
+          "order": 6,
+          "width": 4697,
+          "height": 4627,
+          "file_size_original": 25451515,
+          "file_size_display": 3482554,
+          "file_size_thumbnail": 60856,
+          "exif": {
+            "camera": "Hasselblad 555ELD",
+            "iso": 400,
+            "date_taken": "2025-01-19T14:54:26-08:00"
+          },
+          "uploaded_at": "2025-10-21T05:00:50.440617Z"
+        },
+        {
+          "id": "360f9e2a-935b-4d25-b4d0-a1304b6e2135",
+          "filename_original": "000304970007.jpg",
+          "url_original": "/uploads/originals/ba7816c9-82f4-45c4-9a9b-67b7372aaa43.jpg",
+          "url_display": "/uploads/display/ba7816c9-82f4-45c4-9a9b-67b7372aaa43_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/ba7816c9-82f4-45c4-9a9b-67b7372aaa43_thumbnail.webp",
+          "order": 7,
+          "width": 4803,
+          "height": 4731,
+          "file_size_original": 23538028,
+          "file_size_display": 2400454,
+          "file_size_thumbnail": 42566,
+          "exif": {
+            "camera": "Hasselblad 555ELD",
+            "iso": 400,
+            "date_taken": "2025-01-19T14:54:26-08:00"
+          },
+          "uploaded_at": "2025-10-21T05:00:51.789346Z"
+        },
+        {
+          "id": "de1e64ec-e5b4-4385-b83a-39c78f85ff12",
+          "filename_original": "000304970008.jpg",
+          "url_original": "/uploads/originals/885bbd7c-1909-4e66-86cd-bdce4f9557ac.jpg",
+          "url_display": "/uploads/display/885bbd7c-1909-4e66-86cd-bdce4f9557ac_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/885bbd7c-1909-4e66-86cd-bdce4f9557ac_thumbnail.webp",
+          "order": 8,
+          "width": 4807,
+          "height": 4735,
+          "file_size_original": 24383871,
+          "file_size_display": 3187996,
+          "file_size_thumbnail": 77234,
+          "exif": {
+            "camera": "Hasselblad 555ELD",
+            "iso": 400,
+            "date_taken": "2025-01-19T14:54:26-08:00"
+          },
+          "uploaded_at": "2025-10-21T05:00:53.199925Z"
+        },
+        {
+          "id": "1bb12392-4bf1-4f91-b4d7-205c4839917a",
+          "filename_original": "000304970009.jpg",
+          "url_original": "/uploads/originals/67fdf33e-73a5-4f74-8815-52c1d700d99d.jpg",
+          "url_display": "/uploads/display/67fdf33e-73a5-4f74-8815-52c1d700d99d_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/67fdf33e-73a5-4f74-8815-52c1d700d99d_thumbnail.webp",
+          "order": 9,
+          "width": 4728,
+          "height": 4658,
+          "file_size_original": 24480235,
+          "file_size_display": 3325768,
+          "file_size_thumbnail": 112204,
+          "exif": {
+            "camera": "Hasselblad 555ELD",
+            "iso": 400,
+            "date_taken": "2025-01-19T14:54:26-08:00"
+          },
+          "uploaded_at": "2025-10-21T05:00:54.62491Z"
+        },
+        {
+          "id": "5988e360-b51e-44fa-8294-b28c85924d74",
+          "filename_original": "000304970010.jpg",
+          "url_original": "/uploads/originals/7da5a9a7-347f-4274-ad09-704cb6e9fad0.jpg",
+          "url_display": "/uploads/display/7da5a9a7-347f-4274-ad09-704cb6e9fad0_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/7da5a9a7-347f-4274-ad09-704cb6e9fad0_thumbnail.webp",
+          "order": 10,
+          "width": 4788,
+          "height": 4717,
+          "file_size_original": 17864902,
+          "file_size_display": 1826256,
+          "file_size_thumbnail": 26830,
+          "exif": {
+            "camera": "Hasselblad 555ELD",
+            "iso": 400,
+            "date_taken": "2025-01-19T14:54:26-08:00"
+          },
+          "uploaded_at": "2025-10-21T05:00:55.84852Z"
+        },
+        {
+          "id": "ebfe08ec-a751-4a67-8a44-dad3ce172511",
+          "filename_original": "000304970011.jpg",
+          "url_original": "/uploads/originals/e324ce7b-04fc-4d0f-b08a-56d676355a68.jpg",
+          "url_display": "/uploads/display/e324ce7b-04fc-4d0f-b08a-56d676355a68_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/e324ce7b-04fc-4d0f-b08a-56d676355a68_thumbnail.webp",
+          "order": 11,
+          "width": 4764,
+          "height": 4693,
+          "file_size_original": 22857188,
+          "file_size_display": 2795316,
+          "file_size_thumbnail": 54160,
+          "exif": {
+            "camera": "Hasselblad 555ELD",
+            "iso": 400,
+            "date_taken": "2025-01-19T14:54:26-08:00"
+          },
+          "uploaded_at": "2025-10-21T05:00:57.219083Z"
+        },
+        {
+          "id": "e199af36-b257-4d69-8882-24cbef880cf8",
+          "filename_original": "000304970012.jpg",
+          "url_original": "/uploads/originals/818b562a-d10e-4813-bb0b-019e6b1f44d5.jpg",
+          "url_display": "/uploads/display/818b562a-d10e-4813-bb0b-019e6b1f44d5_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/818b562a-d10e-4813-bb0b-019e6b1f44d5_thumbnail.webp",
+          "order": 12,
+          "width": 4780,
+          "height": 4709,
+          "file_size_original": 21470668,
+          "file_size_display": 2360260,
+          "file_size_thumbnail": 45770,
+          "exif": {
+            "camera": "Hasselblad 555ELD",
+            "iso": 400,
+            "date_taken": "2025-01-19T14:54:26-08:00"
+          },
+          "uploaded_at": "2025-10-21T05:00:58.533197Z"
         }
       ]
     }
