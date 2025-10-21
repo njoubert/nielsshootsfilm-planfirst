@@ -44,6 +44,16 @@ export class AlbumCoverHero extends LitElement {
       z-index: 1;
     }
 
+    .bottom-gradient {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 150px;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.7));
+      z-index: 1;
+    }
+
     .content {
       position: relative;
       z-index: 2;
@@ -119,6 +129,7 @@ export class AlbumCoverHero extends LitElement {
                 />
               </div>
               <div class="overlay"></div>
+              <div class="bottom-gradient"></div>
             `
           : ''}
         <div class="content">
