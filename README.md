@@ -46,12 +46,14 @@ This project is developed by a solo developer working with AI agents (GitHub Cop
 
 ## Project Status
 
-**✅ Phase 1**: Project Setup & Infrastructure - Complete
-**✅ Phase 1.5**: Developer Experience & Code Quality - Complete
-**✅ Phase 2**: Data Model & JSON Schema - Complete
-**✅ Phase 3**: Frontend - Public Site - Complete
-**✅ Phase 4**: Backend - Admin Server - Complete
-**⏳ Phase 5.5**: Manual Browser Testing - Next
+**MVP:**
+
+- **✅ Phase 1**: Project Setup & Infrastructure - Complete
+- **✅ Phase 1.5**: Developer Experience & Code Quality - Complete
+- **✅ Phase 2**: Data Model & JSON Schema - Complete
+- **✅ Phase 3**: Frontend - Public Site - Complete
+- **✅ Phase 4**: Backend - Admin Server - Complete
+- **✅ Phase 5.5**: Manual Browser Testing - Complete
 
 See [`docs/plan/PLAN_MVP.md`](docs/plan/PLAN_MVP.md) for the full roadmap.
 
