@@ -18,6 +18,43 @@
 - **Static Files**: Kept in the `static/` directory, served directly to visitors
 - **Testing**: Pre-commit hooks + manual E2E checklist (MVP).
 
+## Project Scripts - USE THESE
+
+**Always prefer these root-level scripts over running npm, vite, npx, or go commands directly.**
+
+- **`./dev.sh`** - Start/stop development servers
+
+  - `./dev.sh` - Restart both frontend and backend
+  - `./dev.sh start` - Start both servers
+  - `./dev.sh stop` - Stop both servers
+  - `./dev.sh frontend start` - Start only frontend
+  - `./dev.sh frontend stop` - Stop only frontend
+  - `./dev.sh backend start` - Start only backend
+  - `./dev.sh backend stop` - Stop only backend
+
+- **`./format.sh`** - Format all code (runs prettier, gofmt, etc.)
+
+  - Use this instead of `npm run format` or `go fmt`
+
+- **`./build.sh`** - Compile code for distribution
+
+  - Use this instead of `npm run build` or `go build`
+
+- **`./bootstrap.sh`** - Create environmental files for the app
+
+  - Sets up data files and admin credentials for first-time setup
+
+- **`./provision.sh`** - Provision developer workstation
+  - Installs all dependencies (Node.js, Go, libvips, shellcheck, etc.)
+  - Run this on a new machine or after cloning the repository
+
+**Why use these scripts?**
+
+- They handle both frontend and backend consistently
+- They ensure proper working directories and error handling
+- They follow project conventions and best practices
+- They're tested and maintained as part of the project
+
 ## Coding Principles
 
 1. Keep static files pure (no server-side rendering for public pages)
