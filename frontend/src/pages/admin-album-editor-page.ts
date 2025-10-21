@@ -4,7 +4,8 @@
 
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { Album } from '../types/data-models';
+import '../components/admin-header';
+import type { Album, SiteConfig } from '../types/data-models';
 import {
   createAlbum,
   deletePhoto,
@@ -14,6 +15,7 @@ import {
   updateAlbum,
   uploadPhotos,
 } from '../utils/admin-api';
+import { fetchSiteConfig } from '../utils/api';
 
 @customElement('admin-album-editor-page')
 export class AdminAlbumEditorPage extends LitElement {
@@ -24,24 +26,18 @@ export class AdminAlbumEditorPage extends LitElement {
       background: var(--color-background, #f5f5f5);
     }
 
-    .header {
+    .page-header {
       background: var(--color-surface, white);
       border-bottom: 1px solid var(--color-border, #ddd);
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding: 1.5rem 2rem;
+      margin-bottom: 0;
     }
 
-    h1 {
+    .page-title {
       margin: 0;
       font-size: 1.5rem;
+      font-weight: 600;
       color: var(--color-text-primary, #333);
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 0.5rem;
     }
 
     .btn {
@@ -303,10 +299,29 @@ export class AdminAlbumEditorPage extends LitElement {
   @state()
   private dragging = false;
 
+  @state()
+  private siteConfig: SiteConfig | null = null;
+
   connectedCallback() {
     super.connectedCallback();
+    void this.loadData();
+  }
+
+  private async loadData() {
+    await Promise.all([this.loadSiteConfig(), this.loadAlbumIfNeeded()]);
+  }
+
+  private async loadSiteConfig() {
+    try {
+      this.siteConfig = await fetchSiteConfig();
+    } catch (err) {
+      console.error('Failed to load site config:', err);
+    }
+  }
+
+  private async loadAlbumIfNeeded() {
     if (this.albumId && this.albumId !== 'new') {
-      void this.loadAlbum();
+      await this.loadAlbum();
     } else {
       this.loading = false;
     }
@@ -467,18 +482,22 @@ export class AdminAlbumEditorPage extends LitElement {
   }
 
   render() {
+    const siteTitle = this.siteConfig?.site?.title || 'Photography Portfolio';
+
     if (this.loading) {
-      return html`<div class="container"><div class="loading">Loading...</div></div>`;
+      return html`
+        <admin-header .siteTitle=${siteTitle} currentPage="albums"></admin-header>
+        <div class="container"><div class="loading">Loading...</div></div>
+      `;
     }
 
     const isNew = this.albumId === 'new' || !this.albumId;
 
     return html`
-      <div class="header">
-        <h1>${isNew ? 'Create Album' : 'Edit Album'}</h1>
-        <div class="header-actions">
-          <a href="/admin/albums" class="btn btn-secondary">Back to Albums</a>
-        </div>
+      <admin-header .siteTitle=${siteTitle} currentPage="albums"></admin-header>
+
+      <div class="page-header">
+        <h1 class="page-title">${isNew ? 'Create Album' : 'Edit Album'}</h1>
       </div>
 
       <div class="container">

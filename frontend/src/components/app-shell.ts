@@ -14,7 +14,9 @@ import '../pages/portfolio-page';
 // Import admin components
 import '../pages/admin-album-editor-page';
 import '../pages/admin-albums-page';
+import '../pages/admin-dashboard-page';
 import '../pages/admin-login-page';
+import '../pages/admin-settings-page';
 
 import './app-footer';
 import './app-nav';
@@ -82,10 +84,11 @@ export class AppShell extends LitElement {
 
       // Admin routes (with auth guard)
       { path: '/admin/login', component: 'admin-login-page' },
-      { path: '/admin', component: 'admin-albums-page', guard: checkAuth },
+      { path: '/admin', component: 'admin-dashboard-page', guard: checkAuth },
       { path: '/admin/albums', component: 'admin-albums-page', guard: checkAuth },
       { path: '/admin/albums/new', component: 'admin-album-editor-page', guard: checkAuth },
       { path: '/admin/albums/:id/edit', component: 'admin-album-editor-page', guard: checkAuth },
+      { path: '/admin/settings', component: 'admin-settings-page', guard: checkAuth },
 
       // Fallback
       { path: '*', component: 'portfolio-page' },
@@ -159,12 +162,16 @@ export class AppShell extends LitElement {
       // Admin pages
       case 'admin-login-page':
         return html`<admin-login-page></admin-login-page>`;
+      case 'admin-dashboard-page':
+        return html`<admin-dashboard-page></admin-dashboard-page>`;
       case 'admin-albums-page':
         return html`<admin-albums-page></admin-albums-page>`;
       case 'admin-album-editor-page':
         return html`<admin-album-editor-page
           .albumId=${params.id || 'new'}
         ></admin-album-editor-page>`;
+      case 'admin-settings-page':
+        return html`<admin-settings-page></admin-settings-page>`;
 
       default:
         return html`<portfolio-page></portfolio-page>`;

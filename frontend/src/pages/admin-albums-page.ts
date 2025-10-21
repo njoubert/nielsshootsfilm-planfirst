@@ -4,8 +4,10 @@
 
 import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { Album } from '../types/data-models';
-import { deleteAlbum, fetchAllAlbums, logout } from '../utils/admin-api';
+import '../components/admin-header';
+import type { Album, SiteConfig } from '../types/data-models';
+import { deleteAlbum, fetchAllAlbums } from '../utils/admin-api';
+import { fetchSiteConfig } from '../utils/api';
 
 @customElement('admin-albums-page')
 export class AdminAlbumsPage extends LitElement {
@@ -16,24 +18,24 @@ export class AdminAlbumsPage extends LitElement {
       background: var(--color-background, #f5f5f5);
     }
 
-    .header {
-      background: var(--color-surface, white);
-      border-bottom: 1px solid var(--color-border, #ddd);
-      padding: 1rem 2rem;
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .page-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 2rem;
     }
 
-    h1 {
-      margin: 0;
+    .page-title {
       font-size: 1.5rem;
+      font-weight: 600;
       color: var(--color-text-primary, #333);
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 1rem;
+      margin: 0;
     }
 
     .btn {
@@ -73,12 +75,6 @@ export class AdminAlbumsPage extends LitElement {
 
     .btn-danger:hover {
       background: #c82333;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
     }
 
     .loading,
@@ -258,6 +254,9 @@ export class AdminAlbumsPage extends LitElement {
   private albums: Album[] = [];
 
   @state()
+  private siteConfig: SiteConfig | null = null;
+
+  @state()
   private loading = true;
 
   @state()
@@ -271,7 +270,19 @@ export class AdminAlbumsPage extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    void this.loadAlbums();
+    void this.loadData();
+  }
+
+  private async loadData() {
+    await Promise.all([this.loadAlbums(), this.loadSiteConfig()]);
+  }
+
+  private async loadSiteConfig() {
+    try {
+      this.siteConfig = await fetchSiteConfig();
+    } catch (err) {
+      console.error('Failed to load site config:', err);
+    }
   }
 
   private async loadAlbums() {
@@ -286,15 +297,6 @@ export class AdminAlbumsPage extends LitElement {
       this.error = err instanceof Error ? err.message : 'Failed to load albums';
     } finally {
       this.loading = false;
-    }
-  }
-
-  private async handleLogout() {
-    try {
-      await logout();
-      window.location.href = '/admin/login';
-    } catch (err) {
-      console.error('Logout failed:', err);
     }
   }
 
@@ -337,11 +339,11 @@ export class AdminAlbumsPage extends LitElement {
   }
 
   render() {
+    const siteTitle = this.siteConfig?.site?.title || 'Photography Portfolio';
+
     if (this.loading) {
       return html`
-        <div class="header">
-          <h1>Albums</h1>
-        </div>
+        <admin-header .siteTitle=${siteTitle} currentPage="albums"></admin-header>
         <div class="container">
           <div class="loading">Loading albums...</div>
         </div>
@@ -350,12 +352,7 @@ export class AdminAlbumsPage extends LitElement {
 
     if (this.error) {
       return html`
-        <div class="header">
-          <h1>Albums</h1>
-          <div class="header-actions">
-            <button class="btn btn-secondary" @click=${() => this.handleLogout()}>Logout</button>
-          </div>
-        </div>
+        <admin-header .siteTitle=${siteTitle} currentPage="albums"></admin-header>
         <div class="container">
           <div class="error">${this.error}</div>
           <div style="text-align: center; margin-top: 1rem;">
@@ -366,15 +363,13 @@ export class AdminAlbumsPage extends LitElement {
     }
 
     return html`
-      <div class="header">
-        <h1>Albums (${this.albums.length})</h1>
-        <div class="header-actions">
-          <a href="/admin/albums/new" class="btn btn-primary">New Album</a>
-          <button class="btn btn-secondary" @click=${() => this.handleLogout()}>Logout</button>
-        </div>
-      </div>
+      <admin-header .siteTitle=${siteTitle} currentPage="albums"></admin-header>
 
       <div class="container">
+        <div class="page-header">
+          <h1 class="page-title">Albums (${this.albums.length})</h1>
+          <a href="/admin/albums/new" class="btn btn-primary">New Album</a>
+        </div>
         ${this.albums.length === 0
           ? html`
               <div class="empty-state">

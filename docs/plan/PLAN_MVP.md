@@ -26,7 +26,7 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 3. ✅**Phase 2**: Data Model & JSON Schema (albums.json, site_config.json schemas)
 4. ✅**Phase 3**: Frontend - Public Site (portfolio page, album viewing, password protection)
 5. ✅**Phase 4**: Backend - Admin Server (album CRUD, photo upload, admin auth)
-6. **Phase 5**: Integration, Testing & Deployment (pre-commit hooks, unit tests, manual E2E checklist, release packaging)
+6. ✅**Phase 5**: Integration, Testing & Deployment (pre-commit hooks, unit tests, manual E2E checklist, release packaging)
 
 **Post-MVP Enhancements**:
 
