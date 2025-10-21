@@ -467,6 +467,163 @@ export class AdminSettingsPage extends LitElement {
           </div>
         </form>
 
+        <!-- Social Media -->
+        <form @submit=${(e: Event) => this.handleSaveGeneral(e)}>
+          <div class="section">
+            <h2 class="section-title">Social Media</h2>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="social-instagram">Instagram</label>
+                <input
+                  type="text"
+                  id="social-instagram"
+                  .value=${this.config?.social?.instagram || ''}
+                  @input=${(e: Event) =>
+                    this.updateConfigField(
+                      'social.instagram',
+                      (e.target as HTMLInputElement).value
+                    )}
+                  placeholder="username"
+                />
+                <p class="help-text">Username only (without @)</p>
+              </div>
+
+              <div class="form-group">
+                <label for="social-youtube">YouTube</label>
+                <input
+                  type="text"
+                  id="social-youtube"
+                  .value=${this.config?.social?.youtube || ''}
+                  @input=${(e: Event) =>
+                    this.updateConfigField('social.youtube', (e.target as HTMLInputElement).value)}
+                  placeholder="channel-id or @handle"
+                />
+                <p class="help-text">Channel ID or @handle</p>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="social-twitter">X (Twitter)</label>
+                <input
+                  type="text"
+                  id="social-twitter"
+                  .value=${this.config?.social?.twitter || ''}
+                  @input=${(e: Event) =>
+                    this.updateConfigField('social.twitter', (e.target as HTMLInputElement).value)}
+                  placeholder="username"
+                />
+                <p class="help-text">Username only (without @)</p>
+              </div>
+
+              <div class="form-group">
+                <label for="social-threads">Threads</label>
+                <input
+                  type="text"
+                  id="social-threads"
+                  .value=${this.config?.social?.threads || ''}
+                  @input=${(e: Event) =>
+                    this.updateConfigField('social.threads', (e.target as HTMLInputElement).value)}
+                  placeholder="username"
+                />
+                <p class="help-text">Username only (without @)</p>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="social-tiktok">TikTok</label>
+                <input
+                  type="text"
+                  id="social-tiktok"
+                  .value=${this.config?.social?.tiktok || ''}
+                  @input=${(e: Event) =>
+                    this.updateConfigField('social.tiktok', (e.target as HTMLInputElement).value)}
+                  placeholder="username"
+                />
+                <p class="help-text">Username only (without @)</p>
+              </div>
+
+              <div class="form-group">
+                <label for="social-vimeo">Vimeo</label>
+                <input
+                  type="text"
+                  id="social-vimeo"
+                  .value=${this.config?.social?.vimeo || ''}
+                  @input=${(e: Event) =>
+                    this.updateConfigField('social.vimeo', (e.target as HTMLInputElement).value)}
+                  placeholder="username"
+                />
+                <p class="help-text">Username only</p>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="social-pinterest">Pinterest</label>
+                <input
+                  type="text"
+                  id="social-pinterest"
+                  .value=${this.config?.social?.pinterest || ''}
+                  @input=${(e: Event) =>
+                    this.updateConfigField(
+                      'social.pinterest',
+                      (e.target as HTMLInputElement).value
+                    )}
+                  placeholder="username"
+                />
+                <p class="help-text">Username only</p>
+              </div>
+
+              <div class="form-group">
+                <label for="social-behance">Behance</label>
+                <input
+                  type="text"
+                  id="social-behance"
+                  .value=${this.config?.social?.behance || ''}
+                  @input=${(e: Event) =>
+                    this.updateConfigField('social.behance', (e.target as HTMLInputElement).value)}
+                  placeholder="username"
+                />
+                <p class="help-text">Username only</p>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="social-linkedin">LinkedIn</label>
+                <input
+                  type="text"
+                  id="social-linkedin"
+                  .value=${this.config?.social?.linkedin || ''}
+                  @input=${(e: Event) =>
+                    this.updateConfigField('social.linkedin', (e.target as HTMLInputElement).value)}
+                  placeholder="username"
+                />
+                <p class="help-text">Username or company name</p>
+              </div>
+
+              <div class="form-group">
+                <label for="social-facebook">Facebook</label>
+                <input
+                  type="text"
+                  id="social-facebook"
+                  .value=${this.config?.social?.facebook || ''}
+                  @input=${(e: Event) =>
+                    this.updateConfigField('social.facebook', (e.target as HTMLInputElement).value)}
+                  placeholder="username or page"
+                />
+                <p class="help-text">Username or page name</p>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" ?disabled=${this.saving}>
+              ${this.saving ? 'Saving...' : 'Save Social Media'}
+            </button>
+          </div>
+        </form>
+
         <!-- Portfolio Settings -->
         <form @submit=${(e: Event) => this.handleSavePortfolio(e)}>
           <div class="section">

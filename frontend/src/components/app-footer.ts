@@ -34,12 +34,22 @@ export class AppFooter extends LitElement {
     .social-links a {
       color: var(--color-text-primary);
       text-decoration: none;
-      font-size: 0.9rem;
-      transition: color 0.2s;
+      font-size: 1.5rem;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
     }
 
     .social-links a:hover {
-      color: var(--color-text-secondary);
+      color: var(--color-primary);
+      border-color: var(--color-primary);
+      transform: translateY(-2px);
     }
 
     .contact-info {
@@ -87,17 +97,30 @@ export class AppFooter extends LitElement {
           href="https://instagram.com/${this.social.instagram}"
           target="_blank"
           rel="noopener noreferrer"
-          >Instagram</a
+          title="Instagram"
+          >📷</a
         >`
       );
     }
-    if (this.social.facebook) {
+    if (this.social.youtube) {
       links.push(
         html`<a
-          href="https://facebook.com/${this.social.facebook}"
+          href="https://youtube.com/${this.social.youtube}"
           target="_blank"
           rel="noopener noreferrer"
-          >Facebook</a
+          title="YouTube"
+          >📺</a
+        >`
+      );
+    }
+    if (this.social.vimeo) {
+      links.push(
+        html`<a
+          href="https://vimeo.com/${this.social.vimeo}"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Vimeo"
+          >🎬</a
         >`
       );
     }
@@ -107,7 +130,52 @@ export class AppFooter extends LitElement {
           href="https://twitter.com/${this.social.twitter}"
           target="_blank"
           rel="noopener noreferrer"
-          >Twitter</a
+          title="X (Twitter)"
+          >𝕏</a
+        >`
+      );
+    }
+    if (this.social.threads) {
+      links.push(
+        html`<a
+          href="https://threads.net/@${this.social.threads}"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Threads"
+          >🧵</a
+        >`
+      );
+    }
+    if (this.social.tiktok) {
+      links.push(
+        html`<a
+          href="https://tiktok.com/@${this.social.tiktok}"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="TikTok"
+          >🎵</a
+        >`
+      );
+    }
+    if (this.social.pinterest) {
+      links.push(
+        html`<a
+          href="https://pinterest.com/${this.social.pinterest}"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Pinterest"
+          >📌</a
+        >`
+      );
+    }
+    if (this.social.behance) {
+      links.push(
+        html`<a
+          href="https://behance.net/${this.social.behance}"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Behance"
+          >🎨</a
         >`
       );
     }
@@ -117,7 +185,19 @@ export class AppFooter extends LitElement {
           href="https://linkedin.com/in/${this.social.linkedin}"
           target="_blank"
           rel="noopener noreferrer"
-          >LinkedIn</a
+          title="LinkedIn"
+          >💼</a
+        >`
+      );
+    }
+    if (this.social.facebook) {
+      links.push(
+        html`<a
+          href="https://facebook.com/${this.social.facebook}"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Facebook"
+          >👥</a
         >`
       );
     }
@@ -125,7 +205,9 @@ export class AppFooter extends LitElement {
     // Custom links
     this.social.custom_links?.forEach((link) => {
       links.push(
-        html`<a href="${link.url}" target="_blank" rel="noopener noreferrer">${link.label}</a>`
+        html`<a href="${link.url}" target="_blank" rel="noopener noreferrer" title="${link.label}"
+          >🔗</a
+        >`
       );
     });
 
