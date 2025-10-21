@@ -98,6 +98,7 @@ export class AppFooter extends LitElement {
           target="_blank"
           rel="noopener noreferrer"
           title="Instagram"
+          aria-label="Instagram"
           >📷</a
         >`
       );
@@ -109,6 +110,7 @@ export class AppFooter extends LitElement {
           target="_blank"
           rel="noopener noreferrer"
           title="YouTube"
+          aria-label="YouTube"
           >📺</a
         >`
       );
@@ -120,6 +122,7 @@ export class AppFooter extends LitElement {
           target="_blank"
           rel="noopener noreferrer"
           title="Vimeo"
+          aria-label="Vimeo"
           >🎬</a
         >`
       );
@@ -131,6 +134,7 @@ export class AppFooter extends LitElement {
           target="_blank"
           rel="noopener noreferrer"
           title="X (Twitter)"
+          aria-label="X (Twitter)"
           >𝕏</a
         >`
       );
@@ -142,6 +146,7 @@ export class AppFooter extends LitElement {
           target="_blank"
           rel="noopener noreferrer"
           title="Threads"
+          aria-label="Threads"
           >🧵</a
         >`
       );
@@ -153,6 +158,7 @@ export class AppFooter extends LitElement {
           target="_blank"
           rel="noopener noreferrer"
           title="TikTok"
+          aria-label="TikTok"
           >🎵</a
         >`
       );
@@ -164,6 +170,7 @@ export class AppFooter extends LitElement {
           target="_blank"
           rel="noopener noreferrer"
           title="Pinterest"
+          aria-label="Pinterest"
           >📌</a
         >`
       );
@@ -175,6 +182,7 @@ export class AppFooter extends LitElement {
           target="_blank"
           rel="noopener noreferrer"
           title="Behance"
+          aria-label="Behance"
           >🎨</a
         >`
       );
@@ -186,6 +194,7 @@ export class AppFooter extends LitElement {
           target="_blank"
           rel="noopener noreferrer"
           title="LinkedIn"
+          aria-label="LinkedIn"
           >💼</a
         >`
       );
@@ -197,6 +206,7 @@ export class AppFooter extends LitElement {
           target="_blank"
           rel="noopener noreferrer"
           title="Facebook"
+          aria-label="Facebook"
           >👥</a
         >`
       );
@@ -205,7 +215,12 @@ export class AppFooter extends LitElement {
     // Custom links
     this.social.custom_links?.forEach((link) => {
       links.push(
-        html`<a href="${link.url}" target="_blank" rel="noopener noreferrer" title="${link.label}"
+        html`<a
+          href="${link.url}"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="${link.label}"
+          aria-label="${link.label}"
           >🔗</a
         >`
       );

@@ -53,7 +53,7 @@ describe('AppFooter', () => {
     const socialLinks = el.shadowRoot?.querySelectorAll('.social-links a');
 
     expect(socialLinks).to.have.length(1);
-    expect(socialLinks?.[0]?.textContent).to.equal('Instagram');
+    expect(socialLinks?.[0]?.getAttribute('aria-label')).to.equal('Instagram');
     expect(socialLinks?.[0]?.getAttribute('href')).to.equal('https://instagram.com/testuser');
     expect(socialLinks?.[0]?.getAttribute('target')).to.equal('_blank');
     expect(socialLinks?.[0]?.getAttribute('rel')).to.equal('noopener noreferrer');
@@ -70,10 +70,11 @@ describe('AppFooter', () => {
     const socialLinks = el.shadowRoot?.querySelectorAll('.social-links a');
 
     expect(socialLinks).to.have.length(4);
-    expect(socialLinks?.[0]?.textContent).to.equal('Instagram');
-    expect(socialLinks?.[1]?.textContent).to.equal('Facebook');
-    expect(socialLinks?.[2]?.textContent).to.equal('Twitter');
-    expect(socialLinks?.[3]?.textContent).to.equal('LinkedIn');
+    // Order is based on renderSocialLinks method: Instagram, Twitter, LinkedIn, Facebook
+    expect(socialLinks?.[0]?.getAttribute('aria-label')).to.equal('Instagram');
+    expect(socialLinks?.[1]?.getAttribute('aria-label')).to.equal('X (Twitter)');
+    expect(socialLinks?.[2]?.getAttribute('aria-label')).to.equal('LinkedIn');
+    expect(socialLinks?.[3]?.getAttribute('aria-label')).to.equal('Facebook');
   });
 
   it('should render custom social links', async () => {
@@ -87,9 +88,9 @@ describe('AppFooter', () => {
     const socialLinks = el.shadowRoot?.querySelectorAll('.social-links a');
 
     expect(socialLinks).to.have.length(2);
-    expect(socialLinks?.[0]?.textContent).to.equal('GitHub');
+    expect(socialLinks?.[0]?.getAttribute('aria-label')).to.equal('GitHub');
     expect(socialLinks?.[0]?.getAttribute('href')).to.equal('https://github.com/user');
-    expect(socialLinks?.[1]?.textContent).to.equal('Website');
+    expect(socialLinks?.[1]?.getAttribute('aria-label')).to.equal('Website');
     expect(socialLinks?.[1]?.getAttribute('href')).to.equal('https://example.com');
   });
 
