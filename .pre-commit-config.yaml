@@ -102,6 +102,14 @@ repos:
   # Local hooks for custom checks
   - repo: local
     hooks:
+      # Check for JavaScript files in frontend/src (should only have TypeScript)
+      - id: check-no-js-files
+        name: Check No JavaScript Files in Frontend
+        entry: scripts/check-no-js-files.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+
       # Check that shell scripts are only in designated scripts directories
       - id: check-script-locations
         name: Check Script Locations

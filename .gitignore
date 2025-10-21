@@ -11,8 +11,9 @@ coverage/
 backend/coverage.html
 backend/coverage.out
 
-# TypeScript compilation artifacts in src (should not be committed)
+# TypeScript compilation artifacts (should not be committed)
 frontend/src/**/*.js
+frontend/src/**/*.js.map
 
 # Bazel user configuration
 .bazelrc.user
