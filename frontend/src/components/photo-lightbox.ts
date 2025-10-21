@@ -94,110 +94,75 @@ export class PhotoLightbox extends LitElement {
       align-items: center;
       justify-content: center;
       position: relative;
-      padding: 3rem;
+      padding: 0;
       overflow: hidden;
       min-height: 0; /* Important for flex children */
     }
 
+    .nav-button {
+      flex: 1;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 3rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      align-self: stretch;
+    }
+
+    .nav-button:hover {
+      opacity: 0.7;
+    }
+
+    .nav-button:disabled {
+      opacity: 0.2;
+      cursor: not-allowed;
+    }
+
     .photo-container img {
-      max-width: calc(100% - 8rem); /* Account for nav buttons */
+      max-width: 100%;
       max-height: 100%;
       width: auto;
       height: auto;
       object-fit: contain;
       display: block;
-    }
-
-    .nav-button {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
-      color: white;
-      font-size: 2rem;
-      cursor: pointer;
-      padding: 1rem;
-      border-radius: 4px;
-      transition: background-color 0.2s;
-    }
-
-    .nav-button:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-
-    .nav-button:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-
-    .nav-button.prev {
-      left: 2rem;
-    }
-
-    .nav-button.next {
-      right: 2rem;
+      flex-shrink: 0;
     }
 
     .exif-panel {
       padding: 1rem 2rem;
       background-color: rgba(0, 0, 0, 0.7);
-      color: white;
-      font-size: 0.85rem;
-      line-height: 1.6;
-      min-height: 96px;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 9px;
+      line-height: 1.4;
+      min-height: auto;
       box-sizing: border-box;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-
-    .exif-panel.with-data {
-      justify-content: flex-start;
-    }
-
-    .exif-panel.empty {
       align-items: center;
-    }
-
-    .exif-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 0.5rem;
-      width: 100%;
+      white-space: nowrap;
+      overflow-x: auto;
     }
 
     .exif-item {
-      display: flex;
-      gap: 0.5rem;
+      display: inline;
     }
 
-    .exif-label {
-      opacity: 0.7;
+    .exif-item::after {
+      content: ' • ';
+      margin: 0 0.5rem;
+    }
+
+    .exif-item:last-child::after {
+      content: '';
+      margin: 0;
     }
 
     @media (max-width: 768px) {
-      .toolbar,
-      .photo-container {
-        padding: 1rem;
-      }
-
-      .photo-container img {
-        max-width: calc(100% - 4rem); /* Account for smaller nav buttons on mobile */
-      }
-
       .nav-button {
-        padding: 0.5rem;
-        font-size: 1.5rem;
-      }
-
-      .nav-button.prev {
-        left: 0.5rem;
-      }
-
-      .nav-button.next {
-        right: 0.5rem;
+        font-size: 2rem;
       }
     }
   `;
@@ -288,16 +253,20 @@ export class PhotoLightbox extends LitElement {
   }
 
   next() {
+    this.hasNavigated = true;
     if (this.currentIndex < this.photos.length - 1) {
-      this.hasNavigated = true;
       this.currentIndex++;
+    } else {
+      this.currentIndex = 0; // Wrap to first image
     }
   }
 
   prev() {
+    this.hasNavigated = true;
     if (this.currentIndex > 0) {
-      this.hasNavigated = true;
       this.currentIndex--;
+    } else {
+      this.currentIndex = this.photos.length - 1; // Wrap to last image
     }
   }
 
@@ -323,12 +292,7 @@ export class PhotoLightbox extends LitElement {
           @touchstart=${(e: TouchEvent) => this.handleTouchStart(e)}
           @touchend=${(e: TouchEvent) => this.handleTouchEnd(e)}
         >
-          <button
-            class="nav-button prev"
-            @click=${() => this.prev()}
-            ?disabled=${this.currentIndex === 0}
-            aria-label="Previous photo"
-          >
+          <button class="nav-button prev" @click=${() => this.prev()} aria-label="Previous photo">
             ‹
           </button>
 
@@ -337,12 +301,7 @@ export class PhotoLightbox extends LitElement {
             alt="${currentPhoto.alt_text || currentPhoto.caption || 'Photo'}"
           />
 
-          <button
-            class="nav-button next"
-            @click=${() => this.next()}
-            ?disabled=${this.currentIndex === this.photos.length - 1}
-            aria-label="Next photo"
-          >
+          <button class="nav-button next" @click=${() => this.next()} aria-label="Next photo">
             ›
           </button>
         </div>
@@ -357,30 +316,19 @@ export class PhotoLightbox extends LitElement {
     const items = [];
 
     if (exif) {
-      if (exif.camera) items.push({ label: 'Camera', value: exif.camera });
-      if (exif.lens) items.push({ label: 'Lens', value: exif.lens });
-      if (exif.iso) items.push({ label: 'ISO', value: exif.iso.toString() });
-      if (exif.aperture) items.push({ label: 'Aperture', value: exif.aperture });
-      if (exif.shutter_speed) items.push({ label: 'Shutter', value: exif.shutter_speed });
-      if (exif.focal_length) items.push({ label: 'Focal Length', value: exif.focal_length });
+      if (exif.camera) items.push(`${exif.camera}`);
+      if (exif.lens) items.push(`${exif.lens}`);
+      if (exif.iso) items.push(`ISO ${exif.iso}`);
+      if (exif.aperture) items.push(`${exif.aperture}`);
+      if (exif.shutter_speed) items.push(`${exif.shutter_speed}`);
+      if (exif.focal_length) items.push(`${exif.focal_length}`);
     }
 
     const hasItems = items.length > 0;
 
     return html`
-      <div class="exif-panel ${hasItems ? 'with-data' : 'empty'}">
-        ${hasItems
-          ? html`<div class="exif-grid">
-              ${items.map(
-                (item) => html`
-                  <div class="exif-item">
-                    <span class="exif-label">${item.label}:</span>
-                    <span class="exif-value">${item.value}</span>
-                  </div>
-                `
-              )}
-            </div>`
-          : ''}
+      <div class="exif-panel">
+        ${hasItems ? items.map((item) => html`<span class="exif-item">${item}</span>`) : ''}
       </div>
     `;
   }
