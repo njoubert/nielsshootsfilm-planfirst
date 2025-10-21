@@ -14,6 +14,7 @@ export class AlbumCard extends LitElement {
   static styles = css`
     :host {
       display: block;
+      height: 100%;
     }
 
     .card {
@@ -24,6 +25,9 @@ export class AlbumCard extends LitElement {
         transform 0.2s,
         box-shadow 0.2s;
       background-color: var(--color-surface);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
     }
 
     .card:hover {
@@ -32,18 +36,22 @@ export class AlbumCard extends LitElement {
     }
 
     .cover {
-      aspect-ratio: 1;
+      flex: 1;
       overflow: hidden;
       background-color: var(--color-surface);
+      position: relative;
     }
 
     .cover lazy-image {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
     }
 
     .info {
       padding: 1rem;
+      flex-shrink: 0;
     }
 
     .title {

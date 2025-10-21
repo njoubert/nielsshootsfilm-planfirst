@@ -60,6 +60,11 @@ export class AlbumListPage extends LitElement {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 2rem;
+      grid-auto-rows: 1fr;
+    }
+
+    .albums-grid > * {
+      aspect-ratio: 1;
     }
 
     .empty-state {
@@ -80,6 +85,10 @@ export class AlbumListPage extends LitElement {
       .albums-grid {
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 1.5rem;
+      }
+
+      .albums-grid > * {
+        aspect-ratio: 1;
       }
     }
   `;
