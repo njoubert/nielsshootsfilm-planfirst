@@ -25,7 +25,6 @@ describe('AdminDashboardPage', () => {
         updated_at: '2025-01-01',
         visibility: 'public',
         allow_downloads: true,
-        is_portfolio_album: false,
         order: 0,
         photos: [
           {
@@ -54,7 +53,6 @@ describe('AdminDashboardPage', () => {
         updated_at: '2025-01-02',
         visibility: 'unlisted',
         allow_downloads: false,
-        is_portfolio_album: false,
         order: 1,
         photos: [
           {

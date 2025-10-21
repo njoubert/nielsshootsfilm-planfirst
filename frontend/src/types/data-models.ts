@@ -49,7 +49,6 @@ export interface Album {
   password_hash?: string;
   expiration_date?: string;
   allow_downloads: boolean;
-  is_portfolio_album: boolean;
   order: number;
   theme_override?: ThemeMode;
   created_at: string;

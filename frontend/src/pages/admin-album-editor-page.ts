@@ -11,7 +11,6 @@ import {
   deletePhoto,
   fetchAlbumById,
   setCoverPhoto,
-  setMainPortfolioAlbum,
   updateAlbum,
   uploadPhotos,
 } from '../utils/admin-api';
@@ -276,7 +275,6 @@ export class AdminAlbumEditorPage extends LitElement {
     description: '',
     visibility: 'public',
     allow_downloads: true,
-    is_portfolio_album: false,
     order: 0,
     photos: [],
   };
@@ -353,11 +351,6 @@ export class AdminAlbumEditorPage extends LitElement {
         // Update existing album
         await updateAlbum(this.albumId, this.album);
 
-        // If this album is marked as portfolio album, set it as the main portfolio album
-        if (this.album.is_portfolio_album) {
-          await setMainPortfolioAlbum(this.albumId);
-        }
-
         this.success = 'Album updated successfully';
       } else {
         // Create new album
@@ -367,14 +360,8 @@ export class AdminAlbumEditorPage extends LitElement {
           description: this.album.description,
           visibility: this.album.visibility!,
           allow_downloads: this.album.allow_downloads,
-          is_portfolio_album: this.album.is_portfolio_album,
           order: this.album.order,
         });
-
-        // If this album is marked as portfolio album, set it as the main portfolio album
-        if (newAlbum.is_portfolio_album) {
-          await setMainPortfolioAlbum(newAlbum.id);
-        }
 
         // Redirect to edit page to upload photos
         window.location.href = `/admin/albums/${newAlbum.id}/edit`;
@@ -581,19 +568,6 @@ export class AdminAlbumEditorPage extends LitElement {
                     this.updateField('allow_downloads', (e.target as HTMLInputElement).checked)}
                 />
                 <label for="allow_downloads">Allow downloads</label>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <div class="checkbox-group">
-                <input
-                  type="checkbox"
-                  id="is_portfolio"
-                  .checked=${this.album.is_portfolio_album ?? false}
-                  @change=${(e: Event) =>
-                    this.updateField('is_portfolio_album', (e.target as HTMLInputElement).checked)}
-                />
-                <label for="is_portfolio">Portfolio album</label>
               </div>
             </div>
           </div>

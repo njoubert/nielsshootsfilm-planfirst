@@ -187,7 +187,10 @@ export class AdminDashboardPage extends LitElement {
     const totalAlbums = this.albums.length;
     const publicAlbums = this.albums.filter((a) => a.visibility === 'public').length;
     const totalPhotos = this.albums.reduce((sum, album) => sum + (album.photos?.length || 0), 0);
-    const portfolioAlbum = this.albums.find((a) => a.is_portfolio_album);
+    const portfolioAlbumId = this.siteConfig?.portfolio?.main_album_id;
+    const portfolioAlbum = portfolioAlbumId
+      ? this.albums.find((a) => a.id === portfolioAlbumId)
+      : undefined;
 
     return {
       totalAlbums,

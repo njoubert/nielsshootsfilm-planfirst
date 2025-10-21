@@ -82,7 +82,6 @@ export interface CreateAlbumRequest {
   description?: string;
   visibility: 'public' | 'unlisted' | 'password_protected';
   allow_downloads?: boolean;
-  is_portfolio_album?: boolean;
   order?: number;
 }
 

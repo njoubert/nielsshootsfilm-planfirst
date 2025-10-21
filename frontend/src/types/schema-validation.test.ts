@@ -17,7 +17,6 @@ describe('Schema Validation', () => {
         title: 'Test Title',
         visibility: 'public',
         allow_downloads: false,
-        is_portfolio_album: false,
         order: 0,
         created_at: '2025-01-01T00:00:00Z',
         updated_at: '2025-01-01T00:00:00Z',
@@ -30,7 +29,6 @@ describe('Schema Validation', () => {
       expect(mockAlbum.title).toBeDefined();
       expect(mockAlbum.visibility).toBeDefined();
       expect(mockAlbum.allow_downloads).toBeDefined();
-      expect(mockAlbum.is_portfolio_album).toBeDefined();
       expect(mockAlbum.order).toBeDefined();
       expect(mockAlbum.created_at).toBeDefined();
       expect(mockAlbum.updated_at).toBeDefined();
@@ -47,7 +45,6 @@ describe('Schema Validation', () => {
           title: 'Test',
           visibility,
           allow_downloads: false,
-          is_portfolio_album: false,
           order: 0,
           created_at: '2025-01-01T00:00:00Z',
           updated_at: '2025-01-01T00:00:00Z',
@@ -65,7 +62,6 @@ describe('Schema Validation', () => {
         title: 'Test',
         visibility: 'public',
         allow_downloads: true, // snake_case
-        is_portfolio_album: false, // snake_case
         order: 0,
         created_at: '2025-01-01T00:00:00Z', // snake_case
         updated_at: '2025-01-01T00:00:00Z', // snake_case
@@ -73,7 +69,6 @@ describe('Schema Validation', () => {
       };
 
       expect(album).toHaveProperty('allow_downloads');
-      expect(album).toHaveProperty('is_portfolio_album');
       expect(album).toHaveProperty('created_at');
       expect(album).toHaveProperty('updated_at');
     });
@@ -85,7 +80,6 @@ describe('Schema Validation', () => {
         title: 'Test',
         visibility: 'public',
         allow_downloads: false,
-        is_portfolio_album: false,
         order: 0,
         created_at: '2025-01-01T00:00:00Z',
         updated_at: '2025-01-01T00:00:00Z',
@@ -112,7 +106,6 @@ describe('Schema Validation', () => {
         title: 'Test Album',
         visibility: 'public',
         allow_downloads: true,
-        is_portfolio_album: false,
         order: 1,
         created_at: '2025-01-01T00:00:00Z',
         updated_at: '2025-01-01T00:00:00Z',
@@ -209,7 +202,6 @@ describe('Schema Validation', () => {
           title: 'Test',
           visibility: visibility as AlbumVisibility,
           allow_downloads: false,
-          is_portfolio_album: false,
           order: 0,
           created_at: '2025-01-01T00:00:00Z',
           updated_at: '2025-01-01T00:00:00Z',
@@ -234,7 +226,6 @@ describe('Schema Validation', () => {
             cover_photo_id: 'photo-1',
             visibility: 'public',
             allow_downloads: false,
-            is_portfolio_album: true,
             order: 0,
             created_at: '2024-01-01T00:00:00Z',
             updated_at: '2024-01-01T00:00:00Z',
@@ -247,7 +238,6 @@ describe('Schema Validation', () => {
 
       expect(album.id).toBe('sample-portfolio');
       expect(album.visibility).toBe('public');
-      expect(album.is_portfolio_album).toBe(true);
     });
 
     it('should handle albums with null/empty photos arrays', () => {
@@ -258,7 +248,6 @@ describe('Schema Validation', () => {
         title: 'Test',
         visibility: 'public',
         allow_downloads: false,
-        is_portfolio_album: false,
         order: 0,
         created_at: '2025-01-01T00:00:00Z',
         updated_at: '2025-01-01T00:00:00Z',
@@ -274,7 +263,6 @@ describe('Schema Validation', () => {
         title: 'Test',
         visibility: 'public',
         allow_downloads: false,
-        is_portfolio_album: false,
         order: 0,
         created_at: '2025-01-01T00:00:00Z',
         updated_at: '2025-01-01T00:00:00Z',

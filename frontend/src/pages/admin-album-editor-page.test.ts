@@ -13,7 +13,6 @@ describe('AdminAlbumEditorPage', () => {
   let uploadPhotosStub: sinon.SinonStub;
   let deletePhotoStub: sinon.SinonStub;
   let setCoverPhotoStub: sinon.SinonStub;
-  let setMainPortfolioAlbumStub: sinon.SinonStub;
 
   const mockAlbum: Album = {
     id: 'album-1',
@@ -40,7 +39,6 @@ describe('AdminAlbumEditorPage', () => {
     ],
     cover_photo_id: 'photo-1',
     allow_downloads: true,
-    is_portfolio_album: false,
     order: 1,
     created_at: '2025-10-20T00:00:00Z',
     updated_at: '2025-10-20T00:00:00Z',
@@ -54,7 +52,6 @@ describe('AdminAlbumEditorPage', () => {
     uploadPhotosStub = sinon.stub(adminApi, 'uploadPhotos');
     deletePhotoStub = sinon.stub(adminApi, 'deletePhoto');
     setCoverPhotoStub = sinon.stub(adminApi, 'setCoverPhoto');
-    setMainPortfolioAlbumStub = sinon.stub(adminApi, 'setMainPortfolioAlbum').resolves();
   });
 
   afterEach(() => {
@@ -104,10 +101,8 @@ describe('AdminAlbumEditorPage', () => {
       );
 
       const downloadsCheckbox = el.shadowRoot?.querySelector('input#allow_downloads');
-      const portfolioCheckbox = el.shadowRoot?.querySelector('input#is_portfolio_album');
 
       expect(downloadsCheckbox).to.exist;
-      expect(portfolioCheckbox).to.exist;
     });
 
     it('should create new album on submit', async () => {
@@ -217,31 +212,6 @@ describe('AdminAlbumEditorPage', () => {
       await waitUntil(() => updateAlbumStub.called, 'updateAlbum should be called');
 
       expect(updateAlbumStub).to.have.been.calledWith('album-1', sinon.match.any);
-    });
-
-    it('should call setMainPortfolioAlbum when portfolio album checkbox is checked', async () => {
-      const portfolioAlbum = { ...mockAlbum, is_portfolio_album: true };
-      fetchAlbumByIdStub.resolves(portfolioAlbum);
-      updateAlbumStub.resolves(portfolioAlbum);
-
-      const el = await fixture<AdminAlbumEditorPage>(
-        html`<admin-album-editor-page albumId="album-1"></admin-album-editor-page>`
-      );
-
-      await waitUntil(() => !el['loading'], 'loading should complete');
-
-      // Submit the form with portfolio album checked
-      const form = el.shadowRoot?.querySelector('form') as HTMLFormElement;
-      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-      await el.updateComplete;
-
-      await waitUntil(() => updateAlbumStub.called, 'updateAlbum should be called');
-      await waitUntil(
-        () => setMainPortfolioAlbumStub.called,
-        'setMainPortfolioAlbum should be called'
-      );
-
-      expect(setMainPortfolioAlbumStub).to.have.been.calledWith('album-1');
     });
 
     it('should display photos grid', async () => {

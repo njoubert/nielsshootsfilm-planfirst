@@ -119,7 +119,6 @@ func TestAlbumJSONSerialization(t *testing.T) {
 		CoverPhotoID:   "photo-1",
 		Visibility:     "public",
 		AllowDownloads: true,
-		IsPortfolio:    false,
 		Order:          1,
 		CreatedAt:      now,
 		UpdatedAt:      now,
@@ -148,9 +147,6 @@ func TestAlbumJSONSerialization(t *testing.T) {
 	if decoded.AllowDownloads != original.AllowDownloads {
 		t.Errorf("AllowDownloads = %v, want %v", decoded.AllowDownloads, original.AllowDownloads)
 	}
-	if decoded.IsPortfolio != original.IsPortfolio {
-		t.Errorf("IsPortfolio = %v, want %v", decoded.IsPortfolio, original.IsPortfolio)
-	}
 }
 
 // TestAlbumJSONFields tests that JSON field names match expectations.
@@ -161,7 +157,6 @@ func TestAlbumJSONFields(t *testing.T) {
 		Title:          "Test",
 		Visibility:     "public",
 		AllowDownloads: true,
-		IsPortfolio:    false,
 		Order:          0,
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
@@ -185,8 +180,7 @@ func TestAlbumJSONFields(t *testing.T) {
 		"slug",
 		"title",
 		"visibility",
-		"allow_downloads",    // snake_case
-		"is_portfolio_album", // snake_case
+		"allow_downloads", // snake_case
 		"order",
 		"created_at", // snake_case
 		"updated_at", // snake_case
@@ -203,11 +197,6 @@ func TestAlbumJSONFields(t *testing.T) {
 	if _, ok := m["allow_downloads"].(bool); !ok {
 		t.Errorf("allow_downloads should be boolean, got %T", m["allow_downloads"])
 	}
-
-	// Verify is_portfolio_album is boolean
-	if _, ok := m["is_portfolio_album"].(bool); !ok {
-		t.Errorf("is_portfolio_album should be boolean, got %T", m["is_portfolio_album"])
-	}
 }
 
 // TestAlbumWithEmptyVisibility tests edge case of empty visibility.
@@ -218,7 +207,6 @@ func TestAlbumWithEmptyVisibility(t *testing.T) {
 		"title": "Test Album",
 		"visibility": "",
 		"allow_downloads": false,
-		"is_portfolio_album": false,
 		"order": 0,
 		"created_at": "2025-01-01T00:00:00Z",
 		"updated_at": "2025-01-01T00:00:00Z",
@@ -247,7 +235,6 @@ func TestAlbumWithMissingVisibility(t *testing.T) {
 		"slug": "test",
 		"title": "Test Album",
 		"allow_downloads": false,
-		"is_portfolio_album": false,
 		"order": 0,
 		"created_at": "2025-01-01T00:00:00Z",
 		"updated_at": "2025-01-01T00:00:00Z",
