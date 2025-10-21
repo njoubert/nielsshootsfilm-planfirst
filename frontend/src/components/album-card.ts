@@ -32,8 +32,9 @@ export class AlbumCard extends LitElement {
     }
 
     .cover {
-      aspect-ratio: 3/2;
+      aspect-ratio: 1;
       overflow: hidden;
+      background-color: var(--color-surface);
     }
 
     .cover lazy-image {
@@ -99,7 +100,7 @@ export class AlbumCard extends LitElement {
             ? html`<lazy-image
                 src="${coverPhoto.url_thumbnail}"
                 alt="${this.album.title}"
-                aspectRatio="3/2"
+                aspectRatio="1"
               ></lazy-image>`
             : ''}
         </div>

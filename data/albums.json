@@ -585,34 +585,713 @@
       ]
     },
     {
-      "id": "29fd1b3b-31d6-4ea5-a538-b3ce3475409a",
-      "slug": "glebs-album",
-      "title": "A Study in Matt",
-      "subtitle": "Cause he a coooool dude",
+      "id": "eac2ada4-6727-4ca9-9f71-307d7f7f9b73",
+      "slug": "ofarrel-and-polk",
+      "title": "O'Farrel and Polk",
+      "subtitle": "A Post-Pandemic Corner",
+      "description": "I'm on Polk street, between O'Farrel and Ellis. Scenes of a shuttered San Francisco. Broken people on the street, doing fentanyl. The flotsam and jetsam of a cultural moment. ",
+      "cover_photo_id": "eb8f12f9-9638-4f92-8d2e-2159ed9aca96",
       "visibility": "public",
       "allow_downloads": true,
       "order": 0,
-      "created_at": "2025-10-20T23:15:13.425761Z",
-      "updated_at": "2025-10-21T01:08:11.498646Z",
+      "created_at": "2025-10-21T01:31:42.981679Z",
+      "updated_at": "2025-10-21T01:33:29.665127Z",
       "photos": [
         {
-          "id": "cac3992e-71a7-4ae6-8283-7f2e4e758213",
-          "filename_original": "000020650001.jpg",
-          "url_original": "/uploads/originals/72f6934b-8522-4a97-b8f0-73f376891397.jpg",
-          "url_display": "/uploads/display/72f6934b-8522-4a97-b8f0-73f376891397_display.webp",
-          "url_thumbnail": "/uploads/thumbnails/72f6934b-8522-4a97-b8f0-73f376891397_thumbnail.webp",
+          "id": "e20d9fc9-22d1-44ec-8280-3156ad353960",
+          "filename_original": "A7R08266-positive.jpg",
+          "url_original": "/uploads/originals/ad191ff7-a318-4944-8d7e-b150859e3384.jpg",
+          "url_display": "/uploads/display/ad191ff7-a318-4944-8d7e-b150859e3384_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/ad191ff7-a318-4944-8d7e-b150859e3384_thumbnail.webp",
           "order": 1,
-          "width": 3024,
-          "height": 2005,
-          "file_size_original": 7606381,
-          "file_size_display": 1528764,
-          "file_size_thumbnail": 31602,
+          "width": 2977,
+          "height": 4465,
+          "file_size_original": 7737017,
+          "file_size_display": 1769850,
+          "file_size_thumbnail": 60328,
           "exif": {
-            "camera": "Nikon F6",
-            "iso": 100,
-            "date_taken": "2025-01-18T10:17:20-08:00"
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:18:41-08:00"
           },
-          "uploaded_at": "2025-10-20T23:48:25.602277Z"
+          "uploaded_at": "2025-10-21T01:31:50.445533Z"
+        },
+        {
+          "id": "291ba63f-ab9a-4635-8c99-4685b55ea8b2",
+          "filename_original": "A7R08267-positive.jpg",
+          "url_original": "/uploads/originals/c5b6590b-7544-4d37-bd07-f9089328caf9.jpg",
+          "url_display": "/uploads/display/c5b6590b-7544-4d37-bd07-f9089328caf9_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/c5b6590b-7544-4d37-bd07-f9089328caf9_thumbnail.webp",
+          "order": 2,
+          "width": 4496,
+          "height": 2997,
+          "file_size_original": 6881809,
+          "file_size_display": 1154608,
+          "file_size_thumbnail": 27000,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:18:46-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:31:51.106239Z"
+        },
+        {
+          "id": "57da1694-be9f-4bdc-acc3-32a8f8e0d351",
+          "filename_original": "A7R08268-positive.jpg",
+          "url_original": "/uploads/originals/e8b632c0-2d75-46aa-970d-d68ded3c4432.jpg",
+          "url_display": "/uploads/display/e8b632c0-2d75-46aa-970d-d68ded3c4432_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/e8b632c0-2d75-46aa-970d-d68ded3c4432_thumbnail.webp",
+          "order": 3,
+          "width": 2997,
+          "height": 4496,
+          "file_size_original": 7560370,
+          "file_size_display": 1558312,
+          "file_size_thumbnail": 68430,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:18:51-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:31:51.814558Z"
+        },
+        {
+          "id": "9308d56e-3e5e-4e98-8918-ffef1705fd29",
+          "filename_original": "A7R08269-positive.jpg",
+          "url_original": "/uploads/originals/9145e006-d0a9-40ac-a02f-c515a6879f3f.jpg",
+          "url_display": "/uploads/display/9145e006-d0a9-40ac-a02f-c515a6879f3f_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/9145e006-d0a9-40ac-a02f-c515a6879f3f_thumbnail.webp",
+          "order": 4,
+          "width": 4496,
+          "height": 2997,
+          "file_size_original": 7773541,
+          "file_size_display": 1715812,
+          "file_size_thumbnail": 81742,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:18:56-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:31:52.545187Z"
+        },
+        {
+          "id": "12523c8f-da48-45ec-8753-5303917757cd",
+          "filename_original": "A7R08270-positive.jpg",
+          "url_original": "/uploads/originals/86bd260f-088a-41d3-828b-b1ba4eeadf8e.jpg",
+          "url_display": "/uploads/display/86bd260f-088a-41d3-828b-b1ba4eeadf8e_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/86bd260f-088a-41d3-828b-b1ba4eeadf8e_thumbnail.webp",
+          "order": 5,
+          "width": 4473,
+          "height": 2982,
+          "file_size_original": 7651628,
+          "file_size_display": 1646366,
+          "file_size_thumbnail": 48556,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:19:03-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:31:53.256934Z"
+        },
+        {
+          "id": "b045a627-85aa-4e63-b76f-2e192c596c1c",
+          "filename_original": "A7R08271-positive.jpg",
+          "url_original": "/uploads/originals/d17586ad-8fe5-449b-8c21-818ff80206a3.jpg",
+          "url_display": "/uploads/display/d17586ad-8fe5-449b-8c21-818ff80206a3_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/d17586ad-8fe5-449b-8c21-818ff80206a3_thumbnail.webp",
+          "order": 6,
+          "width": 4476,
+          "height": 2518,
+          "file_size_original": 6450774,
+          "file_size_display": 1336650,
+          "file_size_thumbnail": 55694,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:19:08-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:31:53.862103Z"
+        },
+        {
+          "id": "ebe81f1f-680b-464e-bd76-07e843882a4a",
+          "filename_original": "A7R08272-positive.jpg",
+          "url_original": "/uploads/originals/336bc898-a317-488e-a5b8-562a9d144b34.jpg",
+          "url_display": "/uploads/display/336bc898-a317-488e-a5b8-562a9d144b34_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/336bc898-a317-488e-a5b8-562a9d144b34_thumbnail.webp",
+          "order": 7,
+          "width": 2983,
+          "height": 4475,
+          "file_size_original": 8129303,
+          "file_size_display": 1975134,
+          "file_size_thumbnail": 83376,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:19:12-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:31:54.618336Z"
+        },
+        {
+          "id": "9ccfacfd-d329-4fb0-bc97-b467e37de15b",
+          "filename_original": "A7R08273-positive.jpg",
+          "url_original": "/uploads/originals/39514744-8efa-4ff2-b4ae-ee8a733e0faa.jpg",
+          "url_display": "/uploads/display/39514744-8efa-4ff2-b4ae-ee8a733e0faa_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/39514744-8efa-4ff2-b4ae-ee8a733e0faa_thumbnail.webp",
+          "order": 8,
+          "width": 4496,
+          "height": 2529,
+          "file_size_original": 6426952,
+          "file_size_display": 1381980,
+          "file_size_thumbnail": 66738,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:19:17-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:31:55.216542Z"
+        },
+        {
+          "id": "d364fb6b-efc3-41e6-914e-86d5e1660159",
+          "filename_original": "A7R08258-positive.jpg",
+          "url_original": "/uploads/originals/23bca0e4-60b7-4224-b22a-8aaf9d3ffc73.jpg",
+          "url_display": "/uploads/display/23bca0e4-60b7-4224-b22a-8aaf9d3ffc73_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/23bca0e4-60b7-4224-b22a-8aaf9d3ffc73_thumbnail.webp",
+          "order": 9,
+          "width": 4474,
+          "height": 2983,
+          "file_size_original": 12256041,
+          "file_size_display": 1887146,
+          "file_size_thumbnail": 87506,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:13:57-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:01.186046Z"
+        },
+        {
+          "id": "1b590bf3-b233-4352-8442-9c5c3446fe27",
+          "filename_original": "A7R08259-positive.jpg",
+          "url_original": "/uploads/originals/f72aecbe-fe6e-4a82-9714-3301978a5251.jpg",
+          "url_display": "/uploads/display/f72aecbe-fe6e-4a82-9714-3301978a5251_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/f72aecbe-fe6e-4a82-9714-3301978a5251_thumbnail.webp",
+          "order": 10,
+          "width": 2980,
+          "height": 4470,
+          "file_size_original": 12631166,
+          "file_size_display": 2029126,
+          "file_size_thumbnail": 74944,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:14:05-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:02.028234Z"
+        },
+        {
+          "id": "51574e94-4433-4e09-9dca-cbdd32fb991b",
+          "filename_original": "A7R08260-positive.jpg",
+          "url_original": "/uploads/originals/ed23064d-5605-46d3-a45b-59d2ed663d7f.jpg",
+          "url_display": "/uploads/display/ed23064d-5605-46d3-a45b-59d2ed663d7f_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/ed23064d-5605-46d3-a45b-59d2ed663d7f_thumbnail.webp",
+          "order": 11,
+          "width": 4473,
+          "height": 2982,
+          "file_size_original": 9703470,
+          "file_size_display": 970348,
+          "file_size_thumbnail": 54904,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:14:12-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:02.740826Z"
+        },
+        {
+          "id": "0a29dda5-1d58-45f3-b1f7-622b48722e1b",
+          "filename_original": "A7R08261-positive.jpg",
+          "url_original": "/uploads/originals/2dd0313e-1c66-4e5c-9c3a-75c101d81983.jpg",
+          "url_display": "/uploads/display/2dd0313e-1c66-4e5c-9c3a-75c101d81983_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/2dd0313e-1c66-4e5c-9c3a-75c101d81983_thumbnail.webp",
+          "order": 12,
+          "width": 4496,
+          "height": 2997,
+          "file_size_original": 10533391,
+          "file_size_display": 1355506,
+          "file_size_thumbnail": 64430,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:14:17-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:03.481455Z"
+        },
+        {
+          "id": "01495cf3-ca7f-4812-bab0-2250d4671afe",
+          "filename_original": "A7R08262-positive.jpg",
+          "url_original": "/uploads/originals/e123527e-72af-48e3-bb0b-445b56cb65c8.jpg",
+          "url_display": "/uploads/display/e123527e-72af-48e3-bb0b-445b56cb65c8_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/e123527e-72af-48e3-bb0b-445b56cb65c8_thumbnail.webp",
+          "order": 13,
+          "width": 2997,
+          "height": 4496,
+          "file_size_original": 12677143,
+          "file_size_display": 1595482,
+          "file_size_thumbnail": 53672,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:14:21-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:04.300623Z"
+        },
+        {
+          "id": "a0940874-bfe4-45bd-8b61-136ba4b71caa",
+          "filename_original": "A7R08263-positive.jpg",
+          "url_original": "/uploads/originals/4f73c72d-1184-4f89-88fb-7da5988fd631.jpg",
+          "url_display": "/uploads/display/4f73c72d-1184-4f89-88fb-7da5988fd631_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/4f73c72d-1184-4f89-88fb-7da5988fd631_thumbnail.webp",
+          "order": 14,
+          "width": 4480,
+          "height": 2987,
+          "file_size_original": 14443989,
+          "file_size_display": 2888952,
+          "file_size_thumbnail": 99784,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:14:29-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:05.243036Z"
+        },
+        {
+          "id": "7e09b50a-6ce8-4f7b-9da9-9a14cf89de8f",
+          "filename_original": "A7R08264-positive.jpg",
+          "url_original": "/uploads/originals/20ec2fab-f6b7-4176-b962-c4c3d54b390a.jpg",
+          "url_display": "/uploads/display/20ec2fab-f6b7-4176-b962-c4c3d54b390a_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/20ec2fab-f6b7-4176-b962-c4c3d54b390a_thumbnail.webp",
+          "order": 15,
+          "width": 2075,
+          "height": 1660,
+          "file_size_original": 3258459,
+          "file_size_display": 651118,
+          "file_size_thumbnail": 56484,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:14:36-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:05.530849Z"
+        },
+        {
+          "id": "91673d99-28b9-4709-85ba-e6a80f3dc34b",
+          "filename_original": "A7R08265-positive.jpg",
+          "url_original": "/uploads/originals/825b3858-e981-4370-b450-e56111903386.jpg",
+          "url_display": "/uploads/display/825b3858-e981-4370-b450-e56111903386_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/825b3858-e981-4370-b450-e56111903386_thumbnail.webp",
+          "order": 16,
+          "width": 1518,
+          "height": 2024,
+          "file_size_original": 2550648,
+          "file_size_display": 461602,
+          "file_size_thumbnail": 32582,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:14:41-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:05.775127Z"
+        },
+        {
+          "id": "eb8f12f9-9638-4f92-8d2e-2159ed9aca96",
+          "filename_original": "A7R08274-positive.jpg",
+          "url_original": "/uploads/originals/2ff7e328-3004-49c8-b88b-6f68e14fd289.jpg",
+          "url_display": "/uploads/display/2ff7e328-3004-49c8-b88b-6f68e14fd289_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/2ff7e328-3004-49c8-b88b-6f68e14fd289_thumbnail.webp",
+          "order": 17,
+          "width": 4469,
+          "height": 2979,
+          "file_size_original": 12257350,
+          "file_size_display": 1826714,
+          "file_size_thumbnail": 87354,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:20:36-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:18.583234Z"
+        },
+        {
+          "id": "99cecacc-aa22-4fae-a827-92ca964d6dd8",
+          "filename_original": "A7R08275-positive.jpg",
+          "url_original": "/uploads/originals/398870b5-9481-4d5b-9345-c9eff80479e1.jpg",
+          "url_display": "/uploads/display/398870b5-9481-4d5b-9345-c9eff80479e1_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/398870b5-9481-4d5b-9345-c9eff80479e1_thumbnail.webp",
+          "order": 18,
+          "width": 2969,
+          "height": 4454,
+          "file_size_original": 11529356,
+          "file_size_display": 1699204,
+          "file_size_thumbnail": 87314,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:20:41-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:19.396986Z"
+        },
+        {
+          "id": "7751b834-7dbf-4ef3-899b-917e062a1485",
+          "filename_original": "A7R08276-positive.jpg",
+          "url_original": "/uploads/originals/67d8b490-1dfe-43c3-a1ea-b036a1212184.jpg",
+          "url_display": "/uploads/display/67d8b490-1dfe-43c3-a1ea-b036a1212184_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/67d8b490-1dfe-43c3-a1ea-b036a1212184_thumbnail.webp",
+          "order": 19,
+          "width": 4468,
+          "height": 2979,
+          "file_size_original": 10868918,
+          "file_size_display": 1327558,
+          "file_size_thumbnail": 40206,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:20:45-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:20.184691Z"
+        },
+        {
+          "id": "9703a0eb-86c0-47d1-9f55-ba5bf48b7b65",
+          "filename_original": "A7R08277-positive.jpg",
+          "url_original": "/uploads/originals/899d6d55-316a-4639-9f5a-f5d8804f000d.jpg",
+          "url_display": "/uploads/display/899d6d55-316a-4639-9f5a-f5d8804f000d_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/899d6d55-316a-4639-9f5a-f5d8804f000d_thumbnail.webp",
+          "order": 20,
+          "width": 4464,
+          "height": 1648,
+          "file_size_original": 6305718,
+          "file_size_display": 908624,
+          "file_size_thumbnail": 47698,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:20:48-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:20.632437Z"
+        },
+        {
+          "id": "94882a62-ee6a-4971-9782-c6a9b0389e45",
+          "filename_original": "A7R08278-positive.jpg",
+          "url_original": "/uploads/originals/47cd4791-aea8-4271-b1d3-dba2fa4aefd6.jpg",
+          "url_display": "/uploads/display/47cd4791-aea8-4271-b1d3-dba2fa4aefd6_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/47cd4791-aea8-4271-b1d3-dba2fa4aefd6_thumbnail.webp",
+          "order": 21,
+          "width": 4418,
+          "height": 2945,
+          "file_size_original": 9792848,
+          "file_size_display": 1127768,
+          "file_size_thumbnail": 63928,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:20:53-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:21.395595Z"
+        },
+        {
+          "id": "61aedc91-584c-4b87-8be4-409676be76b9",
+          "filename_original": "A7R08279-positive.jpg",
+          "url_original": "/uploads/originals/d32770de-255f-4f7e-b5c3-d6b267af1961.jpg",
+          "url_display": "/uploads/display/d32770de-255f-4f7e-b5c3-d6b267af1961_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/d32770de-255f-4f7e-b5c3-d6b267af1961_thumbnail.webp",
+          "order": 22,
+          "width": 2774,
+          "height": 3467,
+          "file_size_original": 7851185,
+          "file_size_display": 1512836,
+          "file_size_thumbnail": 89778,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:21:01-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:22.105533Z"
+        },
+        {
+          "id": "9835209e-97b7-41d2-a708-73dd9db6f14b",
+          "filename_original": "A7R08280-positive.jpg",
+          "url_original": "/uploads/originals/cf65af4a-8643-40ab-8d20-908965bac555.jpg",
+          "url_display": "/uploads/display/cf65af4a-8643-40ab-8d20-908965bac555_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/cf65af4a-8643-40ab-8d20-908965bac555_thumbnail.webp",
+          "order": 23,
+          "width": 4432,
+          "height": 2955,
+          "file_size_original": 13634913,
+          "file_size_display": 2426590,
+          "file_size_thumbnail": 45242,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:21:05-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:23.019045Z"
+        },
+        {
+          "id": "d1b0e8ba-e2ea-4c39-aaed-0c98e1a0f23f",
+          "filename_original": "A7R08281-positive.jpg",
+          "url_original": "/uploads/originals/438b4773-b37f-480b-9e0d-444301f56c8b.jpg",
+          "url_display": "/uploads/display/438b4773-b37f-480b-9e0d-444301f56c8b_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/438b4773-b37f-480b-9e0d-444301f56c8b_thumbnail.webp",
+          "order": 24,
+          "width": 4527,
+          "height": 1672,
+          "file_size_original": 6721733,
+          "file_size_display": 993562,
+          "file_size_thumbnail": 44460,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:21:11-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:23.495336Z"
+        },
+        {
+          "id": "0eb5dbe0-b3d3-4312-a586-930dc6c5266e",
+          "filename_original": "A7R09305-positive.jpg",
+          "url_original": "/uploads/originals/f772d486-3ab5-4d4d-8463-372e7498f09a.jpg",
+          "url_display": "/uploads/display/f772d486-3ab5-4d4d-8463-372e7498f09a_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/f772d486-3ab5-4d4d-8463-372e7498f09a_thumbnail.webp",
+          "order": 25,
+          "width": 4496,
+          "height": 2997,
+          "file_size_original": 6760322,
+          "file_size_display": 1158790,
+          "file_size_thumbnail": 47956,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:23:09-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:31.280831Z"
+        },
+        {
+          "id": "b8d09447-8326-4bbf-a7cb-bb8eb5873f28",
+          "filename_original": "A7R09306-positive.jpg",
+          "url_original": "/uploads/originals/755913d6-fcbb-460f-9391-ceff45d643b5.jpg",
+          "url_display": "/uploads/display/755913d6-fcbb-460f-9391-ceff45d643b5_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/755913d6-fcbb-460f-9391-ceff45d643b5_thumbnail.webp",
+          "order": 26,
+          "width": 2997,
+          "height": 4496,
+          "file_size_original": 7755547,
+          "file_size_display": 1674018,
+          "file_size_thumbnail": 64788,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:23:14-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:32.029584Z"
+        },
+        {
+          "id": "d4ff951f-607a-4871-b129-300f766bfcde",
+          "filename_original": "A7R09307-positive.jpg",
+          "url_original": "/uploads/originals/86072225-b7b2-4533-a8f7-9900486a3c7e.jpg",
+          "url_display": "/uploads/display/86072225-b7b2-4533-a8f7-9900486a3c7e_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/86072225-b7b2-4533-a8f7-9900486a3c7e_thumbnail.webp",
+          "order": 27,
+          "width": 4496,
+          "height": 2810,
+          "file_size_original": 7055011,
+          "file_size_display": 1472192,
+          "file_size_thumbnail": 51684,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:23:19-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:32.75485Z"
+        },
+        {
+          "id": "aab2e1a7-0b07-4935-8ecb-49e4f61b2138",
+          "filename_original": "A7R09308-positive.jpg",
+          "url_original": "/uploads/originals/c83e05b1-5282-4aa9-88fe-52107c7c5848.jpg",
+          "url_display": "/uploads/display/c83e05b1-5282-4aa9-88fe-52107c7c5848_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/c83e05b1-5282-4aa9-88fe-52107c7c5848_thumbnail.webp",
+          "order": 28,
+          "width": 4496,
+          "height": 2997,
+          "file_size_original": 7519201,
+          "file_size_display": 1515638,
+          "file_size_thumbnail": 61166,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:23:26-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:33.507492Z"
+        },
+        {
+          "id": "1c4e7326-0b32-4643-8a9d-7050151229c2",
+          "filename_original": "A7R09309-positive.jpg",
+          "url_original": "/uploads/originals/46265d44-9c2e-42fc-8321-098cd63f8685.jpg",
+          "url_display": "/uploads/display/46265d44-9c2e-42fc-8321-098cd63f8685_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/46265d44-9c2e-42fc-8321-098cd63f8685_thumbnail.webp",
+          "order": 29,
+          "width": 4496,
+          "height": 2997,
+          "file_size_original": 7761942,
+          "file_size_display": 1680254,
+          "file_size_thumbnail": 66278,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:23:33-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:34.275996Z"
+        },
+        {
+          "id": "ace12134-c0b0-4572-8210-28e2d839b8e2",
+          "filename_original": "A7R09310-positive.jpg",
+          "url_original": "/uploads/originals/82edc3a9-9351-49f7-b85c-868d35468538.jpg",
+          "url_display": "/uploads/display/82edc3a9-9351-49f7-b85c-868d35468538_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/82edc3a9-9351-49f7-b85c-868d35468538_thumbnail.webp",
+          "order": 30,
+          "width": 2011,
+          "height": 2514,
+          "file_size_original": 3011733,
+          "file_size_display": 998640,
+          "file_size_thumbnail": 47686,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:23:40-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:34.669304Z"
+        },
+        {
+          "id": "122296be-c285-4cce-bf9d-17aea790a204",
+          "filename_original": "A7R09311-positive.jpg",
+          "url_original": "/uploads/originals/17ace50a-09d0-45bc-b68f-294c798c2c5d.jpg",
+          "url_display": "/uploads/display/17ace50a-09d0-45bc-b68f-294c798c2c5d_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/17ace50a-09d0-45bc-b68f-294c798c2c5d_thumbnail.webp",
+          "order": 31,
+          "width": 4444,
+          "height": 2963,
+          "file_size_original": 8149028,
+          "file_size_display": 1997648,
+          "file_size_thumbnail": 106666,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:23:45-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:35.456268Z"
+        },
+        {
+          "id": "06dcc916-361a-4794-9f4b-a7c9ad5aa777",
+          "filename_original": "A7R09312-positive.jpg",
+          "url_original": "/uploads/originals/1060dafe-a7f6-40a5-820b-6333af07bb15.jpg",
+          "url_display": "/uploads/display/1060dafe-a7f6-40a5-820b-6333af07bb15_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/1060dafe-a7f6-40a5-820b-6333af07bb15_thumbnail.webp",
+          "order": 32,
+          "width": 4438,
+          "height": 2959,
+          "file_size_original": 7800411,
+          "file_size_display": 1805452,
+          "file_size_thumbnail": 68360,
+          "exif": {
+            "camera": "Fuji GW690III",
+            "date_taken": "2024-11-23T13:23:51-08:00"
+          },
+          "uploaded_at": "2025-10-21T01:32:36.224453Z"
+        },
+        {
+          "id": "1e118cd4-4a52-4dfe-beb0-e06d621e70aa",
+          "filename_original": "000277720006.jpg",
+          "url_original": "/uploads/originals/85791ad5-83e7-489e-bf23-74d25e597e48.jpg",
+          "url_display": "/uploads/display/85791ad5-83e7-489e-bf23-74d25e597e48_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/85791ad5-83e7-489e-bf23-74d25e597e48_thumbnail.webp",
+          "order": 33,
+          "width": 7139,
+          "height": 4903,
+          "file_size_original": 11165109,
+          "file_size_display": 1548758,
+          "file_size_thumbnail": 83452,
+          "exif": {},
+          "uploaded_at": "2025-10-21T01:32:42.985513Z"
+        },
+        {
+          "id": "c23db516-08ba-48c5-8724-062180820a85",
+          "filename_original": "000277720001.jpg",
+          "url_original": "/uploads/originals/36458ed6-abf9-4530-9cf1-e17536374e14.jpg",
+          "url_display": "/uploads/display/36458ed6-abf9-4530-9cf1-e17536374e14_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/36458ed6-abf9-4530-9cf1-e17536374e14_thumbnail.webp",
+          "order": 34,
+          "width": 7139,
+          "height": 4903,
+          "file_size_original": 10733130,
+          "file_size_display": 1549302,
+          "file_size_thumbnail": 64708,
+          "exif": {},
+          "uploaded_at": "2025-10-21T01:32:43.88766Z"
+        },
+        {
+          "id": "5891f7cb-21a0-4b57-abb5-ef7303af40f7",
+          "filename_original": "000277720002.jpg",
+          "url_original": "/uploads/originals/dc38bf34-697a-4f78-b599-90209d549b9d.jpg",
+          "url_display": "/uploads/display/dc38bf34-697a-4f78-b599-90209d549b9d_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/dc38bf34-697a-4f78-b599-90209d549b9d_thumbnail.webp",
+          "order": 35,
+          "width": 7139,
+          "height": 4903,
+          "file_size_original": 8756351,
+          "file_size_display": 1051278,
+          "file_size_thumbnail": 68434,
+          "exif": {},
+          "uploaded_at": "2025-10-21T01:32:44.737032Z"
+        },
+        {
+          "id": "4b1a6463-92f2-449d-8b1d-ecc7716bcb69",
+          "filename_original": "000277720003.jpg",
+          "url_original": "/uploads/originals/4ea44fec-5f0a-4bb1-af45-dbaa620085b4.jpg",
+          "url_display": "/uploads/display/4ea44fec-5f0a-4bb1-af45-dbaa620085b4_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/4ea44fec-5f0a-4bb1-af45-dbaa620085b4_thumbnail.webp",
+          "order": 36,
+          "width": 7139,
+          "height": 4903,
+          "file_size_original": 10797688,
+          "file_size_display": 1339138,
+          "file_size_thumbnail": 64668,
+          "exif": {},
+          "uploaded_at": "2025-10-21T01:32:45.685112Z"
+        },
+        {
+          "id": "ac0d4db7-b91f-4ad3-a7d1-653a4d346120",
+          "filename_original": "000277720004.jpg",
+          "url_original": "/uploads/originals/70734658-4c87-4645-afe2-bbd12b644aa5.jpg",
+          "url_display": "/uploads/display/70734658-4c87-4645-afe2-bbd12b644aa5_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/70734658-4c87-4645-afe2-bbd12b644aa5_thumbnail.webp",
+          "order": 37,
+          "width": 7139,
+          "height": 4903,
+          "file_size_original": 9200749,
+          "file_size_display": 852116,
+          "file_size_thumbnail": 30834,
+          "exif": {},
+          "uploaded_at": "2025-10-21T01:32:46.538985Z"
+        },
+        {
+          "id": "f83825db-3f1e-4120-b236-64ff27934da7",
+          "filename_original": "000277720005.jpg",
+          "url_original": "/uploads/originals/bc75efcb-d28c-4fa1-b5ff-dd6bcd74e3c1.jpg",
+          "url_display": "/uploads/display/bc75efcb-d28c-4fa1-b5ff-dd6bcd74e3c1_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/bc75efcb-d28c-4fa1-b5ff-dd6bcd74e3c1_thumbnail.webp",
+          "order": 38,
+          "width": 7139,
+          "height": 4903,
+          "file_size_original": 6290632,
+          "file_size_display": 407264,
+          "file_size_thumbnail": 28870,
+          "exif": {},
+          "uploaded_at": "2025-10-21T01:32:47.269264Z"
+        },
+        {
+          "id": "91546393-5226-486c-8947-8b1f5d4bf472",
+          "filename_original": "000277720007.jpg",
+          "url_original": "/uploads/originals/fb58169a-fe78-46fe-9f95-8c15230d3f88.jpg",
+          "url_display": "/uploads/display/fb58169a-fe78-46fe-9f95-8c15230d3f88_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/fb58169a-fe78-46fe-9f95-8c15230d3f88_thumbnail.webp",
+          "order": 39,
+          "width": 7139,
+          "height": 4903,
+          "file_size_original": 10913737,
+          "file_size_display": 1540858,
+          "file_size_thumbnail": 81520,
+          "exif": {},
+          "uploaded_at": "2025-10-21T01:32:48.188987Z"
+        },
+        {
+          "id": "ef3cdcae-9dad-4a33-9030-abf737f67e58",
+          "filename_original": "000277720008.jpg",
+          "url_original": "/uploads/originals/b2484e59-d568-4f78-8e4d-58f25b02afdb.jpg",
+          "url_display": "/uploads/display/b2484e59-d568-4f78-8e4d-58f25b02afdb_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/b2484e59-d568-4f78-8e4d-58f25b02afdb_thumbnail.webp",
+          "order": 40,
+          "width": 7139,
+          "height": 4903,
+          "file_size_original": 10282437,
+          "file_size_display": 1304556,
+          "file_size_thumbnail": 68270,
+          "exif": {},
+          "uploaded_at": "2025-10-21T01:32:49.07105Z"
         }
       ]
     }
