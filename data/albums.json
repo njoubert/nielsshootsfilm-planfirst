@@ -1,70 +1,6 @@
 {
   "albums": [
     {
-      "id": "sample-portfolio",
-      "slug": "portfolio",
-      "title": "Portfolio",
-      "subtitle": "Featured Work",
-      "description": "A curated selection of my best photography",
-      "cover_photo_id": "photo-1",
-      "visibility": "public",
-      "allow_downloads": false,
-      "is_portfolio_album": true,
-      "order": 0,
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z",
-      "photos": [
-        {
-          "id": "photo-1",
-          "filename_original": "sample1.jpg",
-          "url_original": "/uploads/originals/sample1.jpg",
-          "url_display": "/uploads/display/sample1_display.jpg",
-          "url_thumbnail": "/uploads/thumbnails/sample1_thumbnail.jpg",
-          "caption": "Sample photo 1",
-          "alt_text": "A beautiful landscape",
-          "order": 0,
-          "width": 1920,
-          "height": 1080,
-          "file_size_original": 104393,
-          "file_size_display": 73115,
-          "file_size_thumbnail": 18634,
-          "uploaded_at": "2024-01-01T00:00:00Z"
-        },
-        {
-          "id": "photo-2",
-          "filename_original": "sample2.jpg",
-          "url_original": "/uploads/originals/sample2.jpg",
-          "url_display": "/uploads/display/sample2_display.jpg",
-          "url_thumbnail": "/uploads/thumbnails/sample2_thumbnail.jpg",
-          "caption": "Sample photo 2",
-          "alt_text": "Urban architecture",
-          "order": 1,
-          "width": 1920,
-          "height": 1080,
-          "file_size_original": 248257,
-          "file_size_display": 51364,
-          "file_size_thumbnail": 8911,
-          "uploaded_at": "2024-01-02T00:00:00Z"
-        },
-        {
-          "id": "photo-3",
-          "filename_original": "sample3.jpg",
-          "url_original": "/uploads/originals/sample3.jpg",
-          "url_display": "/uploads/display/sample3_display.jpg",
-          "url_thumbnail": "/uploads/thumbnails/sample3_thumbnail.jpg",
-          "caption": "Sample photo 3",
-          "alt_text": "Portrait",
-          "order": 2,
-          "width": 1920,
-          "height": 1080,
-          "file_size_original": 255376,
-          "file_size_display": 110900,
-          "file_size_thumbnail": 8082,
-          "uploaded_at": "2024-01-03T00:00:00Z"
-        }
-      ]
-    },
-    {
       "id": "d3eee0cf-9e5c-4601-a9cc-d80e5b3b4d44",
       "slug": "test1",
       "title": "Fleet Week Air Show from the Rooftop!",
@@ -72,10 +8,10 @@
       "cover_photo_id": "c77b67ad-42f7-420b-b988-29a870633a5d",
       "visibility": "public",
       "allow_downloads": true,
-      "is_portfolio_album": false,
+      "is_portfolio_album": true,
       "order": 0,
       "created_at": "2025-10-20T23:09:21.940587Z",
-      "updated_at": "2025-10-21T00:08:40.25925Z",
+      "updated_at": "2025-10-21T00:13:06.231556Z",
       "photos": [
         {
           "id": "021eb922-141d-4984-a951-964b1beefe01",
