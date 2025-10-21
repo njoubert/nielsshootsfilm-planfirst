@@ -10,6 +10,7 @@ import {
   deletePhoto,
   fetchAlbumById,
   setCoverPhoto,
+  setMainPortfolioAlbum,
   updateAlbum,
   uploadPhotos,
 } from '../utils/admin-api';
@@ -336,6 +337,12 @@ export class AdminAlbumEditorPage extends LitElement {
       if (this.albumId && this.albumId !== 'new') {
         // Update existing album
         await updateAlbum(this.albumId, this.album);
+
+        // If this album is marked as portfolio album, set it as the main portfolio album
+        if (this.album.is_portfolio_album) {
+          await setMainPortfolioAlbum(this.albumId);
+        }
+
         this.success = 'Album updated successfully';
       } else {
         // Create new album
@@ -348,6 +355,11 @@ export class AdminAlbumEditorPage extends LitElement {
           is_portfolio_album: this.album.is_portfolio_album,
           order: this.album.order,
         });
+
+        // If this album is marked as portfolio album, set it as the main portfolio album
+        if (newAlbum.is_portfolio_album) {
+          await setMainPortfolioAlbum(newAlbum.id);
+        }
 
         // Redirect to edit page to upload photos
         window.location.href = `/admin/albums/${newAlbum.id}/edit`;
