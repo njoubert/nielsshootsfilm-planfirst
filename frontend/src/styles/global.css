@@ -5,8 +5,8 @@
 
 body {
   margin: 0;
-  background: #111;
-  color: #f5f5f5;
+  background: var(--color-background);
+  color: var(--color-text-primary);
   font-family: 'Raleway', sans-serif;
 }
 

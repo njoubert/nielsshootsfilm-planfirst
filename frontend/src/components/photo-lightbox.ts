@@ -52,19 +52,27 @@ export class PhotoLightbox extends LitElement {
     .lightbox {
       position: fixed;
       inset: 0;
-      background-color: rgba(0, 0, 0, 0.95);
+      background-color: var(--color-background);
       z-index: 9999;
       display: flex;
       flex-direction: column;
+      padding: 3rem 0 4rem 0; /* Small buffer top, larger bottom like picture frames */
     }
 
     .toolbar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 1rem 2rem;
-      background-color: rgba(0, 0, 0, 0.5);
-      color: white;
+      background-color: var(--color-background);
+      color: var(--color-text-primary);
+      z-index: 10;
+      height: 3rem;
+      box-sizing: border-box;
     }
 
     .photo-counter {
@@ -74,7 +82,7 @@ export class PhotoLightbox extends LitElement {
     .close-button {
       background: none;
       border: none;
-      color: white;
+      color: var(--color-text-primary);
       font-size: 2rem;
       cursor: pointer;
       padding: 0;
@@ -94,17 +102,15 @@ export class PhotoLightbox extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
-      padding: 0;
       overflow: hidden;
-      min-height: 0; /* Important for flex children */
+      position: relative;
     }
 
     .nav-button {
       flex: 1;
       background: none;
       border: none;
-      color: white;
+      color: var(--color-text-primary);
       font-size: 3rem;
       cursor: pointer;
       transition: opacity 0.2s;
@@ -134,17 +140,22 @@ export class PhotoLightbox extends LitElement {
     }
 
     .exif-panel {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
       padding: 1rem 2rem;
-      background-color: rgba(0, 0, 0, 0.7);
-      color: rgba(255, 255, 255, 0.5);
+      background-color: var(--color-background);
+      color: var(--color-text-secondary);
       font-size: 9px;
       line-height: 1.4;
-      min-height: auto;
       box-sizing: border-box;
       display: flex;
       align-items: center;
       white-space: nowrap;
       overflow-x: auto;
+      z-index: 10;
+      height: 4rem;
     }
 
     .exif-item {

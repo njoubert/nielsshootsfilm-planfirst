@@ -191,7 +191,7 @@ export class AdminAlbumEditorPage extends LitElement {
 
     .photos-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      grid-template-columns: repeat(4, 1fr);
       gap: 1rem;
       margin-top: 1rem;
     }
@@ -601,9 +601,9 @@ export class AdminAlbumEditorPage extends LitElement {
                     @dragleave=${() => this.handleDragLeave()}
                     @drop=${(e: DragEvent) => this.handleDrop(e)}
                   >
-                    <p>📸 Drag photos here or click to browse</p>
+                    <p>Drag photos here or click to browse</p>
                     <p style="font-size: 0.875rem; color: var(--color-text-secondary, #666);">
-                      JPG, PNG, WEBP up to 50MB each
+                      Up to 50MB each
                     </p>
                   </div>
                   <input

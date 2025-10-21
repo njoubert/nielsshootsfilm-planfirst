@@ -12,9 +12,14 @@
       rel="stylesheet"
     />
     <style>
-      /* Prevent white flash during navigation */
+      /* Prevent white flash during navigation - matches theme.css */
       html {
-        background: #111;
+        background: #f5f5f5; /* Light mode default */
+      }
+      @media (prefers-color-scheme: dark) {
+        html {
+          background: #111111; /* Dark mode */
+        }
       }
     </style>
   </head>

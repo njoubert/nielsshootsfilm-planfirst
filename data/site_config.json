@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2025-10-21T08:24:18.437779Z",
+  "last_updated": "2025-10-21T16:26:34.688811Z",
   "site": {
     "title": "Niels Shoots Film",
     "tagline": "Film Photography Portfolio",
@@ -8,10 +8,7 @@
     "language": "en",
     "timezone": "America/Los_Angeles"
   },
-  "owner": {
-    "name": "Niels Joubert",
-    "location": "San Francisco, California"
-  },
+  "owner": {},
   "social": {
     "instagram": "niels.shoots.film"
   },

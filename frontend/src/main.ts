@@ -4,8 +4,8 @@
  */
 
 import './components/app-shell';
-import './styles/admin-theme.css';
 import './styles/global.css';
+import './styles/theme.css';
 
 // Bootstrap the application
 window.addEventListener('DOMContentLoaded', () => {

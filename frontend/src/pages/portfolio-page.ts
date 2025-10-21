@@ -65,7 +65,7 @@ export class PortfolioPage extends LitElement {
     }
 
     .photos-section {
-      padding: 2rem 0;
+      padding: 0 0 2rem 0;
     }
   `;
 

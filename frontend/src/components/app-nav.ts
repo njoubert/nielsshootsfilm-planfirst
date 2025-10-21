@@ -36,7 +36,7 @@ export class AppNav extends LitElement {
       font-weight: 300;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      color: var(--color-text-primary);
+      color: #ffffff;
       text-decoration: none;
     }
 
@@ -49,13 +49,13 @@ export class AppNav extends LitElement {
     }
 
     .nav-links a {
-      color: var(--color-text-primary);
+      color: #ffffff;
       text-decoration: none;
       transition: color 0.2s;
     }
 
     .nav-links a:hover {
-      color: var(--color-text-secondary);
+      color: rgba(255, 255, 255, 0.7);
     }
 
     @media (max-width: 768px) {

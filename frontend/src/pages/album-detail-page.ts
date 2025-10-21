@@ -54,7 +54,7 @@ export class AlbumDetailPage extends LitElement {
     }
 
     .photos-section {
-      padding: 2rem 0;
+      padding: 0 0 2rem 0;
     }
 
     .password-container {
