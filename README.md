@@ -104,6 +104,40 @@ pre-commit install
 ./bootstrap.sh
 ```
 
+### Environment Management with direnv (Optional but Recommended)
+
+The project uses [direnv](https://direnv.net/) to automatically load environment variables and add scripts to your PATH when you enter the project directory.
+
+**Setup direnv:**
+
+```bash
+# Install direnv
+brew install direnv  # macOS
+# or: sudo apt-get install direnv  # Linux
+
+# Add hook to your shell (choose one):
+echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc   # for zsh
+echo 'eval "$(direnv hook bash)"' >> ~/.bashrc # for bash
+
+# Restart shell or reload config
+source ~/.zshrc  # or ~/.bashrc
+```
+
+**Enable for this project:**
+
+```bash
+# In the project directory, allow direnv
+direnv allow
+```
+
+**Benefits:**
+
+- Scripts available from anywhere: `dev.sh`, `build.sh`, `format.sh`, etc.
+- Automatic `.env` file loading
+- Project-specific environment variables
+
+Without direnv, you'll need to run scripts with their full path (e.g., `./dev.sh` or `./scripts/test-api.sh`).
+
 ### Development
 
 Run the development servers in two separate terminals:

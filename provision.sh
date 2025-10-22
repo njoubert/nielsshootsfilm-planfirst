@@ -344,6 +344,57 @@ install_devex_tools() {
     else
         print_success "jq already installed"
     fi
+
+    # direnv for automatic environment loading
+    if ! command_exists direnv; then
+        if [[ "$OS" == "macos" ]]; then
+            print_info "Installing direnv..."
+            brew install direnv
+            print_success "direnv installed"
+            print_warning "Add direnv hook to your shell config:"
+            print_info "  For zsh: echo 'eval \"\$(direnv hook zsh)\"' >> ~/.zshrc"
+            print_info "  For bash: echo 'eval \"\$(direnv hook bash)\"' >> ~/.bashrc"
+            print_info "  Then restart your shell or run: source ~/.zshrc"
+        elif [[ "$OS" == "linux" ]]; then
+            if command_exists apt-get; then
+                print_info "Installing direnv..."
+                sudo apt-get install -y direnv
+                print_success "direnv installed"
+            else
+                print_warning "direnv not installed (optional)"
+                print_info "Install from: https://direnv.net/docs/installation.html"
+            fi
+        fi
+    else
+        print_success "direnv already installed"
+    fi
+}
+
+# Setup direnv
+setup_direnv() {
+    print_header "Setting up direnv"
+
+    if ! command_exists direnv; then
+        print_warning "direnv not installed - skipping .envrc setup"
+        print_info "direnv was not installed (it's optional)"
+        print_info "To use it later, install with: brew install direnv"
+        return
+    fi
+
+    if [ -f ".envrc" ]; then
+        print_info "Allowing .envrc for automatic environment loading..."
+        if direnv allow; then
+            print_success "direnv configured - environment will load automatically"
+            print_info "Note: You need to add the direnv hook to your shell if you haven't already:"
+            print_info "  For zsh:  echo 'eval \"\$(direnv hook zsh)\"' >> ~/.zshrc"
+            print_info "  For bash: echo 'eval \"\$(direnv hook bash)\"' >> ~/.bashrc"
+            print_info "  Then restart your shell or run: source ~/.zshrc"
+        else
+            print_warning "Failed to allow .envrc - you can run 'direnv allow' manually"
+        fi
+    else
+        print_warning ".envrc file not found - skipping"
+    fi
 }
 
 # Run bootstrap script
@@ -521,6 +572,7 @@ main() {
     # Verify everything
     if verify_installation; then
         run_bootstrap
+        setup_direnv
         print_next_steps
     else
         print_error "Installation completed with errors"
