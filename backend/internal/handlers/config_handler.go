@@ -43,6 +43,12 @@ func (h *ConfigHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate storage configuration
+	if config.Storage.MaxDiskUsagePercent < 10 || config.Storage.MaxDiskUsagePercent > 95 {
+		http.Error(w, "max_disk_usage_percent must be between 10 and 95", http.StatusBadRequest)
+		return
+	}
+
 	if err := h.configService.Update(&config); err != nil {
 		h.logger.Error("failed to update config", slog.String("error", err.Error()))
 		http.Error(w, "Internal server error", http.StatusInternalServerError)

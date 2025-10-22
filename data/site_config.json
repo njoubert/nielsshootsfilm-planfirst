@@ -47,5 +47,8 @@
     "show_about": false,
     "show_contact": false
   },
-  "features": {}
+  "features": {},
+  "storage": {
+    "max_disk_usage_percent": 80
+  }
 }

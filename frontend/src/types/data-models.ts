@@ -165,4 +165,9 @@ export interface SiteConfig {
   portfolio: PortfolioConfig;
   navigation: NavigationConfig;
   features: FeaturesConfig;
+  storage: StorageConfig;
+}
+
+export interface StorageConfig {
+  max_disk_usage_percent: number;
 }

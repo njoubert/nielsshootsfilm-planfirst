@@ -66,6 +66,9 @@ describe('AdminSettingsPage', () => {
         show_contact: true,
       },
       features: {},
+      storage: {
+        max_disk_usage_percent: 80,
+      },
     };
 
     mockAlbums = [

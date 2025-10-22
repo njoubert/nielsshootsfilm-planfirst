@@ -3,6 +3,8 @@ package services
 import (
 	"os"
 	"path/filepath"
+	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/models"
@@ -199,7 +201,7 @@ func TestImageService_DeletePhoto(t *testing.T) {
 	require.NoError(t, err, "thumbnail file should exist")
 
 	// Create image service
-	imageService, err := NewImageService(tmpDir)
+	imageService, err := NewImageService(tmpDir, nil)
 	require.NoError(t, err, "NewImageService should succeed")
 
 	// Create photo model
@@ -229,7 +231,7 @@ func TestImageService_DeletePhoto_NonexistentFiles(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create image service
-	imageService, err := NewImageService(tmpDir)
+	imageService, err := NewImageService(tmpDir, nil)
 	require.NoError(t, err, "NewImageService should succeed")
 
 	// Create photo model pointing to nonexistent files
@@ -244,4 +246,167 @@ func TestImageService_DeletePhoto_NonexistentFiles(t *testing.T) {
 	// Delete the photo (should not error on nonexistent files)
 	err = imageService.DeletePhoto(photo)
 	assert.NoError(t, err, "DeletePhoto should succeed even if files don't exist")
+}
+
+func TestImageService_CheckDiskSpace_SufficientSpace(t *testing.T) {
+	// Create a temporary directory for uploads
+	tmpDir := t.TempDir()
+
+	// Create image service with nil config (should use default 80%)
+	imageService, err := NewImageService(tmpDir, nil)
+	require.NoError(t, err, "NewImageService should succeed")
+
+	// Check disk space with a small file (1MB)
+	err = imageService.checkDiskSpace(1024 * 1024)
+	assert.NoError(t, err, "checkDiskSpace should succeed with sufficient space")
+}
+
+func TestImageService_CheckDiskSpace_MinimumFreeSpace(t *testing.T) {
+	// Create a temporary directory for uploads
+	tmpDir := t.TempDir()
+
+	// Create image service
+	imageService, err := NewImageService(tmpDir, nil)
+	require.NoError(t, err, "NewImageService should succeed")
+
+	// Get actual disk stats
+	var stat syscall.Statfs_t
+	err = syscall.Statfs(tmpDir, &stat)
+	require.NoError(t, err, "should get filesystem stats")
+
+	// #nosec G115 - disk size conversions are safe for reasonable disk sizes
+	availableSpace := int64(stat.Bavail) * int64(stat.Bsize)
+
+	// If available space is less than 1GB (unlikely in test), skip this test
+	if availableSpace < 1024*1024*1024 {
+		t.Skip("Not enough disk space to run this test")
+	}
+
+	// The 500MB minimum check should pass with normal disk space
+	err = imageService.checkDiskSpace(1024 * 1024)
+	assert.NoError(t, err, "checkDiskSpace should succeed when above 500MB free")
+}
+
+// createTestConfigService creates a temporary config service for testing.
+func createTestConfigService(t *testing.T, maxDiskUsagePercent int) *SiteConfigService {
+	tmpDataDir := t.TempDir()
+	fileService, err := NewFileService(tmpDataDir)
+	require.NoError(t, err, "NewFileService should succeed")
+
+	configService := NewSiteConfigService(fileService)
+
+	// Set the config
+	config := &models.SiteConfig{
+		Storage: models.StorageConfig{
+			MaxDiskUsagePercent: maxDiskUsagePercent,
+		},
+	}
+	err = configService.Update(config)
+	require.NoError(t, err, "should update config")
+
+	return configService
+}
+
+func TestImageService_CheckDiskSpace_WithConfigAt80Percent(t *testing.T) {
+	// Create a temporary directory for uploads
+	tmpDir := t.TempDir()
+
+	// Create config service with 80% max
+	configService := createTestConfigService(t, 80)
+
+	// Create image service with config
+	imageService, err := NewImageService(tmpDir, configService)
+	require.NoError(t, err, "NewImageService should succeed")
+
+	// Small file should succeed
+	err = imageService.checkDiskSpace(1024 * 1024)
+	assert.NoError(t, err, "checkDiskSpace should succeed with 80% config")
+}
+
+func TestImageService_CheckDiskSpace_WithConfigAt95Percent(t *testing.T) {
+	// Create a temporary directory for uploads
+	tmpDir := t.TempDir()
+
+	// Create config service with 95% max
+	// This should be capped at 95% (100% - 5% reserve)
+	configService := createTestConfigService(t, 95)
+
+	// Create image service with config
+	imageService, err := NewImageService(tmpDir, configService)
+	require.NoError(t, err, "NewImageService should succeed")
+
+	// Small file should succeed (we can't easily test the 95% cap without filling the disk)
+	err = imageService.checkDiskSpace(1024 * 1024)
+	assert.NoError(t, err, "checkDiskSpace should succeed with 95% config")
+}
+
+func TestImageService_CheckDiskSpace_WithConfigAt10Percent(t *testing.T) {
+	// Create a temporary directory for uploads
+	tmpDir := t.TempDir()
+
+	// Create config service with 10% max (minimum allowed)
+	configService := createTestConfigService(t, 10)
+
+	// Create image service with config
+	imageService, err := NewImageService(tmpDir, configService)
+	require.NoError(t, err, "NewImageService should succeed")
+
+	// Get current disk usage
+	var stat syscall.Statfs_t
+	err = syscall.Statfs(tmpDir, &stat)
+	require.NoError(t, err, "should get filesystem stats")
+
+	// #nosec G115 - disk size conversions are safe for reasonable disk sizes
+	totalSpace := int64(stat.Blocks) * int64(stat.Bsize)
+	// #nosec G115 - disk size conversions are safe for reasonable disk sizes
+	availableSpace := int64(stat.Bavail) * int64(stat.Bsize)
+	currentUsagePercent := (float64(totalSpace-availableSpace) / float64(totalSpace)) * 100
+
+	// If current usage is already above 10%, the check should fail
+	// This is expected in most test environments
+	err = imageService.checkDiskSpace(1024 * 1024)
+	if currentUsagePercent >= 10 {
+		assert.Error(t, err, "checkDiskSpace should fail when disk usage exceeds 10%")
+		assert.Contains(t, err.Error(), "disk usage is at", "error should mention disk usage")
+	}
+}
+
+func TestImageService_CheckDiskSpace_WithNilConfig(t *testing.T) {
+	// Create a temporary directory for uploads
+	tmpDir := t.TempDir()
+
+	// Create image service with nil config service
+	imageService, err := NewImageService(tmpDir, nil)
+	require.NoError(t, err, "NewImageService should succeed")
+
+	// Should use default 80%
+	// We can't guarantee success/failure without knowing actual disk usage,
+	// but we can verify it doesn't panic with nil config
+	assert.NotPanics(t, func() {
+		_ = imageService.checkDiskSpace(1024 * 1024)
+	}, "checkDiskSpace should not panic with nil config")
+}
+
+func TestImageService_CheckDiskSpace_ErrorMessage(t *testing.T) {
+	// Create a temporary directory for uploads
+	tmpDir := t.TempDir()
+
+	// Create config service with very low limit
+	configService := createTestConfigService(t, 1)
+
+	// Create image service with config
+	imageService, err := NewImageService(tmpDir, configService)
+	require.NoError(t, err, "NewImageService should succeed")
+
+	// Try to upload - should fail
+	err = imageService.checkDiskSpace(1024 * 1024)
+	if err != nil {
+		// Error message should contain helpful information
+		assert.Contains(t, err.Error(), "%", "error should mention percentage")
+		assert.True(t,
+			strings.Contains(err.Error(), "disk usage") ||
+				strings.Contains(err.Error(), "exceeding"),
+			"error should mention disk usage or exceeding limit",
+		)
+	}
 }

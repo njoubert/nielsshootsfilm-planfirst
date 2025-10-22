@@ -123,6 +123,9 @@ describe('AdminDashboardPage', () => {
         show_contact: true,
       },
       features: {},
+      storage: {
+        max_disk_usage_percent: 80,
+      },
     };
 
     fetchAllAlbumsStub = sinon.stub(adminApi, 'fetchAllAlbums').resolves(mockAlbums);

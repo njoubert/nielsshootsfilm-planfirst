@@ -57,7 +57,7 @@ func main() {
 	albumService := services.NewAlbumService(fileService)
 	configService := services.NewSiteConfigService(fileService)
 
-	imageService, err := services.NewImageService(uploadDir)
+	imageService, err := services.NewImageService(uploadDir, configService)
 	if err != nil {
 		logger.Error("failed to create image service", slog.String("error", err.Error()))
 		os.Exit(1)
@@ -70,6 +70,7 @@ func main() {
 	albumHandler := handlers.NewAlbumHandler(albumService, imageService, logger)
 	authHandler := handlers.NewAuthHandler(authService, logger)
 	configHandler := handlers.NewConfigHandler(configService, logger)
+	storageHandler := handlers.NewStorageHandler(configService, uploadDir)
 
 	// Start session cleanup goroutine
 	authHandler.StartSessionCleanup()
@@ -140,6 +141,9 @@ func main() {
 
 			// Auth management
 			r.Post("/change-password", authHandler.ChangePassword)
+
+			// Storage management
+			r.Get("/storage/stats", storageHandler.GetStats)
 		})
 	})
 

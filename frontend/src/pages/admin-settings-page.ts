@@ -665,6 +665,39 @@ export class AdminSettingsPage extends LitElement {
           </div>
         </form>
 
+        <!-- Storage Settings -->
+        <form @submit=${(e: Event) => this.handleSaveGeneral(e)}>
+          <div class="section">
+            <h2 class="section-title">Storage Settings</h2>
+
+            <div class="form-group">
+              <label for="storage-max-usage">Maximum Disk Usage Percentage</label>
+              <input
+                type="number"
+                id="storage-max-usage"
+                min="10"
+                max="95"
+                .value=${this.config?.storage?.max_disk_usage_percent?.toString() || '80'}
+                @input=${(e: Event) => {
+                  const value = parseInt((e.target as HTMLInputElement).value, 10);
+                  if (value >= 10 && value <= 95) {
+                    this.updateConfigField('storage.max_disk_usage_percent', value);
+                  }
+                }}
+                required
+              />
+              <p class="help-text">
+                Maximum allowed disk usage (10-95%). Default is 80%. The system always reserves at
+                least 5% of disk space.
+              </p>
+            </div>
+
+            <button type="submit" class="btn btn-primary" ?disabled=${this.saving}>
+              ${this.saving ? 'Saving...' : 'Save Storage Settings'}
+            </button>
+          </div>
+        </form>
+
         <!-- Password Change -->
         <form @submit=${(e: Event) => this.handleChangePassword(e)}>
           <div class="section">

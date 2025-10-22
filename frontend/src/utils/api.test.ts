@@ -61,6 +61,9 @@ describe('api utilities', () => {
           show_contact: true,
         },
         features: { enable_analytics: false },
+        storage: {
+          max_disk_usage_percent: 80,
+        },
       };
 
       global.fetch = vi.fn().mockResolvedValue({
@@ -207,6 +210,9 @@ describe('api utilities', () => {
           show_contact: true,
         },
         features: { enable_analytics: false },
+        storage: {
+          max_disk_usage_percent: 80,
+        },
       };
 
       const mockAlbum: Album = {

@@ -182,6 +182,18 @@ export class AdminAlbumEditorPage extends LitElement {
       background: var(--color-background, #e7f3ff);
     }
 
+    .upload-area.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      border-color: var(--color-danger, #dc3545);
+      background: var(--color-danger-bg, #f8d7da);
+    }
+
+    .upload-area.disabled:hover {
+      border-color: var(--color-danger, #dc3545);
+      background: var(--color-danger-bg, #f8d7da);
+    }
+
     .upload-progress {
       margin-top: 1rem;
       padding: 0.75rem;
@@ -337,13 +349,22 @@ export class AdminAlbumEditorPage extends LitElement {
   @state()
   private siteConfig: SiteConfig | null = null;
 
+  @state()
+  private availableSpace: number | null = null;
+
+  @state()
+  private totalSpace: number | null = null;
+
+  @state()
+  private usagePercent: number | null = null;
+
   connectedCallback() {
     super.connectedCallback();
     void this.loadData();
   }
 
   private async loadData() {
-    await Promise.all([this.loadSiteConfig(), this.loadAlbumIfNeeded()]);
+    await Promise.all([this.loadSiteConfig(), this.loadAlbumIfNeeded(), this.loadStorageStats()]);
   }
 
   private async loadSiteConfig() {
@@ -351,6 +372,34 @@ export class AdminAlbumEditorPage extends LitElement {
       this.siteConfig = await fetchSiteConfig();
     } catch (err) {
       console.error('Failed to load site config:', err);
+    }
+  }
+
+  private async loadStorageStats() {
+    try {
+      const response = await fetch('/api/admin/storage/stats', {
+        credentials: 'include',
+      });
+
+      // Retry if auth not ready yet
+      if (response.status === 401 || response.status === 403) {
+        console.debug('Album editor: storage stats auth not ready, will retry in 1s');
+        setTimeout(() => void this.loadStorageStats(), 1000);
+        return;
+      }
+
+      if (response.ok) {
+        const stats = (await response.json()) as {
+          available_bytes: number;
+          total_bytes: number;
+          usage_percent: number;
+        };
+        this.availableSpace = stats.available_bytes;
+        this.totalSpace = stats.total_bytes;
+        this.usagePercent = stats.usage_percent;
+      }
+    } catch (err) {
+      console.error('Failed to load storage stats:', err);
     }
   }
 
@@ -448,8 +497,8 @@ export class AdminAlbumEditorPage extends LitElement {
     try {
       const result = await uploadPhotos(this.albumId, files);
 
-      // Reload album to show new photos
-      await this.loadAlbum();
+      // Reload album to show new photos and refresh storage stats
+      await Promise.all([this.loadAlbum(), this.loadStorageStats()]);
 
       // Handle results based on success/failure counts
       const uploadedCount = result.uploaded.length;
@@ -591,6 +640,41 @@ export class AdminAlbumEditorPage extends LitElement {
     this.album = { ...this.album, [field]: value };
   }
 
+  private formatBytes(bytes: number): string {
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let size = bytes;
+    let unitIndex = 0;
+
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+
+    return `${size.toFixed(2)} ${units[unitIndex]}`;
+  }
+
+  private isUploadDisabled(): boolean {
+    if (
+      this.usagePercent === null ||
+      this.siteConfig === null ||
+      this.siteConfig.storage === undefined
+    ) {
+      return false; // Don't disable if we don't have the data yet
+    }
+
+    const maxPercent = this.siteConfig.storage.max_disk_usage_percent || 80;
+    return this.usagePercent >= maxPercent;
+  }
+
+  private getUploadDisabledMessage(): string | null {
+    if (!this.isUploadDisabled()) return null;
+
+    const maxPercent = this.siteConfig?.storage?.max_disk_usage_percent || 80;
+    return `Uploads disabled: Disk usage is at ${this.usagePercent?.toFixed(
+      1
+    )}%, exceeding the ${maxPercent}% limit. Please free up space or increase the limit in settings.`;
+  }
+
   render() {
     const siteTitle = this.siteConfig?.site?.title || 'Photography Portfolio';
 
@@ -707,22 +791,44 @@ export class AdminAlbumEditorPage extends LitElement {
               <div class="form-section">
                 <h2>Photos (${this.album.photos?.length || 0})</h2>
 
+                ${this.getUploadDisabledMessage()
+                  ? html`<div class="error-message">${this.getUploadDisabledMessage()}</div>`
+                  : ''}
+
                 <div class="photo-upload">
                   <div
-                    class="upload-area ${this.dragging ? 'dragging' : ''}"
+                    class="upload-area ${this.dragging ? 'dragging' : ''} ${this.isUploadDisabled()
+                      ? 'disabled'
+                      : ''}"
                     @click=${() => {
+                      if (this.isUploadDisabled()) return;
                       const input = this.shadowRoot?.querySelector(
                         'input[type="file"]'
                       ) as HTMLInputElement;
                       input?.click();
                     }}
-                    @dragover=${(e: DragEvent) => this.handleDragOver(e)}
+                    @dragover=${(e: DragEvent) => {
+                      if (this.isUploadDisabled()) {
+                        e.preventDefault();
+                        return;
+                      }
+                      this.handleDragOver(e);
+                    }}
                     @dragleave=${() => this.handleDragLeave()}
-                    @drop=${(e: DragEvent) => this.handleDrop(e)}
+                    @drop=${(e: DragEvent) => {
+                      if (this.isUploadDisabled()) {
+                        e.preventDefault();
+                        return;
+                      }
+                      this.handleDrop(e);
+                    }}
                   >
                     <p>Drag photos here or click to browse</p>
                     <p style="font-size: 0.875rem; color: var(--color-text-secondary, #666);">
                       Up to 50MB each
+                      ${this.availableSpace !== null
+                        ? html` • ${this.formatBytes(this.availableSpace)} available`
+                        : ''}
                     </p>
                   </div>
                   <input
@@ -730,6 +836,7 @@ export class AdminAlbumEditorPage extends LitElement {
                     multiple
                     accept="image/*"
                     style="display: none;"
+                    ?disabled=${this.isUploadDisabled()}
                     @change=${(e: Event) => this.handleFileSelect(e)}
                   />
                 </div>

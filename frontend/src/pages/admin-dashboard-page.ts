@@ -6,6 +6,7 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '../components/admin-header';
+import '../components/storage-stats';
 import type { Album, SiteConfig } from '../types/data-models';
 import { fetchAllAlbums } from '../utils/admin-api';
 import { fetchSiteConfig } from '../utils/api';
@@ -263,6 +264,8 @@ export class AdminDashboardPage extends LitElement {
             </p>
           </div>
         </div>
+
+        <storage-stats style="margin-bottom: 2rem;"></storage-stats>
 
         <div class="quick-actions">
           <h2 class="section-title">Quick Actions</h2>

@@ -104,6 +104,36 @@ This repository requires writing reports if you make major changes to the codeba
 - Always run pre-commit hooks before committing code, by using `pre-commit run`.
 - Check the documentation that is close to the files you changed and make updates as needed.
 
+## Common Gotchas
+
+### Vite Proxy Configuration
+
+**Problem**: API requests from frontend return HTML instead of JSON, causing "Unexpected token" parse errors.
+
+**Cause**: Vite dev server needs explicit proxy configuration to forward `/api/*` requests to the backend server.
+
+**Solution**: Ensure `frontend/vite.config.ts` includes:
+
+```typescript
+server: {
+  proxy: {
+    '/api': {
+      target: 'http://localhost:8080',
+      changeOrigin: true,
+    },
+  },
+}
+```
+
+**When to check**: If you see errors about parsing HTML as JSON, or if API endpoints return 404 with HTML content during development.
+
+**Important**: After modifying `vite.config.ts`, you MUST restart the frontend dev server for changes to take effect:
+
+```bash
+./dev.sh frontend stop
+./dev.sh frontend start
+```
+
 ## You MAY NOT
 
 - You may not turn off tests without explicit permission

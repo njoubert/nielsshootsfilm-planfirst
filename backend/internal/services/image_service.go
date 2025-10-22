@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/davidbyttow/govips/v2/vips"
 	"github.com/google/uuid"
@@ -22,6 +23,7 @@ const (
 	thumbnailMaxSize = 800               // Thumbnail size
 	displayQuality   = 85                // Quality for display (JPEG/WebP)
 	thumbnailQuality = 80                // Quality for thumbnail (JPEG/WebP)
+	minFreeSpace     = 500 * 1024 * 1024 // Minimum 500 MB free space required
 )
 
 var allowedMimeTypes = map[string]bool{
@@ -36,11 +38,12 @@ var allowedMimeTypes = map[string]bool{
 
 // ImageService handles image upload and processing.
 type ImageService struct {
-	uploadDir string
+	uploadDir     string
+	configService *SiteConfigService
 }
 
 // NewImageService creates a new image service.
-func NewImageService(uploadDir string) (*ImageService, error) {
+func NewImageService(uploadDir string, configService *SiteConfigService) (*ImageService, error) {
 	// Initialize vips
 	vips.Startup(nil)
 
@@ -59,8 +62,69 @@ func NewImageService(uploadDir string) (*ImageService, error) {
 	}
 
 	return &ImageService{
-		uploadDir: uploadDir,
+		uploadDir:     uploadDir,
+		configService: configService,
 	}, nil
+}
+
+// checkDiskSpace checks if there is enough free disk space for an upload
+// It enforces both the configured max_disk_usage_percent and always reserves 5% of disk.
+func (s *ImageService) checkDiskSpace(estimatedSize int64) error {
+	var stat syscall.Statfs_t
+	err := syscall.Statfs(s.uploadDir, &stat)
+	if err != nil {
+		return fmt.Errorf("failed to get filesystem stats: %w", err)
+	}
+
+	// Get total and available space
+	// #nosec G115 - disk size conversions are safe for reasonable disk sizes
+	totalSpace := int64(stat.Blocks) * int64(stat.Bsize)
+	// #nosec G115 - disk size conversions are safe for reasonable disk sizes
+	availableSpace := int64(stat.Bavail) * int64(stat.Bsize)
+	currentUsagePercent := (float64(totalSpace-availableSpace) / float64(totalSpace)) * 100
+
+	// Get max usage percent from config (default 80%)
+	maxUsagePercent := 80
+	if s.configService != nil {
+		config, err := s.configService.Get()
+		if err == nil && config.Storage.MaxDiskUsagePercent > 0 {
+			maxUsagePercent = config.Storage.MaxDiskUsagePercent
+		}
+	}
+
+	// Always reserve at least 5% of disk regardless of setting
+	minReservePercent := 5
+	effectiveMaxPercent := maxUsagePercent
+	if effectiveMaxPercent > 100-minReservePercent {
+		effectiveMaxPercent = 100 - minReservePercent
+	}
+
+	// Estimate total space needed (original + display + thumbnail, approximately 2x original)
+	estimatedTotal := estimatedSize * 2
+
+	// Calculate what usage percent would be after upload
+	usedAfterUpload := totalSpace - availableSpace + estimatedTotal
+	usagePercentAfterUpload := (float64(usedAfterUpload) / float64(totalSpace)) * 100
+
+	// Check absolute minimum free space
+	if availableSpace < minFreeSpace {
+		return fmt.Errorf("insufficient disk space: %s available, minimum %s required",
+			formatBytes(availableSpace), formatBytes(minFreeSpace))
+	}
+
+	// Check if current usage already exceeds limit
+	if currentUsagePercent >= float64(effectiveMaxPercent) {
+		return fmt.Errorf("disk usage is at %.1f%%, exceeding the %d%% limit",
+			currentUsagePercent, effectiveMaxPercent)
+	}
+
+	// Check if upload would exceed the limit
+	if usagePercentAfterUpload >= float64(effectiveMaxPercent) {
+		return fmt.Errorf("upload would increase disk usage to %.1f%%, exceeding the %d%% limit (estimated %s needed)",
+			usagePercentAfterUpload, effectiveMaxPercent, formatBytes(estimatedTotal))
+	}
+
+	return nil
 }
 
 // ProcessUpload processes an uploaded image file using libvips.
@@ -68,6 +132,11 @@ func (s *ImageService) ProcessUpload(fileHeader *multipart.FileHeader) (*models.
 	// Validate file size
 	if fileHeader.Size > maxFileSize {
 		return nil, fmt.Errorf("file size %s exceeds maximum %s", formatBytes(fileHeader.Size), formatBytes(maxFileSize))
+	}
+
+	// Check disk space before processing
+	if err := s.checkDiskSpace(fileHeader.Size); err != nil {
+		return nil, err
 	}
 
 	// Open uploaded file
@@ -167,6 +236,16 @@ func (s *ImageService) ProcessUpload(fileHeader *multipart.FileHeader) (*models.
 	if err != nil {
 		// EXIF extraction is not critical, just log and continue
 		exifData = nil
+	}
+
+	// Final disk space check after upload completes
+	totalSize := originalSize + displaySize + thumbnailSize
+	if err := s.checkDiskSpace(totalSize); err != nil {
+		// Clean up all files
+		_ = os.Remove(originalPath)
+		_ = os.Remove(displayPath)
+		_ = os.Remove(thumbnailPath)
+		return nil, fmt.Errorf("insufficient disk space after upload: %w", err)
 	}
 
 	// Create photo object

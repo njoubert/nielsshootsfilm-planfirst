@@ -17,6 +17,7 @@ type SiteConfig struct {
 	Portfolio   PortfolioConfig  `json:"portfolio"`
 	Navigation  NavigationConfig `json:"navigation"`
 	Features    FeaturesConfig   `json:"features"`
+	Storage     StorageConfig    `json:"storage"`
 }
 
 // SiteInfo contains basic site information.
@@ -111,6 +112,11 @@ type FeaturesConfig struct {
 	EnableNewsletter  bool `json:"enable_newsletter,omitempty"`
 	EnableComments    bool `json:"enable_comments,omitempty"`
 	EnableAnalytics   bool `json:"enable_analytics,omitempty"`
+}
+
+// StorageConfig contains storage and disk usage settings.
+type StorageConfig struct {
+	MaxDiskUsagePercent int `json:"max_disk_usage_percent"` // Maximum disk usage percentage (default 80)
 }
 
 // Validate checks if the site config has required fields.
