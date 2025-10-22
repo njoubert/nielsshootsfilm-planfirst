@@ -45,11 +45,31 @@ func main() {
 
 	// Allow environment variables to override config file
 	adminUsername := getEnv("ADMIN_USERNAME", adminConfig.Username)
-	adminPasswordHash := getEnv("ADMIN_PASSWORD_HASH", adminConfig.PasswordHash)
+
+	// Check for plain text password first (for development/testing)
+	// This takes precedence over ADMIN_PASSWORD_HASH and config file
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	var adminPasswordHash string
+
+	if adminPassword != "" {
+		// Hash the plain text password
+		logger.Info("using ADMIN_PASSWORD from environment (dev mode)")
+		hash, err := services.HashPassword(adminPassword) // pragma: allowlist secret
+		if err != nil {
+			logger.Error("failed to hash ADMIN_PASSWORD",
+				slog.String("error", err.Error()),
+			)
+			os.Exit(1)
+		}
+		adminPasswordHash = hash // pragma: allowlist secret
+	} else {
+		// Fall back to hashed password from env or config file
+		adminPasswordHash = getEnv("ADMIN_PASSWORD_HASH", adminConfig.PasswordHash) // pragma: allowlist secret
+	}
 
 	if adminPasswordHash == "" {
 		logger.Error("admin password hash not configured",
-			slog.String("hint", "run ./bootstrap.sh to set admin password"),
+			slog.String("hint", "run ./bootstrap.sh to set admin password or set ADMIN_PASSWORD in .env"),
 		)
 		os.Exit(1)
 	}

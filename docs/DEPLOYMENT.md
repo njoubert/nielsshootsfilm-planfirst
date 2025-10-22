@@ -1,6 +1,56 @@
-# Frontend Deployment Guide
+# Deployment Guide
 
 ## Overview
+
+This project consists of two parts:
+
+- **Frontend**: Static website (HTML/CSS/JS)
+- **Backend**: Go server for admin operations
+
+## Admin Password Configuration
+
+### Local Development
+
+For local testing with a simple password:
+
+1. Copy `.env.example` to `.env` (if not already done)
+2. Set `ADMIN_PASSWORD=admin` in `.env`
+3. The backend will automatically hash this password when it starts
+4. `.env` is in `.gitignore` and won't be deployed
+
+### Production Deployment
+
+For production with a secure password:
+
+1. Generate a secure password hash:
+
+   ```bash
+   cd backend
+   go run cmd/hash-password/main.go YOUR_SECURE_PASSWORD
+   ```
+
+2. **Option A**: Set in environment variable (recommended for Docker/cloud):
+
+   ```bash
+   export ADMIN_PASSWORD_HASH='$2a$10$...'
+   ```
+
+3. **Option B**: Set in `data/admin_config.json`:
+
+   ```json
+   {
+     "username": "admin",
+     "password_hash": "$2a$10$..."
+   }
+   ```
+
+4. **Important**: Do NOT set `ADMIN_PASSWORD` in production - only use `ADMIN_PASSWORD_HASH`
+
+**Priority order**: `ADMIN_PASSWORD` (dev) > `ADMIN_PASSWORD_HASH` (env) > `admin_config.json`
+
+---
+
+## Frontend Deployment
 
 The frontend is built as a static website that can be hosted on any static web server (nginx, Apache, Netlify, Vercel, S3+CloudFront, etc.). The build process compiles TypeScript to JavaScript, bundles assets, and copies necessary data files.
 
