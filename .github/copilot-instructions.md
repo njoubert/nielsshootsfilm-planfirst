@@ -61,6 +61,13 @@
 2. Admin backend modifies JSON files atomically
 3. Use conventional commits (feat:, fix:, docs:, refactor:, test:)
 
+## UIUX Design Principles
+
+1. Always use subtle colors, transitions, styles, and spacing for a gentle, professional feel.
+2. The images are the primary content, everything else should be muted in the background.
+3. Avoid rounded corners; prefer sharp edges for a modern aesthetic.
+4. Have buttons and interactions be hidden until hover or focus states, to reduce visual clutter.
+
 ## Working Style - Single Developer Project
 
 - **Minimum work**: Do only what's needed for the task at hand

@@ -56,10 +56,9 @@ export class PhotoLightbox extends LitElement {
       z-index: 9999;
       display: flex;
       flex-direction: column;
-      padding: 3rem 0 4rem 0; /* Small buffer top, larger bottom like picture frames */
     }
 
-    .toolbar {
+    .lightbox-toolbar {
       position: absolute;
       top: 0;
       left: 0;
@@ -68,8 +67,8 @@ export class PhotoLightbox extends LitElement {
       justify-content: space-between;
       align-items: center;
       padding: 1rem 2rem;
-      background-color: var(--color-background);
-      color: var(--color-text-primary);
+      background: transparent;
+      color: white;
       z-index: 10;
       height: 3rem;
       box-sizing: border-box;
@@ -82,7 +81,7 @@ export class PhotoLightbox extends LitElement {
     .close-button {
       background: none;
       border: none;
-      color: var(--color-text-primary);
+      color: white;
       font-size: 2rem;
       cursor: pointer;
       padding: 0;
@@ -107,26 +106,37 @@ export class PhotoLightbox extends LitElement {
     }
 
     .nav-button {
-      flex: 1;
-      background: none;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      background: transparent;
       border: none;
-      color: var(--color-text-primary);
+      color: white;
       font-size: 3rem;
       cursor: pointer;
-      transition: opacity 0.2s;
+      transition: background 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
-      align-self: stretch;
+      width: 60px;
+      z-index: 5;
     }
 
     .nav-button:hover {
-      opacity: 0.7;
+      background: rgba(0, 0, 0, 0.5);
     }
 
     .nav-button:disabled {
       opacity: 0.2;
       cursor: not-allowed;
+    }
+
+    .nav-button.prev {
+      left: 0;
+    }
+
+    .nav-button.next {
+      right: 0;
     }
 
     .photo-container img {
@@ -136,7 +146,6 @@ export class PhotoLightbox extends LitElement {
       height: auto;
       object-fit: contain;
       display: block;
-      flex-shrink: 0;
     }
 
     .exif-panel {
@@ -145,8 +154,8 @@ export class PhotoLightbox extends LitElement {
       left: 0;
       right: 0;
       padding: 1rem 2rem;
-      background-color: var(--color-background);
-      color: var(--color-text-secondary);
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+      color: white;
       font-size: 9px;
       line-height: 1.4;
       box-sizing: border-box;
@@ -175,6 +184,7 @@ export class PhotoLightbox extends LitElement {
     @media (max-width: 768px) {
       .nav-button {
         font-size: 2rem;
+        width: 50px;
       }
     }
   `;
@@ -305,7 +315,7 @@ export class PhotoLightbox extends LitElement {
 
     return html`
       <div class="lightbox">
-        <div class="toolbar">
+        <div class="lightbox-toolbar">
           <div class="photo-counter">${this.currentIndex + 1} / ${this.photos.length}</div>
           <button class="close-button" @click=${() => this.close()} aria-label="Close">×</button>
         </div>
