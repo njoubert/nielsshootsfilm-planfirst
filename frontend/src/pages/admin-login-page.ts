@@ -4,6 +4,7 @@
 
 import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import '../components/toast-notification';
 import { login } from '../utils/admin-api';
 
 @customElement('admin-login-page')
@@ -76,26 +77,6 @@ export class AdminLoginPage extends LitElement {
     input:focus {
       outline: none;
       border-color: var(--color-primary, #007bff);
-    }
-
-    .error-message {
-      margin-top: 1rem;
-      padding: 0.75rem;
-      background: var(--color-danger-bg, #fee);
-      border: 1px solid var(--color-danger, #fcc);
-      border-radius: 4px;
-      color: var(--color-danger-text, #c00);
-      font-size: 0.875rem;
-    }
-
-    .success-message {
-      margin-top: 1rem;
-      padding: 0.75rem;
-      background: var(--color-success-bg, #efe);
-      border: 1px solid var(--color-success, #cfc);
-      border-radius: 4px;
-      color: var(--color-success-text, #060);
-      font-size: 0.875rem;
     }
 
     button {
@@ -203,17 +184,30 @@ export class AdminLoginPage extends LitElement {
               />
             </div>
 
-            ${this.error ? html`<div class="error-message">${this.error}</div>` : ''}
-            ${this.success
-              ? html`<div class="success-message">Login successful! Redirecting...</div>`
-              : ''}
-
             <button type="submit" ?disabled=${this.loading} class=${this.loading ? 'loading' : ''}>
               ${this.loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
         </div>
       </div>
+
+      <toast-notification
+        type="success"
+        .message=${this.success ? 'Login successful! Redirecting...' : ''}
+        ?visible=${this.success}
+        @toast-close=${() => {
+          this.success = false;
+        }}
+      ></toast-notification>
+
+      <toast-notification
+        type="error"
+        .message=${this.error}
+        ?visible=${this.error !== ''}
+        @toast-close=${() => {
+          this.error = '';
+        }}
+      ></toast-notification>
     `;
   }
 }

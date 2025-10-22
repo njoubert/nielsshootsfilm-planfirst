@@ -5,6 +5,7 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '../components/admin-header';
+import '../components/toast-notification';
 import type { Album, SiteConfig } from '../types/data-models';
 import { deleteAlbum, fetchAllAlbums } from '../utils/admin-api';
 import { fetchSiteConfig } from '../utils/api';
@@ -84,10 +85,6 @@ export class AdminAlbumsPage extends LitElement {
       text-align: center;
       padding: 3rem 1rem;
       color: var(--color-text-secondary, #666);
-    }
-
-    .error {
-      color: var(--color-danger, #dc3545);
     }
 
     .albums-grid {
@@ -357,104 +354,120 @@ export class AdminAlbumsPage extends LitElement {
         <div class="container">
           <div class="loading">Loading albums...</div>
         </div>
-      `;
-    }
 
-    if (this.error) {
-      return html`
-        <admin-header .siteTitle=${siteTitle} currentPage="albums"></admin-header>
-        <div class="container">
-          <div class="error">${this.error}</div>
-          <div style="text-align: center; margin-top: 1rem;">
-            <button class="btn btn-primary" @click=${() => this.loadAlbums()}>Retry</button>
-          </div>
-        </div>
+        <toast-notification
+          type="error"
+          .message=${this.error}
+          ?visible=${this.error !== ''}
+          @toast-close=${() => {
+            this.error = '';
+          }}
+        ></toast-notification>
       `;
     }
 
     return html`
       <admin-header .siteTitle=${siteTitle} currentPage="albums"></admin-header>
 
-      <div class="container">
-        <div class="page-header">
-          <h1 class="page-title">Albums</h1>
-          <a href="/admin/albums/new" class="btn btn-primary">New Album</a>
-        </div>
-        ${this.albums.length === 0
-          ? html`
-              <div class="empty-state">
-                <h2>No albums yet</h2>
-                <p>Create your first album to get started</p>
-                <a href="/admin/albums/new" class="btn btn-primary"> Create Album </a>
-              </div>
-            `
-          : html`
-              <div class="albums-grid">
-                ${this.albums.map(
-                  (album) => html`
-                    <div class="album-card">
-                      <div class="album-thumbnail">
-                        ${this.getCoverThumbnail(album)
-                          ? html`<img src=${this.getCoverThumbnail(album)!} alt=${album.title} />`
-                          : html`<span>No photos</span>`}
-                      </div>
-                      <div class="album-info">
-                        <h3 class="album-title">${album.title}</h3>
-                        <p class="album-subtitle">${album.subtitle || '\u00A0'}</p>
+      <div class="container">${this.renderAlbums()}</div>
 
-                        <div class="album-meta">
-                          <span>📷 ${album.photos?.length || 0} photos</span>
-                          <span class="visibility-badge visibility-${album.visibility}">
-                            ${this.formatVisibility(album.visibility)}
-                          </span>
-                        </div>
+      <toast-notification
+        type="error"
+        .message=${this.error}
+        ?visible=${this.error !== ''}
+        @toast-close=${() => {
+          this.error = '';
+        }}
+      ></toast-notification>
+    `;
+  }
 
-                        <div class="album-actions">
-                          <a
-                            href="/admin/albums/${album.id}/edit"
-                            class="btn btn-primary btn-small"
-                          >
-                            Edit
-                          </a>
-                          <a href="/albums/${album.slug}" class="btn btn-secondary btn-small">
-                            View
-                          </a>
-                          <button
-                            class="btn btn-danger btn-small"
-                            @click=${() => this.showDeleteConfirm(album)}
-                          >
-                            Delete
-                          </button>
+  private renderAlbums() {
+    return html`
+      <div class="page-header">
+        <h1 class="page-title">Albums</h1>
+        <a href="/admin/albums/new" class="btn btn-primary">New Album</a>
+      </div>
+        ${
+          this.albums.length === 0
+            ? html`
+                <div class="empty-state">
+                  <h2>No albums yet</h2>
+                  <p>Create your first album to get started</p>
+                  <a href="/admin/albums/new" class="btn btn-primary"> Create Album </a>
+                </div>
+              `
+            : html`
+                <div class="albums-grid">
+                  ${this.albums.map(
+                    (album) => html`
+                      <div class="album-card">
+                        <div class="album-thumbnail">
+                          ${this.getCoverThumbnail(album)
+                            ? html`<img src=${this.getCoverThumbnail(album)!} alt=${album.title} />`
+                            : html`<span>No photos</span>`}
+                        </div>
+                        <div class="album-info">
+                          <h3 class="album-title">${album.title}</h3>
+                          <p class="album-subtitle">${album.subtitle || '\u00A0'}</p>
+
+                          <div class="album-meta">
+                            <span>📷 ${album.photos?.length || 0} photos</span>
+                            <span class="visibility-badge visibility-${album.visibility}">
+                              ${this.formatVisibility(album.visibility)}
+                            </span>
+                          </div>
+
+                          <div class="album-actions">
+                            <a
+                              href="/admin/albums/${album.id}/edit"
+                              class="btn btn-primary btn-small"
+                            >
+                              Edit
+                            </a>
+                            <a href="/albums/${album.slug}" class="btn btn-secondary btn-small">
+                              View
+                            </a>
+                            <button
+                              class="btn btn-danger btn-small"
+                              @click=${() => this.showDeleteConfirm(album)}
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  `
-                )}
-              </div>
-            `}
+                    `
+                  )}
+                </div>
+              `
+        }
       </div>
 
-      ${this.deleteConfirm.show
-        ? html`
-            <div class="modal-overlay" @click=${() => this.hideDeleteConfirm()}>
-              <div class="modal" @click=${(e: Event) => e.stopPropagation()}>
-                <h2>Delete Album?</h2>
-                <p>
-                  Are you sure you want to delete
-                  <strong>${this.deleteConfirm.album?.title}</strong>? This action cannot be undone.
-                </p>
-                <div class="modal-actions">
-                  <button class="btn btn-secondary" @click=${() => this.hideDeleteConfirm()}>
-                    Cancel
-                  </button>
-                  <button class="btn btn-danger" @click=${() => this.handleDelete()}>
-                    Delete Album
-                  </button>
+      ${
+        this.deleteConfirm.show
+          ? html`
+              <div class="modal-overlay" @click=${() => this.hideDeleteConfirm()}>
+                <div class="modal" @click=${(e: Event) => e.stopPropagation()}>
+                  <h2>Delete Album?</h2>
+                  <p>
+                    Are you sure you want to delete
+                    <strong>${this.deleteConfirm.album?.title}</strong>? This action cannot be
+                    undone.
+                  </p>
+                  <div class="modal-actions">
+                    <button class="btn btn-secondary" @click=${() => this.hideDeleteConfirm()}>
+                      Cancel
+                    </button>
+                    <button class="btn btn-danger" @click=${() => this.handleDelete()}>
+                      Delete Album
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          `
-        : ''}
+            `
+          : ''
+      }
     `;
   }
 }

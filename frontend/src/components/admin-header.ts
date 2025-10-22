@@ -13,18 +13,17 @@ export class AdminHeader extends LitElement {
     :host {
       display: block;
       background: var(--color-surface, white);
-      border-bottom: 1px solid var(--color-border, #ddd);
     }
 
     .header {
-      padding: 1rem 2rem;
+      padding: 1rem 2rem 0;
     }
 
     .header-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1rem;
+      margin-bottom: 0.5rem;
     }
 
     .site-title {

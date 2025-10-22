@@ -1,5 +1,5 @@
 import { expect, fixture, html } from '@open-wc/testing';
-import { describe, it, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, it, vi } from 'vitest';
 import './toast-notification';
 import type { ToastNotification } from './toast-notification';
 

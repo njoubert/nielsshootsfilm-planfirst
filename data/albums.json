@@ -505,33 +505,6 @@
           "uploaded_at": "2025-10-21T08:23:08.552632Z"
         }
       ]
-    },
-    {
-      "id": "1984f3f8-de0a-40cb-b9bd-6e65408aeb19",
-      "slug": "test",
-      "title": "Test",
-      "visibility": "public",
-      "allow_downloads": true,
-      "order": 0,
-      "created_at": "2025-10-22T05:25:03.046332Z",
-      "updated_at": "2025-10-22T05:29:27.803572Z",
-      "photos": [
-        {
-          "id": "69640a3f-619a-418b-b764-6b4a7c26b3b9",
-          "filename_original": "009908810004-halfsize.jpg",
-          "url_original": "/uploads/originals/a2d1551f-24ed-42a2-b98d-855d4d4bd3d7.jpg",
-          "url_display": "/uploads/display/a2d1551f-24ed-42a2-b98d-855d4d4bd3d7_display.webp",
-          "url_thumbnail": "/uploads/thumbnails/a2d1551f-24ed-42a2-b98d-855d4d4bd3d7_thumbnail.webp",
-          "order": 1,
-          "width": 2006,
-          "height": 3024,
-          "file_size_original": 1920480,
-          "file_size_display": 491204,
-          "file_size_thumbnail": 33498,
-          "exif": {},
-          "uploaded_at": "2025-10-22T05:25:26.671809Z"
-        }
-      ]
     }
   ]
 }

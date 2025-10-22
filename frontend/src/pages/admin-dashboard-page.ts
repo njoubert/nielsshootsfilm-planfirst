@@ -7,6 +7,7 @@ import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '../components/admin-header';
 import '../components/storage-stats';
+import '../components/toast-notification';
 import type { Album, SiteConfig } from '../types/data-models';
 import { fetchAllAlbums } from '../utils/admin-api';
 import { fetchSiteConfig } from '../utils/api';
@@ -145,10 +146,6 @@ export class AdminDashboardPage extends LitElement {
       color: var(--color-text-secondary, #666);
     }
 
-    .error {
-      color: var(--color-danger, #dc3545);
-    }
-
     @media (max-width: 768px) {
       .stats-grid {
         grid-template-columns: 1fr;
@@ -216,15 +213,15 @@ export class AdminDashboardPage extends LitElement {
         <div class="container">
           <div class="loading">Loading dashboard...</div>
         </div>
-      `;
-    }
 
-    if (this.error) {
-      return html`
-        <admin-header .siteTitle=${siteTitle} currentPage="dashboard"></admin-header>
-        <div class="container">
-          <div class="error">${this.error}</div>
-        </div>
+        <toast-notification
+          type="error"
+          .message=${this.error}
+          ?visible=${this.error !== ''}
+          @toast-close=${() => {
+            this.error = '';
+          }}
+        ></toast-notification>
       `;
     }
 
@@ -233,67 +230,80 @@ export class AdminDashboardPage extends LitElement {
     return html`
       <admin-header .siteTitle=${siteTitle} currentPage="dashboard"></admin-header>
 
-      <div class="container">
-        <div class="page-header">
-          <h1 class="page-title">Dashboard</h1>
-          <p class="page-subtitle">Welcome back! Here's an overview of your portfolio.</p>
+      <div class="container">${this.renderDashboard(stats)}</div>
+
+      <toast-notification
+        type="error"
+        .message=${this.error}
+        ?visible=${this.error !== ''}
+        @toast-close=${() => {
+          this.error = '';
+        }}
+      ></toast-notification>
+    `;
+  }
+
+  private renderDashboard(stats: ReturnType<typeof this.getStats>) {
+    return html`
+      <div class="page-header">
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Welcome back! Here's an overview of your portfolio.</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <p class="stat-label">Total Albums</p>
+          <p class="stat-value">${stats.totalAlbums}</p>
+          <p class="stat-meta">${stats.publicAlbums} public</p>
         </div>
 
-        <div class="stats-grid">
-          <div class="stat-card">
-            <p class="stat-label">Total Albums</p>
-            <p class="stat-value">${stats.totalAlbums}</p>
-            <p class="stat-meta">${stats.publicAlbums} public</p>
-          </div>
-
-          <div class="stat-card">
-            <p class="stat-label">Total Photos</p>
-            <p class="stat-value">${stats.totalPhotos}</p>
-            <p class="stat-meta">
-              ${stats.totalAlbums > 0
-                ? `Avg ${Math.round(stats.totalPhotos / stats.totalAlbums)} per album`
-                : ''}
-            </p>
-          </div>
-
-          <div class="stat-card">
-            <p class="stat-label">Portfolio Album</p>
-            <p class="stat-value">${stats.portfolioAlbum ? '✓' : '—'}</p>
-            <p class="stat-meta">
-              ${stats.portfolioAlbum ? stats.portfolioAlbum.title : 'No portfolio album set'}
-            </p>
-          </div>
+        <div class="stat-card">
+          <p class="stat-label">Total Photos</p>
+          <p class="stat-value">${stats.totalPhotos}</p>
+          <p class="stat-meta">
+            ${stats.totalAlbums > 0
+              ? `Avg ${Math.round(stats.totalPhotos / stats.totalAlbums)} per album`
+              : ''}
+          </p>
         </div>
 
-        <storage-stats style="margin-bottom: 2rem;"></storage-stats>
+        <div class="stat-card">
+          <p class="stat-label">Portfolio Album</p>
+          <p class="stat-value">${stats.portfolioAlbum ? '✓' : '—'}</p>
+          <p class="stat-meta">
+            ${stats.portfolioAlbum ? stats.portfolioAlbum.title : 'No portfolio album set'}
+          </p>
+        </div>
+      </div>
 
-        <div class="quick-actions">
-          <h2 class="section-title">Quick Actions</h2>
-          <div class="actions-grid">
-            <a href="/admin/albums/new" class="action-card">
-              <div class="action-icon">📸</div>
-              <h3 class="action-title">Create Album</h3>
-              <p class="action-description">Start a new photo album</p>
-            </a>
+      <storage-stats style="margin-bottom: 2rem;"></storage-stats>
 
-            <a href="/admin/albums" class="action-card">
-              <div class="action-icon">📚</div>
-              <h3 class="action-title">Manage Albums</h3>
-              <p class="action-description">View and edit all albums</p>
-            </a>
+      <div class="quick-actions">
+        <h2 class="section-title">Quick Actions</h2>
+        <div class="actions-grid">
+          <a href="/admin/albums/new" class="action-card">
+            <div class="action-icon">📸</div>
+            <h3 class="action-title">Create Album</h3>
+            <p class="action-description">Start a new photo album</p>
+          </a>
 
-            <a href="/admin/settings" class="action-card">
-              <div class="action-icon">⚙️</div>
-              <h3 class="action-title">Settings</h3>
-              <p class="action-description">Configure your site</p>
-            </a>
+          <a href="/admin/albums" class="action-card">
+            <div class="action-icon">📚</div>
+            <h3 class="action-title">Manage Albums</h3>
+            <p class="action-description">View and edit all albums</p>
+          </a>
 
-            <a href="/" class="action-card" target="_blank">
-              <div class="action-icon">🌐</div>
-              <h3 class="action-title">View Site</h3>
-              <p class="action-description">See your public portfolio</p>
-            </a>
-          </div>
+          <a href="/admin/settings" class="action-card">
+            <div class="action-icon">⚙️</div>
+            <h3 class="action-title">Settings</h3>
+            <p class="action-description">Configure your site</p>
+          </a>
+
+          <a href="/" class="action-card" target="_blank">
+            <div class="action-icon">🌐</div>
+            <h3 class="action-title">View Site</h3>
+            <p class="action-description">See your public portfolio</p>
+          </a>
         </div>
       </div>
     `;
