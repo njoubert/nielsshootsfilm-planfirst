@@ -27,10 +27,15 @@
   - `./dev.sh` - Restart both frontend and backend
   - `./dev.sh start` - Start both servers
   - `./dev.sh stop` - Stop both servers
+  - `./dev.sh status` - Check status of both servers
   - `./dev.sh frontend start` - Start only frontend
   - `./dev.sh frontend stop` - Stop only frontend
+  - `./dev.sh frontend status` - Check frontend status
   - `./dev.sh backend start` - Start only backend
   - `./dev.sh backend stop` - Stop only backend
+  - `./dev.sh backend status` - Check backend status
+
+  **Status checks**: The status commands check if processes are running AND if they're responding to HTTP requests. Returns clear indicators: ✓ (running), ⚠ (running but not responding), or ✗ (not running).
 
 - **`./format.sh`** - Format all code (runs prettier, gofmt, etc.)
 
