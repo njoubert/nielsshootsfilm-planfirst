@@ -27,6 +27,8 @@ type AuthService struct {
 	sessions     map[string]*Session
 	mu           sync.RWMutex
 	sessionTTL   time.Duration
+	fileService  *FileService
+	configFile   string
 }
 
 // NewAuthService creates a new auth service.
@@ -36,7 +38,15 @@ func NewAuthService(username, passwordHash string, sessionTTL time.Duration) *Au
 		passwordHash: passwordHash, // pragma: allowlist secret
 		sessions:     make(map[string]*Session),
 		sessionTTL:   sessionTTL,
+		fileService:  nil,
+		configFile:   "",
 	}
+}
+
+// SetConfigPersistence configures the auth service to persist password changes to disk.
+func (s *AuthService) SetConfigPersistence(fileService *FileService, configFile string) {
+	s.fileService = fileService
+	s.configFile = configFile
 }
 
 // Authenticate verifies credentials and creates a session.
@@ -142,6 +152,28 @@ func (s *AuthService) ChangePassword(oldPassword, newPassword string) error {
 	}
 
 	s.passwordHash = string(newHash)
+
+	// Persist to disk if configured
+	if s.fileService != nil && s.configFile != "" {
+		// Import models package to use AdminConfig struct
+		config := struct {
+			Username     string `json:"username"`
+			PasswordHash string `json:"password_hash"` // pragma: allowlist secret
+		}{
+			Username:     s.username,
+			PasswordHash: s.passwordHash, // pragma: allowlist secret
+		}
+
+		if err := s.fileService.WriteJSON(s.configFile, config); err != nil {
+			// Log the error but don't fail the password change
+			// The in-memory password is already updated
+			slog.Error("failed to persist password change to disk",
+				slog.String("error", err.Error()),
+				slog.String("file", s.configFile),
+			)
+			return fmt.Errorf("password changed in memory but failed to save to disk: %w", err)
+		}
+	}
 
 	return nil
 }

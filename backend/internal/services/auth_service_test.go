@@ -1,6 +1,7 @@
 package services
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -197,4 +198,72 @@ func TestAuthService_MultipleActiveSessions(t *testing.T) {
 
 	_, err = service.ValidateSession(session2)
 	assert.NoError(t, err)
+}
+
+func TestAuthService_ChangePassword_Persistence(t *testing.T) {
+	// Create a temporary directory for test data
+	tmpDir, err := os.MkdirTemp("", "auth_test_*")
+	require.NoError(t, err)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	// Create a file service
+	fileService, err := NewFileService(tmpDir)
+	require.NoError(t, err)
+
+	// Write initial admin config
+	configFile := "admin_config.json"
+	initialHash := "$2a$10$VPqUwu5tQ8xAsqdRFgzibeVQVewjXsBkKuhJClOVqpeGflWYwLZKm" // test123 // pragma: allowlist secret
+	initialConfig := struct {
+		Username     string `json:"username"`
+		PasswordHash string `json:"password_hash"` // pragma: allowlist secret
+	}{
+		Username:     "testuser",
+		PasswordHash: initialHash, // pragma: allowlist secret
+	}
+	err = fileService.WriteJSON(configFile, initialConfig)
+	require.NoError(t, err)
+
+	// Create auth service with persistence configured
+	service := NewAuthService("testuser", initialHash, 24*time.Hour)
+	service.SetConfigPersistence(fileService, configFile)
+
+	// Change password
+	err = service.ChangePassword("test123", "newpassword456")
+	require.NoError(t, err)
+
+	// Read the config file back
+	var savedConfig struct {
+		Username     string `json:"username"`
+		PasswordHash string `json:"password_hash"` // pragma: allowlist secret
+	}
+	err = fileService.ReadJSON(configFile, &savedConfig)
+	require.NoError(t, err)
+
+	// Verify the hash was saved and is different from the original
+	assert.NotEqual(t, initialHash, savedConfig.PasswordHash)
+	assert.Equal(t, "testuser", savedConfig.Username)
+
+	// Verify we can create a new service with the saved hash and authenticate with new password
+	newService := NewAuthService(savedConfig.Username, savedConfig.PasswordHash, 24*time.Hour)
+	sessionID, err := newService.Authenticate("testuser", "newpassword456")
+	require.NoError(t, err)
+	assert.NotEmpty(t, sessionID)
+
+	// Old password should not work
+	_, err = newService.Authenticate("testuser", "test123")
+	assert.Error(t, err)
+}
+
+func TestAuthService_ChangePassword_PersistenceNotConfigured(t *testing.T) {
+	// Create a service without persistence configured
+	service := setupAuthService(t)
+
+	// Change password should still work (just won't persist)
+	err := service.ChangePassword("test123", "newpassword456")
+	require.NoError(t, err)
+
+	// New password should work in memory
+	sessionID, err := service.Authenticate("testuser", "newpassword456")
+	require.NoError(t, err)
+	assert.NotEmpty(t, sessionID)
 }

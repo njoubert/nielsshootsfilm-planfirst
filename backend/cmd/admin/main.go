@@ -65,6 +65,8 @@ func main() {
 
 	// Initialize auth service (24 hour session TTL)
 	authService := services.NewAuthService(adminUsername, adminPasswordHash, 24*time.Hour)
+	// Configure persistence so password changes are saved to disk
+	authService.SetConfigPersistence(fileService, "admin_config.json")
 
 	// Initialize handlers
 	albumHandler := handlers.NewAlbumHandler(albumService, imageService, logger)

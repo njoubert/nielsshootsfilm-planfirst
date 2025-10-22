@@ -27,12 +27,15 @@ func NewStorageHandler(configService *services.SiteConfigService, uploadDir stri
 
 // StorageStats represents storage statistics.
 type StorageStats struct {
-	TotalBytes     int64           `json:"total_bytes"`
-	UsedBytes      int64           `json:"used_bytes"`
-	AvailableBytes int64           `json:"available_bytes"`
-	UsagePercent   float64         `json:"usage_percent"`
-	Breakdown      StorageByType   `json:"breakdown"`
-	Warning        *StorageWarning `json:"warning,omitempty"`
+	TotalBytes      int64           `json:"total_bytes"`
+	UsedBytes       int64           `json:"used_bytes"`
+	AvailableBytes  int64           `json:"available_bytes"`
+	ReservedBytes   int64           `json:"reserved_bytes"`
+	UsableBytes     int64           `json:"usable_bytes"`
+	ReservedPercent int             `json:"reserved_percent"`
+	UsagePercent    float64         `json:"usage_percent"`
+	Breakdown       StorageByType   `json:"breakdown"`
+	Warning         *StorageWarning `json:"warning,omitempty"`
 }
 
 // StorageByType breaks down storage by upload type.
@@ -73,6 +76,14 @@ func (h *StorageHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 	usedBytes := breakdown.Originals + breakdown.Display + breakdown.Thumbnails
 	usagePercent := (float64(totalBytes-availableBytes) / float64(totalBytes)) * 100
 
+	// Calculate reserved space (always 5% minimum)
+	reservedPercent := 5
+	reservedBytes := int64(float64(totalBytes) * float64(reservedPercent) / 100.0)
+	usableBytes := availableBytes - reservedBytes
+	if usableBytes < 0 {
+		usableBytes = 0
+	}
+
 	// Get config to check threshold
 	config, err := h.configService.Get()
 	if err != nil {
@@ -100,12 +111,15 @@ func (h *StorageHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stats := StorageStats{
-		TotalBytes:     totalBytes,
-		UsedBytes:      usedBytes,
-		AvailableBytes: availableBytes,
-		UsagePercent:   usagePercent,
-		Breakdown:      *breakdown,
-		Warning:        warning,
+		TotalBytes:      totalBytes,
+		UsedBytes:       usedBytes,
+		AvailableBytes:  availableBytes,
+		ReservedBytes:   reservedBytes,
+		UsableBytes:     usableBytes,
+		ReservedPercent: reservedPercent,
+		UsagePercent:    usagePercent,
+		Breakdown:       *breakdown,
+		Warning:         warning,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

@@ -11,6 +11,9 @@ interface StorageStats {
   total_bytes: number;
   used_bytes: number;
   available_bytes: number;
+  reserved_bytes: number;
+  usable_bytes: number;
+  reserved_percent: number;
   usage_percent: number;
   breakdown: {
     originals_bytes: number;
@@ -108,6 +111,8 @@ export class StorageStatsComponent extends LitElement {
       background: var(--color-border, #e0e0e0);
       border-radius: 4px;
       overflow: hidden;
+      position: relative;
+      display: flex;
     }
 
     .usage-bar-fill {
@@ -115,6 +120,13 @@ export class StorageStatsComponent extends LitElement {
       transition:
         width 0.3s ease,
         background-color 0.3s ease;
+    }
+
+    .usage-bar-reserved {
+      height: 100%;
+      margin-left: auto;
+      background: repeating-linear-gradient(45deg, #d0d0d0, #d0d0d0 4px, #e8e8e8 4px, #e8e8e8 8px);
+      border-left: 1px solid #b0b0b0;
     }
 
     .usage-bar-fill.low {
@@ -322,6 +334,11 @@ export class StorageStatsComponent extends LitElement {
               class="usage-bar-fill ${usageLevel}"
               style="width: ${this.stats.usage_percent}%"
             ></div>
+            <div
+              class="usage-bar-reserved"
+              style="width: ${this.stats.reserved_percent}%"
+              title="Reserved space (${this.stats.reserved_percent}%)"
+            ></div>
           </div>
         </div>
 
@@ -333,9 +350,15 @@ export class StorageStatsComponent extends LitElement {
           </div>
 
           <div class="detail-item">
-            <div class="detail-label">Available</div>
-            <div class="detail-value">${this.formatBytes(this.stats.available_bytes)}</div>
-            <div class="detail-subtext">Free disk space</div>
+            <div class="detail-label">Usable Space</div>
+            <div class="detail-value">${this.formatBytes(this.stats.usable_bytes)}</div>
+            <div class="detail-subtext">Available for uploads</div>
+          </div>
+
+          <div class="detail-item">
+            <div class="detail-label">Reserved Space</div>
+            <div class="detail-value">${this.formatBytes(this.stats.reserved_bytes)}</div>
+            <div class="detail-subtext">${this.stats.reserved_percent}% kept in reserve</div>
           </div>
 
           <div class="detail-item">

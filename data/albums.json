@@ -505,6 +505,28 @@
           "uploaded_at": "2025-10-21T08:23:08.552632Z"
         }
       ]
+    },
+    {
+      "id": "d31441ea-4387-4e73-a444-c1407aa99323",
+      "slug": "test1",
+      "title": "Test1",
+      "visibility": "public",
+      "allow_downloads": true,
+      "order": 0,
+      "created_at": "2025-10-22T06:18:12.865638Z",
+      "updated_at": "2025-10-22T06:18:12.865638Z",
+      "photos": null
+    },
+    {
+      "id": "6668a12d-a39e-4f43-8bfc-4c6c8ada6a09",
+      "slug": "test-2",
+      "title": "Test 2",
+      "visibility": "public",
+      "allow_downloads": true,
+      "order": 0,
+      "created_at": "2025-10-22T06:18:21.745304Z",
+      "updated_at": "2025-10-22T06:18:21.745304Z",
+      "photos": null
     }
   ]
 }
