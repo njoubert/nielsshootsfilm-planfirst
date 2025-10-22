@@ -2,6 +2,10 @@
 
 A modern photography portfolio with a unique hybrid static/dynamic architecture, designed for speed, simplicity, and ease of content management.
 
+![albums view](image-2.png)
+
+![admin dashboard](image-1.png)
+
 ## The Unique Approach
 
 **Hybrid Static/Dynamic Architecture:**
