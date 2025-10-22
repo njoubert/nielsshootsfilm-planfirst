@@ -76,15 +76,7 @@ func (h *StorageHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 	usedBytes := breakdown.Originals + breakdown.Display + breakdown.Thumbnails
 	usagePercent := (float64(totalBytes-availableBytes) / float64(totalBytes)) * 100
 
-	// Calculate reserved space (always 5% minimum)
-	reservedPercent := 5
-	reservedBytes := int64(float64(totalBytes) * float64(reservedPercent) / 100.0)
-	usableBytes := availableBytes - reservedBytes
-	if usableBytes < 0 {
-		usableBytes = 0
-	}
-
-	// Get config to check threshold
+	// Get config to determine max usage threshold
 	config, err := h.configService.Get()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get config: %v", err), http.StatusInternalServerError)
@@ -94,6 +86,15 @@ func (h *StorageHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 	maxPercent := config.Storage.MaxDiskUsagePercent
 	if maxPercent == 0 {
 		maxPercent = 80 // Default
+	}
+
+	// Calculate reserved space based on max_disk_usage_percent
+	// e.g., if max is 80%, then 20% is reserved
+	reservedPercent := 100 - maxPercent
+	reservedBytes := int64(float64(totalBytes) * float64(reservedPercent) / 100.0)
+	usableBytes := availableBytes - reservedBytes
+	if usableBytes < 0 {
+		usableBytes = 0
 	}
 
 	// Determine warning status

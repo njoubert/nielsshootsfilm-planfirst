@@ -348,12 +348,6 @@ export class StorageStatsComponent extends LitElement {
 
         <div class="storage-details">
           <div class="detail-item">
-            <div class="detail-label">TOTAL USED</div>
-            <div class="detail-value">${this.formatBytes(this.stats.used_bytes)}</div>
-            <div class="detail-subtext">Uploads directory</div>
-          </div>
-
-          <div class="detail-item">
             <div class="detail-label">USABLE SPACE</div>
             <div class="detail-value">${this.formatBytes(this.stats.usable_bytes)}</div>
             <div class="detail-subtext">Available for uploads</div>
@@ -363,6 +357,12 @@ export class StorageStatsComponent extends LitElement {
             <div class="detail-label">RESERVED SPACE</div>
             <div class="detail-value">${this.formatBytes(this.stats.reserved_bytes)}</div>
             <div class="detail-subtext">${this.stats.reserved_percent}% kept in reserve</div>
+          </div>
+
+          <div class="detail-item">
+            <div class="detail-label">TOTAL USED</div>
+            <div class="detail-value">${this.formatBytes(this.stats.used_bytes)}</div>
+            <div class="detail-subtext">Uploads directory</div>
           </div>
 
           <div class="detail-item">
