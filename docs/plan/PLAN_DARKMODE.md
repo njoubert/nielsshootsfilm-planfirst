@@ -1,3 +1,5 @@
+# Dark Mode Plan
+
 **Theme System Integration**:
 The theme system (dark/light mode) is initialized early in the page load process to prevent color flashing. See Phase 8 for complete theme implementation details.
 

@@ -11,6 +11,7 @@ import '../components/toast-notification';
 import type { Album, SiteConfig } from '../types/data-models';
 import { fetchAllAlbums } from '../utils/admin-api';
 import { fetchSiteConfig } from '../utils/api';
+import { onLogout } from '../utils/auth-state';
 
 @customElement('admin-dashboard-page')
 export class AdminDashboardPage extends LitElement {
@@ -175,9 +176,35 @@ export class AdminDashboardPage extends LitElement {
   @state()
   private error = '';
 
+  private unsubscribeLogout?: () => void;
+
   connectedCallback() {
     super.connectedCallback();
     void this.loadData();
+
+    // Subscribe to logout events to clear cached data
+    this.unsubscribeLogout = onLogout(() => {
+      this.clearState();
+    });
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    // Clean up logout listener
+    if (this.unsubscribeLogout) {
+      this.unsubscribeLogout();
+    }
+  }
+
+  /**
+   * Clear all cached state data.
+   * Called when user logs out to prevent showing stale data.
+   */
+  private clearState() {
+    this.albums = [];
+    this.siteConfig = null;
+    this.loading = false;
+    this.error = '';
   }
 
   private async loadData() {

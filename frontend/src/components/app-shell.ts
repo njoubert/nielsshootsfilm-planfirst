@@ -3,7 +3,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { SiteConfig } from '../types/data-models';
 import { checkAuth } from '../utils/admin-api';
 import { fetchSiteConfig } from '../utils/api';
-import { Router } from '../utils/router';
+import { onLogout } from '../utils/auth-state';
+import { Router, type Route } from '../utils/router';
 import { themeManager } from '../utils/theme-manager';
 
 // Import all public components
@@ -31,6 +32,8 @@ export class AppShell extends LitElement {
   @state() private config?: SiteConfig;
   @state() private currentPath = '/';
   @state() private loading = true;
+  @state() private isAuthenticated = false;
+  @state() private authChecked = false;
 
   private router?: Router;
 
@@ -77,11 +80,27 @@ export class AppShell extends LitElement {
     }
   `;
 
+  private unsubscribeLogout?: () => void;
+
   connectedCallback() {
     super.connectedCallback();
 
+    // Subscribe to logout events to redirect to login
+    this.unsubscribeLogout = onLogout(() => {
+      // Force redirect to login page on logout
+      window.location.href = '/admin/login';
+    });
+
     // Initialize async without making connectedCallback async
     void this.initialize();
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    // Clean up logout listener
+    if (this.unsubscribeLogout) {
+      this.unsubscribeLogout();
+    }
   }
 
   private async initialize() {
@@ -118,6 +137,9 @@ export class AppShell extends LitElement {
     // Subscribe to route changes
     this.router.subscribe((path) => {
       this.currentPath = path;
+      // Reset auth state when route changes to force a new auth check
+      this.authChecked = false;
+      this.isAuthenticated = false;
       this.requestUpdate();
     });
 
@@ -182,6 +204,31 @@ export class AppShell extends LitElement {
 
     const { route, params } = match;
 
+    // For protected admin pages, check auth before rendering
+    if (route.guard && route.component !== 'admin-login-page') {
+      // If we haven't checked auth yet for this route, check it
+      if (!this.authChecked) {
+        void this.checkAuthAndRedirect(route);
+        // Show loading spinner while checking
+        return html`
+          <div class="loading">
+            <loading-spinner></loading-spinner>
+          </div>
+        `;
+      }
+
+      // If we've checked and user is not authenticated, show loading while redirect happens
+      if (!this.isAuthenticated) {
+        return html`
+          <div class="loading">
+            <loading-spinner></loading-spinner>
+          </div>
+        `;
+      }
+
+      // Auth checked and user is authenticated, proceed to render the page
+    }
+
     switch (route.component) {
       case 'portfolio-page':
         return html`<portfolio-page></portfolio-page>`;
@@ -206,6 +253,26 @@ export class AppShell extends LitElement {
 
       default:
         return html`<portfolio-page></portfolio-page>`;
+    }
+  }
+
+  private async checkAuthAndRedirect(route: Route) {
+    try {
+      if (route.guard) {
+        const isAuthenticated = await route.guard();
+        this.isAuthenticated = isAuthenticated;
+        this.authChecked = true;
+
+        if (!isAuthenticated) {
+          // Not authenticated, redirect to login
+          window.location.href = '/admin/login';
+        }
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      this.isAuthenticated = false;
+      this.authChecked = true;
+      window.location.href = '/admin/login';
     }
   }
 }

@@ -1,4 +1,6 @@
-### 3.4 Blog Section (Phase 8 - Advanced Feature)
+# Blog Section Plan
+
+## 3.4 Blog Section (Phase 8 - Advanced Feature)
 
 > **Defer to Phase 8**: Focus on albums first. Blog can be added later without affecting core functionality.
 
@@ -9,7 +11,7 @@ Planned features (Phase 8):
 - Tag filtering and pagination
 - Markdown or rich text support
 
-#### Blog Management
+### Blog Management
 
 - `GET /api/admin/blog` - List posts
 - `POST /api/admin/blog` - Create post

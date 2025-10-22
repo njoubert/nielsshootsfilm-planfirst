@@ -1,3 +1,5 @@
+# SEO Settings Plan
+
 ## Settings
 
 **Section 6: SEO & Analytics**

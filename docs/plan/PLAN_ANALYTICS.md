@@ -5,7 +5,7 @@
 - Download tracking
 - Analytics data is read from SQLite database (Phase 2.2)
 
-### 3.8 TypeScript Utilities
+## 3.8 TypeScript Utilities
 
 - [ ] JSON data fetching utilities with type safety
 - [ ] Type definitions for all JSON schemas (Album, Photo, BlogPost, SiteConfig)
@@ -18,7 +18,7 @@
 - [ ] **Analytics tracking utility** (fire-and-forget, graceful degradation)
 - [ ] bcrypt.js for client-side password verification
 
-#### Analytics Tracking (Public, No Auth Required)
+## Analytics Tracking (Public, No Auth Required)
 
 **Public endpoints** - accessible from static site, no authentication:
 
@@ -62,17 +62,18 @@
 
 ## Dashboard UI Updates
 
-    - **Analytics summary** (last 7 days):
-    - Total page views
-    - Total album views
-    - Total downloads
-    - Trending albums (most viewed)
-      - View full analytics
-    - [ ] Charts/visualizations
-    - Views over time (sparkline/mini chart)
-    - Top 5 albums by views
+**Analytics summary** (last 7 days):
 
-#### Analytics Page
+- Total page views
+- Total album views
+- Total downloads
+- Trending albums (most viewed)
+- View full analytics
+- [ ] Charts/visualizations
+- Views over time (sparkline/mini chart)
+- Top 5 albums by views
+
+### Analytics Page
 
 **Purpose**: View detailed analytics about site usage, album performance, and photo downloads.
 
@@ -80,7 +81,7 @@
 
 **Layout**:
 
-```
+```text
 ┌────────────────────────────────────────────┐
 │ Analytics                                  │
 ├────────────────────────────────────────────┤

@@ -9,6 +9,7 @@ import '../components/toast-notification';
 import type { Album, SiteConfig } from '../types/data-models';
 import { deleteAlbum, fetchAllAlbums } from '../utils/admin-api';
 import { fetchSiteConfig } from '../utils/api';
+import { onLogout } from '../utils/auth-state';
 
 @customElement('admin-albums-page')
 export class AdminAlbumsPage extends LitElement {
@@ -283,9 +284,36 @@ export class AdminAlbumsPage extends LitElement {
     album: null,
   };
 
+  private unsubscribeLogout?: () => void;
+
   connectedCallback() {
     super.connectedCallback();
     void this.loadData();
+
+    // Subscribe to logout events to clear cached data
+    this.unsubscribeLogout = onLogout(() => {
+      this.clearState();
+    });
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    // Clean up logout listener
+    if (this.unsubscribeLogout) {
+      this.unsubscribeLogout();
+    }
+  }
+
+  /**
+   * Clear all cached state data.
+   * Called when user logs out to prevent showing stale data.
+   */
+  private clearState() {
+    this.albums = [];
+    this.siteConfig = null;
+    this.loading = false;
+    this.error = '';
+    this.deleteConfirm = { show: false, album: null };
   }
 
   private async loadData() {

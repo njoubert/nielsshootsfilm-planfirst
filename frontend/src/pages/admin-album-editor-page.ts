@@ -17,6 +17,7 @@ import {
   uploadPhotos,
 } from '../utils/admin-api';
 import { fetchSiteConfig } from '../utils/api';
+import { onLogout } from '../utils/auth-state';
 
 @customElement('admin-album-editor-page')
 export class AdminAlbumEditorPage extends LitElement {
@@ -354,9 +355,52 @@ export class AdminAlbumEditorPage extends LitElement {
   @state()
   private usagePercent: number | null = null;
 
+  private unsubscribeLogout?: () => void;
+
   connectedCallback() {
     super.connectedCallback();
     void this.loadData();
+
+    // Subscribe to logout events to clear cached data
+    this.unsubscribeLogout = onLogout(() => {
+      this.clearState();
+    });
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    // Clean up logout listener
+    if (this.unsubscribeLogout) {
+      this.unsubscribeLogout();
+    }
+  }
+
+  /**
+   * Clear all cached state data.
+   * Called when user logs out to prevent showing stale data.
+   */
+  private clearState() {
+    this.album = {
+      title: '',
+      subtitle: '',
+      description: '',
+      visibility: 'public',
+      allow_downloads: true,
+      order: 0,
+      photos: [],
+    };
+    this.loading = false;
+    this.saving = false;
+    this.uploading = false;
+    this.error = '';
+    this.success = '';
+    this.dragging = false;
+    this.draggedPhotoId = null;
+    this.dragOverPhotoId = null;
+    this.siteConfig = null;
+    this.availableSpace = null;
+    this.totalSpace = null;
+    this.usagePercent = null;
   }
 
   private async loadData() {

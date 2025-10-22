@@ -1,4 +1,6 @@
-### 3.6 Download Functionality (Phase 8 - Advanced Feature)
+# Phase 8 Enhancements Plan
+
+## 3.6 Download Functionality (Phase 8 - Advanced Feature)
 
 **Phase 8 Enhancement**:
 

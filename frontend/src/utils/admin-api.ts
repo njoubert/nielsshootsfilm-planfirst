@@ -4,6 +4,7 @@
  */
 
 import type { Album, SiteConfig } from '../types/data-models';
+import { dispatchLoginEvent, dispatchLogoutEvent } from './auth-state';
 
 const API_BASE_URL = 'http://localhost:8080';
 
@@ -39,11 +40,17 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
     throw new Error(error || 'Login failed');
   }
 
-  return response.json() as Promise<LoginResponse>;
+  const result = (await response.json()) as Promise<LoginResponse>;
+
+  // Dispatch login event to notify components
+  dispatchLoginEvent();
+
+  return result;
 }
 
 /**
  * Logout from admin panel.
+ * Clears HTTP-only cookie and dispatches logout event.
  */
 export async function logout(): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/api/admin/logout`, {
@@ -54,6 +61,9 @@ export async function logout(): Promise<void> {
   if (!response.ok) {
     throw new Error('Logout failed');
   }
+
+  // Dispatch logout event to notify all admin components to clear their state
+  dispatchLogoutEvent();
 }
 
 /**

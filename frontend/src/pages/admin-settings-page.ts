@@ -15,6 +15,7 @@ import {
   updateSiteConfig,
 } from '../utils/admin-api';
 import { fetchSiteConfig } from '../utils/api';
+import { onLogout } from '../utils/auth-state';
 
 @customElement('admin-settings-page')
 export class AdminSettingsPage extends LitElement {
@@ -200,9 +201,43 @@ export class AdminSettingsPage extends LitElement {
   @state()
   private confirmPassword = '';
 
+  private unsubscribeLogout?: () => void;
+
   connectedCallback() {
     super.connectedCallback();
     void this.loadData();
+
+    // Subscribe to logout events to clear cached data
+    this.unsubscribeLogout = onLogout(() => {
+      this.clearState();
+    });
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    // Clean up logout listener
+    if (this.unsubscribeLogout) {
+      this.unsubscribeLogout();
+    }
+  }
+
+  /**
+   * Clear all cached state data.
+   * Called when user logs out to prevent showing stale data.
+   */
+  private clearState() {
+    this.config = null;
+    this.albums = [];
+    this.loading = false;
+    this.saving = false;
+    this.savingPassword = false;
+    this.error = '';
+    this.success = '';
+    this.passwordError = '';
+    this.passwordSuccess = '';
+    this.oldPassword = '';
+    this.newPassword = '';
+    this.confirmPassword = '';
   }
 
   private async loadData() {

@@ -237,7 +237,7 @@ detect-secrets audit .secrets.baseline
 }
 ```
 
-```
+```text
 // .prettierignore
 node_modules/
 dist/
@@ -582,7 +582,7 @@ indent_style = tab
 
 #### .gitignore
 
-```
+```text
 # Dependencies
 node_modules/
 frontend/node_modules/
@@ -788,7 +788,7 @@ bazel test //:lint_all
 
 **Format**: Using [Conventional Commits](https://www.conventionalcommits.org/)
 
-```
+```text
 <type>(<scope>): <subject>
 
 <body>
@@ -808,7 +808,7 @@ bazel test //:lint_all
 
 **Examples**:
 
-```
+```text
 feat(albums): add password protection for client galleries
 
 Implements bcrypt-based password protection for albums with
