@@ -64,11 +64,11 @@ export class PhotoLightbox extends LitElement {
       left: 0;
       right: 0;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
       padding: 1rem 2rem;
       background: transparent;
-      color: white;
+      color: var(--color-text-primary);
       z-index: 10;
       height: 3rem;
       box-sizing: border-box;
@@ -81,7 +81,7 @@ export class PhotoLightbox extends LitElement {
     .close-button {
       background: none;
       border: none;
-      color: white;
+      color: var(--color-text-primary);
       font-size: 2rem;
       cursor: pointer;
       padding: 0;
@@ -111,7 +111,7 @@ export class PhotoLightbox extends LitElement {
       bottom: 0;
       background: transparent;
       border: none;
-      color: white;
+      color: var(--color-text-primary);
       font-size: 3rem;
       cursor: pointer;
       transition: background 0.2s;
@@ -154,17 +154,29 @@ export class PhotoLightbox extends LitElement {
       left: 0;
       right: 0;
       padding: 1rem 2rem;
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
-      color: white;
+      background: transparent;
+      color: var(--color-text-secondary);
       font-size: 9px;
       line-height: 1.4;
       box-sizing: border-box;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       white-space: nowrap;
       overflow-x: auto;
       z-index: 10;
       height: 4rem;
+    }
+
+    .exif-items {
+      display: flex;
+      align-items: center;
+    }
+
+    .photo-counter {
+      font-size: 9px;
+      margin-left: auto;
+      flex-shrink: 0;
     }
 
     .exif-item {
@@ -316,7 +328,6 @@ export class PhotoLightbox extends LitElement {
     return html`
       <div class="lightbox">
         <div class="lightbox-toolbar">
-          <div class="photo-counter">${this.currentIndex + 1} / ${this.photos.length}</div>
           <button class="close-button" @click=${() => this.close()} aria-label="Close">×</button>
         </div>
 
@@ -341,7 +352,7 @@ export class PhotoLightbox extends LitElement {
           </button>
         </div>
 
-        ${this.showExif ? this.renderExif(currentPhoto) : ''}
+        ${this.renderExif(currentPhoto)}
       </div>
     `;
   }
@@ -350,7 +361,7 @@ export class PhotoLightbox extends LitElement {
     const exif = photo.exif;
     const items = [];
 
-    if (exif) {
+    if (this.showExif && exif) {
       if (exif.camera) items.push(`${exif.camera}`);
       if (exif.lens) items.push(`${exif.lens}`);
       if (exif.iso) items.push(`ISO ${exif.iso}`);
@@ -363,7 +374,10 @@ export class PhotoLightbox extends LitElement {
 
     return html`
       <div class="exif-panel">
-        ${hasItems ? items.map((item) => html`<span class="exif-item">${item}</span>`) : ''}
+        <div class="exif-items">
+          ${hasItems ? items.map((item) => html`<span class="exif-item">${item}</span>`) : ''}
+        </div>
+        <div class="photo-counter">${this.currentIndex + 1} of ${this.photos.length}</div>
       </div>
     `;
   }
