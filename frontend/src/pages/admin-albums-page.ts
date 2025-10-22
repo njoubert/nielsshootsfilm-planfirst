@@ -192,8 +192,10 @@ export class AdminAlbumsPage extends LitElement {
       border-top: 1px solid var(--color-border, #eee);
     }
 
-    .album-actions button {
+    .album-actions button,
+    .album-actions a {
       flex: 1;
+      text-align: center;
     }
 
     .btn-small {
@@ -398,9 +400,7 @@ export class AdminAlbumsPage extends LitElement {
                       </div>
                       <div class="album-info">
                         <h3 class="album-title">${album.title}</h3>
-                        ${album.subtitle
-                          ? html`<p class="album-subtitle">${album.subtitle}</p>`
-                          : ''}
+                        <p class="album-subtitle">${album.subtitle || '\u00A0'}</p>
 
                         <div class="album-meta">
                           <span>📷 ${album.photos?.length || 0} photos</span>
