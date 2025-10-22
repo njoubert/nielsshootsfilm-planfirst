@@ -33,17 +33,19 @@ export class AdminDashboardPage extends LitElement {
 
     .page-title {
       font-family: 'Raleway', sans-serif;
-      font-size: 52px;
+      font-size: 32px;
       font-weight: 600;
       color: var(--color-text-primary, #333);
       margin: 0 0 0.5rem;
       text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .page-subtitle {
-      font-size: 1rem;
+      font-size: 0.875rem;
       color: var(--color-text-secondary, #666);
       margin: 0;
+      font-weight: 400;
     }
 
     .stats-grid {
@@ -55,22 +57,22 @@ export class AdminDashboardPage extends LitElement {
 
     .stat-card {
       background: var(--color-surface, white);
-      border-radius: 8px;
+      border-radius: 0;
       padding: 1.5rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--shadow-sm);
     }
 
     .stat-label {
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       color: var(--color-text-secondary, #666);
       margin: 0 0 0.5rem;
-      font-weight: 500;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.08em;
     }
 
     .stat-value {
-      font-size: 2rem;
+      font-size: 1.75rem;
       font-weight: 700;
       color: var(--color-text-primary, #333);
       margin: 0;
@@ -84,18 +86,19 @@ export class AdminDashboardPage extends LitElement {
 
     .quick-actions {
       background: var(--color-surface, white);
-      border-radius: 8px;
+      border-radius: 0;
       padding: 1.5rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--shadow-md);
     }
 
     .section-title {
       font-family: 'Raleway', sans-serif;
-      font-size: 1.125rem;
+      font-size: 1rem;
       font-weight: 600;
       color: var(--color-text-primary, #333);
       margin: 0 0 1rem;
       text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .actions-grid {
@@ -107,17 +110,19 @@ export class AdminDashboardPage extends LitElement {
     .action-card {
       padding: 1.5rem;
       border: 2px solid var(--color-border, #ddd);
-      border-radius: 8px;
+      border-radius: 0;
       text-decoration: none;
       color: var(--color-text-primary, #333);
       transition: all 0.2s;
       text-align: center;
+      box-shadow: var(--shadow-sm);
     }
 
     .action-card:hover {
       border-color: var(--color-primary, #007bff);
       background: var(--color-background, #f8f9fa);
       transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
     }
 
     .action-icon {
@@ -127,14 +132,15 @@ export class AdminDashboardPage extends LitElement {
 
     .action-title {
       font-family: 'Raleway', sans-serif;
-      font-size: 1rem;
+      font-size: 0.875rem;
       font-weight: 600;
       margin: 0 0 0.25rem;
       text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .action-description {
-      font-size: 0.813rem;
+      font-size: 0.75rem;
       color: var(--color-text-secondary, #666);
       margin: 0;
     }

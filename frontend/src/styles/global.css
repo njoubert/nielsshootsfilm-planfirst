@@ -20,10 +20,13 @@ h6 {
   font-family: 'Raleway', sans-serif;
 }
 
-/* Title styling - 52px, all caps */
+/* Public page splash title - 52px, all caps, dramatic */
+.splash-title,
 h1 {
   font-size: 52px;
+  font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* Subtitle styling - 14px, all caps */
@@ -31,4 +34,26 @@ h1 {
   font-family: 'Raleway', sans-serif;
   font-size: 14px;
   text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Common button base - sharp corners */
+button,
+.button {
+  border-radius: 0;
+  font-family: 'Raleway', sans-serif;
+}
+
+/* Common input base - sharp corners */
+input,
+textarea,
+select {
+  border-radius: 0;
+  font-family: 'Raleway', sans-serif;
+}
+
+/* Common card base - sharp corners */
+.card {
+  border-radius: 0;
+  box-shadow: var(--shadow-md);
 }

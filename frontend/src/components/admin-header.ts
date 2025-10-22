@@ -17,7 +17,7 @@ export class AdminHeader extends LitElement {
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
     }
 
     .header {
@@ -31,29 +31,38 @@ export class AdminHeader extends LitElement {
       margin-bottom: 0.5rem;
     }
 
+    .title-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
     .site-title {
-      font-size: 1.25rem;
-      font-weight: 600;
+      font-size: 16px;
+      font-weight: 300;
       color: var(--color-text-primary, #333);
       text-decoration: none;
       transition: color 0.2s;
       text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-family: 'Raleway', sans-serif;
     }
 
     .site-title:hover {
-      color: var(--color-primary, #007bff);
+      color: var(--color-text-secondary, #666);
     }
 
     .admin-badge {
       display: inline-block;
-      margin-left: 0.5rem;
-      padding: 0.125rem 0.5rem;
-      background: var(--color-primary, #007bff);
-      color: white;
-      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      background: var(--color-text-primary, #333);
+      color: var(--color-surface, white);
+      font-size: 0.625rem;
       font-weight: 500;
-      border-radius: 4px;
+      border-radius: 0;
       text-transform: uppercase;
+      letter-spacing: 0.1em;
+      line-height: 1;
     }
 
     .header-actions {
@@ -64,10 +73,10 @@ export class AdminHeader extends LitElement {
 
     .theme-toggle-btn {
       padding: 0.5rem;
-      background: var(--color-border, #ddd);
-      color: var(--color-text-primary, #333);
+      background: var(--color-background, #fafafa);
+      color: var(--color-text-secondary, #666);
       border: none;
-      border-radius: 4px;
+      border-radius: 0;
       font-size: 0.875rem;
       cursor: pointer;
       transition: all 0.2s;
@@ -81,7 +90,7 @@ export class AdminHeader extends LitElement {
     }
 
     .theme-toggle-btn:hover {
-      background: var(--color-border, #ccc);
+      background: var(--color-border, #eeeeee);
       transform: scale(1.05);
     }
 
@@ -91,10 +100,10 @@ export class AdminHeader extends LitElement {
 
     .logout-btn {
       padding: 0.5rem 1rem;
-      background: var(--color-border, #ddd);
-      color: var(--color-text-primary, #333);
+      background: var(--color-background, #fafafa);
+      color: var(--color-text-secondary, #666);
       border: none;
-      border-radius: 4px;
+      border-radius: 0;
       font-size: 0.875rem;
       font-weight: 500;
       cursor: pointer;
@@ -105,7 +114,8 @@ export class AdminHeader extends LitElement {
     }
 
     .logout-btn:hover {
-      background: var(--color-border, #ccc);
+      background: var(--color-border, #eeeeee);
+      color: var(--color-text-primary, #1a1a1a);
       transform: scale(1.05);
     }
 
@@ -116,7 +126,7 @@ export class AdminHeader extends LitElement {
     .nav-tabs {
       display: flex;
       gap: 0.5rem;
-      border-bottom: 2px solid var(--color-border, #ddd);
+      border-bottom: 1px solid var(--color-border, #eeeeee);
       margin: 0 -2rem;
       padding: 0 2rem;
     }
@@ -128,18 +138,18 @@ export class AdminHeader extends LitElement {
       font-size: 0.875rem;
       font-weight: 500;
       border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
+      margin-bottom: -1px;
       transition: all 0.2s;
     }
 
     .nav-tab:hover {
-      color: var(--color-text-primary, #333);
-      background: var(--color-background, #f8f9fa);
+      color: var(--color-text-primary, #1a1a1a);
+      background: var(--color-background, #fafafa);
     }
 
     .nav-tab.active {
-      color: var(--color-primary, #007bff);
-      border-bottom-color: var(--color-primary, #007bff);
+      color: var(--color-text-primary, #1a1a1a);
+      border-bottom-color: var(--color-text-primary, #1a1a1a);
     }
 
     @media (max-width: 768px) {
@@ -239,11 +249,9 @@ export class AdminHeader extends LitElement {
     return html`
       <div class="header">
         <div class="header-top">
-          <div>
-            <a href="/" class="site-title">
-              ${this.siteTitle}
-              <span class="admin-badge">Admin</span>
-            </a>
+          <div class="title-container">
+            <a href="/" class="site-title">${this.siteTitle}</a>
+            <span class="admin-badge">Admin</span>
           </div>
           <div class="header-actions">
             <button

@@ -27,18 +27,19 @@ export class AdminLoginPage extends LitElement {
 
     .login-card {
       background: var(--color-surface, white);
-      border-radius: 8px;
+      border-radius: 0;
       padding: 2rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--shadow-md);
     }
 
     h1 {
       font-family: 'Raleway', sans-serif;
       margin: 0 0 0.5rem;
-      font-size: 1.75rem;
+      font-size: 1.5rem;
       color: var(--color-text-primary, #333);
       text-align: center;
       text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .subtitle {
@@ -67,7 +68,7 @@ export class AdminLoginPage extends LitElement {
       width: 100%;
       padding: 0.75rem;
       border: 1px solid var(--color-border, #ddd);
-      border-radius: 4px;
+      border-radius: 0;
       font-size: 1rem;
       font-family: inherit;
       box-sizing: border-box;
@@ -85,11 +86,13 @@ export class AdminLoginPage extends LitElement {
       background: var(--color-primary, #007bff);
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: 0;
       font-size: 1rem;
       font-weight: 500;
       cursor: pointer;
       transition: background-color 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     button:hover:not(:disabled) {

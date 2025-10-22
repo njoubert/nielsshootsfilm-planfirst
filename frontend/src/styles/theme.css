@@ -9,10 +9,10 @@
   --color-background: #fafafa;
   --color-background-rgb: 250, 250, 250;
   --color-surface: #ffffff;
-  --color-border: #e0e0e0;
-  --color-border-rgb: 224, 224, 224;
+  --color-border: #eeeeee;
+  --color-border-rgb: 238, 238, 238;
 
-  --color-text-primary: #212121;
+  --color-text-primary: #1a1a1a;
   --color-text-secondary: #666666;
   --color-text-tertiary: #999999;
 
@@ -43,9 +43,9 @@
   --color-input-text: #212121;
 
   /* Shadow */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.06);
 }
 
 /* Dark mode colors */
@@ -143,10 +143,10 @@
   --color-background: #fafafa;
   --color-background-rgb: 250, 250, 250;
   --color-surface: #ffffff;
-  --color-border: #e0e0e0;
-  --color-border-rgb: 224, 224, 224;
+  --color-border: #eeeeee;
+  --color-border-rgb: 238, 238, 238;
 
-  --color-text-primary: #212121;
+  --color-text-primary: #1a1a1a;
   --color-text-secondary: #666666;
   --color-text-tertiary: #999999;
 
@@ -177,7 +177,7 @@
   --color-input-text: #212121;
 
   /* Shadow */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.06);
 }

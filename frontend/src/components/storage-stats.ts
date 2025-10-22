@@ -35,9 +35,9 @@ export class StorageStatsComponent extends LitElement {
 
     .stats-card {
       background: var(--color-surface, white);
-      border-radius: 8px;
+      border-radius: 0;
       padding: 1.5rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--shadow-md);
     }
 
     .stats-header {
@@ -48,9 +48,11 @@ export class StorageStatsComponent extends LitElement {
     }
 
     .stats-title {
-      font-size: 1.125rem;
+      font-size: 1rem;
       font-weight: 600;
       color: var(--color-text-primary, #333);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .refresh-btn {
@@ -58,10 +60,12 @@ export class StorageStatsComponent extends LitElement {
       background: var(--color-border, #ddd);
       color: var(--color-text-primary, #333);
       border: none;
-      border-radius: 4px;
+      border-radius: 0;
       font-size: 0.875rem;
       cursor: pointer;
       transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .refresh-btn:hover {
@@ -76,7 +80,7 @@ export class StorageStatsComponent extends LitElement {
     .warning-banner {
       padding: 1rem;
       margin-bottom: 1rem;
-      border-radius: 4px;
+      border-radius: 0;
       font-size: 0.875rem;
       line-height: 1.4;
     }
@@ -109,7 +113,7 @@ export class StorageStatsComponent extends LitElement {
       width: 100%;
       height: 24px;
       background: var(--color-border, #e0e0e0);
-      border-radius: 4px;
+      border-radius: 0;
       overflow: hidden;
       position: relative;
       display: flex;
@@ -151,7 +155,7 @@ export class StorageStatsComponent extends LitElement {
     .detail-item {
       padding: 1rem;
       background: var(--color-background, #f8f9fa);
-      border-radius: 4px;
+      border-radius: 0;
     }
 
     .detail-label {
@@ -186,7 +190,7 @@ export class StorageStatsComponent extends LitElement {
       background: #f8d7da;
       border: 1px solid #dc3545;
       color: #721c24;
-      border-radius: 4px;
+      border-radius: 0;
       font-size: 0.875rem;
     }
   `;

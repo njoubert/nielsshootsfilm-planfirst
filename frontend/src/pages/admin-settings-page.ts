@@ -37,34 +37,37 @@ export class AdminSettingsPage extends LitElement {
 
     .page-title {
       font-family: 'Raleway', sans-serif;
-      font-size: 52px;
+      font-size: 32px;
       font-weight: 600;
       color: var(--color-text-primary, #333);
       margin: 0 0 0.5rem;
       text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .page-subtitle {
-      font-size: 1rem;
+      font-size: 0.875rem;
       color: var(--color-text-secondary, #666);
       margin: 0;
     }
 
     .section {
       background: var(--color-surface, white);
-      border-radius: 8px;
+      border-radius: 0;
       padding: 1.5rem;
       margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm);
     }
 
     .section-title {
       font-family: 'Raleway', sans-serif;
-      font-size: 1.125rem;
+      font-size: 1rem;
       font-weight: 600;
       color: var(--color-text-primary, #333);
       margin: 0 0 1rem;
       padding-bottom: 0.75rem;
       text-transform: uppercase;
+      letter-spacing: 0.05em;
       border-bottom: 2px solid var(--color-border, #ddd);
     }
 
@@ -86,7 +89,7 @@ export class AdminSettingsPage extends LitElement {
       width: 100%;
       padding: 0.75rem;
       border: 1px solid var(--color-border, #ddd);
-      border-radius: 4px;
+      border-radius: 0;
       font-size: 0.875rem;
       font-family: inherit;
       box-sizing: border-box;
@@ -114,11 +117,13 @@ export class AdminSettingsPage extends LitElement {
     .btn {
       padding: 0.75rem 1.5rem;
       border: none;
-      border-radius: 4px;
+      border-radius: 0;
       font-size: 0.875rem;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .btn-primary {

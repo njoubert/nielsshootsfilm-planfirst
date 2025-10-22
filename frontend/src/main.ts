@@ -4,6 +4,7 @@
  */
 
 import './components/app-shell';
+import './styles/admin.css';
 import './styles/global.css';
 import './styles/theme.css';
 

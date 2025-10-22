@@ -34,23 +34,26 @@ export class AdminAlbumsPage extends LitElement {
 
     .page-title {
       font-family: 'Raleway', sans-serif;
-      font-size: 52px;
+      font-size: 32px;
       font-weight: 600;
       color: var(--color-text-primary, #333);
       margin: 0;
       text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .btn {
       padding: 0.5rem 1rem;
       border: none;
-      border-radius: 4px;
+      border-radius: 0;
       font-size: 0.875rem;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s;
       text-decoration: none;
       display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .btn-primary {
@@ -96,14 +99,14 @@ export class AdminAlbumsPage extends LitElement {
 
     .album-card {
       background: var(--color-surface, white);
-      border-radius: 8px;
+      border-radius: 0;
       overflow: hidden;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--shadow-sm);
       transition: box-shadow 0.2s;
     }
 
     .album-card:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: var(--shadow-md);
     }
 
     .album-thumbnail {
@@ -132,10 +135,11 @@ export class AdminAlbumsPage extends LitElement {
     .album-title {
       font-family: 'Raleway', sans-serif;
       margin: 0 0 0.25rem;
-      font-size: 1.125rem;
+      font-size: 1rem;
       font-weight: 600;
       color: var(--color-text-primary, #333);
       text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .album-subtitle {
@@ -161,9 +165,11 @@ export class AdminAlbumsPage extends LitElement {
     .visibility-badge {
       display: inline-block;
       padding: 0.25rem 0.5rem;
-      border-radius: 4px;
+      border-radius: 0;
       font-size: 0.75rem;
       font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .visibility-public {
@@ -232,17 +238,19 @@ export class AdminAlbumsPage extends LitElement {
 
     .modal {
       background: var(--color-surface, white);
-      border-radius: 8px;
+      border-radius: 0;
       padding: 2rem;
       max-width: 400px;
       width: 90%;
+      box-shadow: var(--shadow-lg);
     }
 
     .modal h2 {
       font-family: 'Raleway', sans-serif;
       margin: 0 0 1rem;
-      font-size: 1.25rem;
+      font-size: 1.125rem;
       text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .modal p {
@@ -412,7 +420,7 @@ export class AdminAlbumsPage extends LitElement {
                           <p class="album-subtitle">${album.subtitle || '\u00A0'}</p>
 
                           <div class="album-meta">
-                            <span>📷 ${album.photos?.length || 0} photos</span>
+                            <span>${album.photos?.length || 0} photos</span>
                             <span class="visibility-badge visibility-${album.visibility}">
                               ${this.formatVisibility(album.visibility)}
                             </span>

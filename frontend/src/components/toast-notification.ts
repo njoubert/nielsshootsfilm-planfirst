@@ -27,8 +27,8 @@ export class ToastNotification extends LitElement {
 
     .toast {
       padding: 1rem 1.5rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border-radius: 0;
+      box-shadow: var(--shadow-lg);
       display: flex;
       align-items: flex-start;
       gap: 1rem;

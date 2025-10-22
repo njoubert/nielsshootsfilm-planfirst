@@ -37,22 +37,25 @@ export class AdminAlbumEditorPage extends LitElement {
     .page-title {
       font-family: 'Raleway', sans-serif;
       margin: 0;
-      font-size: 52px;
+      font-size: 32px;
       font-weight: 600;
       color: var(--color-text-primary, #333);
       text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .btn {
       padding: 0.5rem 1rem;
       border: none;
-      border-radius: 4px;
+      border-radius: 0;
       font-size: 0.875rem;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s;
       text-decoration: none;
       display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .btn-primary {
@@ -101,17 +104,19 @@ export class AdminAlbumEditorPage extends LitElement {
 
     .form-section {
       background: var(--color-surface, white);
-      border-radius: 8px;
+      border-radius: 0;
       padding: 1.5rem;
       margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm);
     }
 
     .form-section h2 {
       font-family: 'Raleway', sans-serif;
       margin: 0 0 1rem;
-      font-size: 1.125rem;
+      font-size: 1rem;
       color: var(--color-text-primary, #333);
       text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .form-group {
@@ -132,7 +137,7 @@ export class AdminAlbumEditorPage extends LitElement {
       width: 100%;
       padding: 0.5rem;
       border: 1px solid var(--color-border, #ddd);
-      border-radius: 4px;
+      border-radius: 0;
       font-size: 0.875rem;
       font-family: inherit;
       box-sizing: border-box;
@@ -166,7 +171,7 @@ export class AdminAlbumEditorPage extends LitElement {
 
     .upload-area {
       border: 2px dashed var(--color-border, #ddd);
-      border-radius: 4px;
+      border-radius: 0;
       padding: 2rem;
       text-align: center;
       cursor: pointer;
@@ -199,7 +204,7 @@ export class AdminAlbumEditorPage extends LitElement {
       margin-top: 1rem;
       padding: 0.75rem;
       background: var(--color-info-bg, #e7f3ff);
-      border-radius: 4px;
+      border-radius: 0;
       color: var(--color-info-text, #004085);
     }
 
@@ -208,7 +213,7 @@ export class AdminAlbumEditorPage extends LitElement {
       padding: 0.75rem;
       background: var(--color-danger-bg, #f8d7da);
       border: 1px solid var(--color-danger, #f5c6cb);
-      border-radius: 4px;
+      border-radius: 0;
       color: var(--color-danger-text, #721c24);
       font-size: 0.875rem;
     }
@@ -291,9 +296,11 @@ export class AdminAlbumEditorPage extends LitElement {
       background: rgba(0, 123, 255, 0.9);
       color: white;
       padding: 0.25rem 0.5rem;
-      border-radius: 4px;
+      border-radius: 0;
       font-size: 0.625rem;
       font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
   `;
 
