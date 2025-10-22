@@ -26,6 +26,12 @@ export class PhotoLightbox extends LitElement {
     // Reset navigation state when opening
     if (value && !oldValue) {
       this.hasNavigated = false;
+      this.dispatchPhotoChangeEvent();
+    }
+
+    // Dispatch close event
+    if (!value && oldValue) {
+      this.dispatchEvent(new CustomEvent('lightbox-close', { bubbles: true }));
     }
 
     // Handle scroll and zoom when open state changes
@@ -306,6 +312,18 @@ export class PhotoLightbox extends LitElement {
     }
   };
 
+  private dispatchPhotoChangeEvent() {
+    if (this.open && this.photos[this.currentIndex]) {
+      const photoId = this.photos[this.currentIndex].id;
+      this.dispatchEvent(
+        new CustomEvent('photo-change', {
+          bubbles: true,
+          detail: { photoId, index: this.currentIndex },
+        })
+      );
+    }
+  }
+
   next() {
     this.hasNavigated = true;
     if (this.currentIndex < this.photos.length - 1) {
@@ -313,6 +331,7 @@ export class PhotoLightbox extends LitElement {
     } else {
       this.currentIndex = 0; // Wrap to first image
     }
+    this.dispatchPhotoChangeEvent();
   }
 
   prev() {
@@ -322,6 +341,7 @@ export class PhotoLightbox extends LitElement {
     } else {
       this.currentIndex = this.photos.length - 1; // Wrap to last image
     }
+    this.dispatchPhotoChangeEvent();
   }
 
   close() {

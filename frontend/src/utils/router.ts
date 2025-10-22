@@ -21,7 +21,9 @@ export class Router {
   constructor(routes: Route[]) {
     this.routes = routes;
     this.setupListeners();
-    void this.navigate(window.location.pathname);
+    // Initialize with current path without modifying URL (preserves query params)
+    this.currentPath = window.location.pathname;
+    this.notifyListeners();
   }
 
   /**
