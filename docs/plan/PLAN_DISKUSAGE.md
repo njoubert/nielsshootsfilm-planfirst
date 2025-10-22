@@ -29,7 +29,7 @@
 - The front end should refuse to upload images if the available disk space is less than the maximum disk usage allowed in the settings.
 - The back-end must use the same configuration settings to check that it will reject uploads if the upload will result in less disk space available than allowed by the maximum disk usage percentage. The back-end must also always reserve 5% of the disk to remain free regardless of the setting.
 
-## Phase 3 Configurable limits for image upload
+## Phase 3 Configurable limits for image upload DONE
 
 - Have a setting that configures the largest individual image size you can upload. Set the default to 50MBytes.
 - Have the backend and the frontend both check the image size.

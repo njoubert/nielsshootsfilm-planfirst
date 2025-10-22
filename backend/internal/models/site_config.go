@@ -117,6 +117,7 @@ type FeaturesConfig struct {
 // StorageConfig contains storage and disk usage settings.
 type StorageConfig struct {
 	MaxDiskUsagePercent int `json:"max_disk_usage_percent"` // Maximum disk usage percentage (default 80)
+	MaxImageSizeMB      int `json:"max_image_size_mb"`      // Maximum individual image size in MB (default 50)
 }
 
 // Validate checks if the site config has required fields.

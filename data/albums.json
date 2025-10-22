@@ -505,6 +505,36 @@
           "uploaded_at": "2025-10-21T08:23:08.552632Z"
         }
       ]
+    },
+    {
+      "id": "e64c3b38-f0c6-4044-8408-374635242c6b",
+      "slug": "test",
+      "title": "Test",
+      "visibility": "public",
+      "allow_downloads": true,
+      "order": 0,
+      "created_at": "2025-10-22T05:15:27.513651Z",
+      "updated_at": "2025-10-22T05:15:33.631802Z",
+      "photos": [
+        {
+          "id": "7ba3f0b7-b37f-405e-8887-158632937ddb",
+          "filename_original": "A7R08260-positive.jpg",
+          "url_original": "/uploads/originals/d744a87d-dd0f-41b0-abcf-e38eecab8ddc.jpg",
+          "url_display": "/uploads/display/d744a87d-dd0f-41b0-abcf-e38eecab8ddc_display.webp",
+          "url_thumbnail": "/uploads/thumbnails/d744a87d-dd0f-41b0-abcf-e38eecab8ddc_thumbnail.webp",
+          "order": 1,
+          "width": 4473,
+          "height": 2982,
+          "file_size_original": 5647510,
+          "file_size_display": 998490,
+          "file_size_thumbnail": 54794,
+          "exif": {
+            "camera": "Fuji Fuji GW690III",
+            "date_taken": "2024-11-23T13:14:12-08:00"
+          },
+          "uploaded_at": "2025-10-22T05:15:33.63168Z"
+        }
+      ]
     }
   ]
 }

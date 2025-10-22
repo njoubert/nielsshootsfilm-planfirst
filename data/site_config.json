@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2025-10-21T16:26:34.688811Z",
+  "last_updated": "2025-10-22T05:16:05.774746Z",
   "site": {
     "title": "Niels Shoots Film",
     "tagline": "Film Photography Portfolio",
@@ -49,6 +49,7 @@
   },
   "features": {},
   "storage": {
-    "max_disk_usage_percent": 80
+    "max_disk_usage_percent": 80,
+    "max_image_size_mb": 50
   }
 }

@@ -129,9 +129,22 @@ func (s *ImageService) checkDiskSpace(estimatedSize int64) error {
 
 // ProcessUpload processes an uploaded image file using libvips.
 func (s *ImageService) ProcessUpload(fileHeader *multipart.FileHeader) (*models.Photo, error) {
-	// Validate file size
+	// Validate file size against configured max (default 50MB)
+	maxSizeMB := 50
+	if s.configService != nil {
+		config, err := s.configService.Get()
+		if err == nil && config.Storage.MaxImageSizeMB > 0 {
+			maxSizeMB = config.Storage.MaxImageSizeMB
+		}
+	}
+	maxSizeBytes := int64(maxSizeMB) * 1024 * 1024
+	if fileHeader.Size > maxSizeBytes {
+		return nil, fmt.Errorf("file size %s exceeds maximum allowed %s (%dMB)", formatBytes(fileHeader.Size), formatBytes(maxSizeBytes), maxSizeMB)
+	}
+
+	// Also check hard limit for safety
 	if fileHeader.Size > maxFileSize {
-		return nil, fmt.Errorf("file size %s exceeds maximum %s", formatBytes(fileHeader.Size), formatBytes(maxFileSize))
+		return nil, fmt.Errorf("file size %s exceeds absolute maximum %s", formatBytes(fileHeader.Size), formatBytes(maxFileSize))
 	}
 
 	// Check disk space before processing

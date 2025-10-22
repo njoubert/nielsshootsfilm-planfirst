@@ -49,6 +49,11 @@ func (h *ConfigHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if config.Storage.MaxImageSizeMB < 1 || config.Storage.MaxImageSizeMB > 100 {
+		http.Error(w, "max_image_size_mb must be between 1 and 100", http.StatusBadRequest)
+		return
+	}
+
 	if err := h.configService.Update(&config); err != nil {
 		h.logger.Error("failed to update config", slog.String("error", err.Error()))
 		http.Error(w, "Internal server error", http.StatusInternalServerError)

@@ -493,4 +493,196 @@ describe('AdminAlbumEditorPage', () => {
       expect(saveButton.disabled).to.be.true;
     });
   });
+
+  describe('File Size Validation', () => {
+    beforeEach(() => {
+      fetchAlbumByIdStub.resolves(mockAlbum);
+    });
+
+    it('should reject files larger than configured max size', async () => {
+      const el = await fixture<AdminAlbumEditorPage>(
+        html`<admin-album-editor-page albumId="album-1"></admin-album-editor-page>`
+      );
+      await el.updateComplete;
+
+      // Set max size to 50MB in site config
+      el['siteConfig'] = {
+        version: '1.0',
+        last_updated: new Date().toISOString(),
+        site: { title: 'Test', language: 'en', timezone: 'UTC' },
+        owner: {},
+        social: {},
+        branding: {
+          primary_color: '#000',
+          secondary_color: '#fff',
+          accent_color: '#f00',
+          theme: {
+            mode: 'light',
+            light: {
+              background: '#fff',
+              surface: '#f5f5f5',
+              text_primary: '#000',
+              text_secondary: '#666',
+              border: '#ccc',
+            },
+            dark: {
+              background: '#000',
+              surface: '#111',
+              text_primary: '#fff',
+              text_secondary: '#999',
+              border: '#333',
+            },
+          },
+        },
+        portfolio: { show_exif_data: false, enable_lightbox: true },
+        navigation: { show_home: true, show_albums: true, show_about: false, show_contact: false },
+        features: {},
+        storage: { max_disk_usage_percent: 80, max_image_size_mb: 50 },
+      };
+
+      // Create a mock file larger than 50MB
+      const largeFile = new File(['x'.repeat(51 * 1024 * 1024)], 'large.jpg', {
+        type: 'image/jpeg',
+      });
+
+      // Try to upload
+      await el['uploadFiles']([largeFile]);
+      await el.updateComplete;
+
+      // Should show error
+      expect(el['error']).to.include('exceed');
+      expect(el['error']).to.include('50MB');
+      expect(uploadPhotosStub.called).to.be.false;
+    });
+
+    it('should accept files smaller than configured max size', async () => {
+      uploadPhotosStub.resolves({
+        uploaded: [{ id: 'photo-2', filename: 'small.jpg' }],
+        errors: [],
+      });
+      fetchAlbumByIdStub.resolves(mockAlbum); // For reload after upload
+
+      const el = await fixture<AdminAlbumEditorPage>(
+        html`<admin-album-editor-page albumId="album-1"></admin-album-editor-page>`
+      );
+      await el.updateComplete;
+
+      // Set max size to 50MB
+      el['siteConfig'] = {
+        version: '1.0',
+        last_updated: new Date().toISOString(),
+        site: { title: 'Test', language: 'en', timezone: 'UTC' },
+        owner: {},
+        social: {},
+        branding: {
+          primary_color: '#000',
+          secondary_color: '#fff',
+          accent_color: '#f00',
+          theme: {
+            mode: 'light',
+            light: {
+              background: '#fff',
+              surface: '#f5f5f5',
+              text_primary: '#000',
+              text_secondary: '#666',
+              border: '#ccc',
+            },
+            dark: {
+              background: '#000',
+              surface: '#111',
+              text_primary: '#fff',
+              text_secondary: '#999',
+              border: '#333',
+            },
+          },
+        },
+        portfolio: { show_exif_data: false, enable_lightbox: true },
+        navigation: { show_home: true, show_albums: true, show_about: false, show_contact: false },
+        features: {},
+        storage: { max_disk_usage_percent: 80, max_image_size_mb: 50 },
+      };
+
+      // Create a mock file smaller than 50MB (use much smaller for test)
+      const smallFile = new File(['x'.repeat(1024)], 'small.jpg', {
+        type: 'image/jpeg',
+      });
+
+      // Try to upload
+      await el['uploadFiles']([smallFile]);
+      await el.updateComplete;
+
+      // Should not show size error and should call upload
+      expect(el['error']).to.not.include('exceed');
+      expect(uploadPhotosStub.called).to.be.true;
+    });
+
+    it('should use default 50MB if config not loaded', async () => {
+      const el = await fixture<AdminAlbumEditorPage>(
+        html`<admin-album-editor-page albumId="album-1"></admin-album-editor-page>`
+      );
+      await el.updateComplete;
+
+      // Don't set siteConfig, should use default 50MB
+      el['siteConfig'] = null;
+
+      // Create a file larger than 50MB
+      const largeFile = new File(['x'.repeat(51 * 1024 * 1024)], 'large.jpg', {
+        type: 'image/jpeg',
+      });
+
+      await el['uploadFiles']([largeFile]);
+      await el.updateComplete;
+
+      // Should still enforce 50MB default
+      expect(el['error']).to.include('exceed');
+      expect(el['error']).to.include('50MB');
+    });
+
+    it('should display configured max size in upload box', async () => {
+      const el = await fixture<AdminAlbumEditorPage>(
+        html`<admin-album-editor-page albumId="album-1"></admin-album-editor-page>`
+      );
+      await el.updateComplete;
+
+      // Set max size to 75MB
+      el['siteConfig'] = {
+        version: '1.0',
+        last_updated: new Date().toISOString(),
+        site: { title: 'Test', language: 'en', timezone: 'UTC' },
+        owner: {},
+        social: {},
+        branding: {
+          primary_color: '#000',
+          secondary_color: '#fff',
+          accent_color: '#f00',
+          theme: {
+            mode: 'light',
+            light: {
+              background: '#fff',
+              surface: '#f5f5f5',
+              text_primary: '#000',
+              text_secondary: '#666',
+              border: '#ccc',
+            },
+            dark: {
+              background: '#000',
+              surface: '#111',
+              text_primary: '#fff',
+              text_secondary: '#999',
+              border: '#333',
+            },
+          },
+        },
+        portfolio: { show_exif_data: false, enable_lightbox: true },
+        navigation: { show_home: true, show_albums: true, show_about: false, show_contact: false },
+        features: {},
+        storage: { max_disk_usage_percent: 80, max_image_size_mb: 75 },
+      };
+      await el.updateComplete;
+
+      const uploadArea = el.shadowRoot?.querySelector('.upload-area');
+      const text = uploadArea?.textContent || '';
+      expect(text).to.include('75MB');
+    });
+  });
 });

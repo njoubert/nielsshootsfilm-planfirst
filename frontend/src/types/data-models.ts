@@ -170,4 +170,5 @@ export interface SiteConfig {
 
 export interface StorageConfig {
   max_disk_usage_percent: number;
+  max_image_size_mb: number;
 }

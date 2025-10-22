@@ -692,6 +692,27 @@ export class AdminSettingsPage extends LitElement {
               </p>
             </div>
 
+            <div class="form-group">
+              <label for="storage-max-image-size">Maximum Image Size (MB)</label>
+              <input
+                type="number"
+                id="storage-max-image-size"
+                min="1"
+                max="100"
+                .value=${this.config?.storage?.max_image_size_mb?.toString() || '50'}
+                @input=${(e: Event) => {
+                  const value = parseInt((e.target as HTMLInputElement).value, 10);
+                  if (value >= 1 && value <= 100) {
+                    this.updateConfigField('storage.max_image_size_mb', value);
+                  }
+                }}
+                required
+              />
+              <p class="help-text">
+                Maximum allowed size for individual image uploads (1-100MB). Default is 50MB.
+              </p>
+            </div>
+
             <button type="submit" class="btn btn-primary" ?disabled=${this.saving}>
               ${this.saving ? 'Saving...' : 'Save Storage Settings'}
             </button>

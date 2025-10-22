@@ -125,6 +125,7 @@ describe('AdminDashboardPage', () => {
       features: {},
       storage: {
         max_disk_usage_percent: 80,
+        max_image_size_mb: 50,
       },
     };
 

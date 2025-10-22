@@ -490,6 +490,19 @@ export class AdminAlbumEditorPage extends LitElement {
       return;
     }
 
+    // Validate file sizes before uploading
+    const maxSizeMB = this.siteConfig?.storage?.max_image_size_mb || 50;
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+    const oversizedFiles = files.filter((file) => file.size > maxSizeBytes);
+
+    if (oversizedFiles.length > 0) {
+      const fileList = oversizedFiles
+        .map((f) => `${f.name} (${this.formatBytes(f.size)})`)
+        .join(', ');
+      this.error = `${oversizedFiles.length} file(s) exceed the maximum size of ${maxSizeMB}MB: ${fileList}`;
+      return;
+    }
+
     this.uploading = true;
     this.error = '';
     this.success = '';
@@ -825,7 +838,7 @@ export class AdminAlbumEditorPage extends LitElement {
                   >
                     <p>Drag photos here or click to browse</p>
                     <p style="font-size: 0.875rem; color: var(--color-text-secondary, #666);">
-                      Up to 50MB each
+                      Up to ${this.siteConfig?.storage?.max_image_size_mb || 50}MB each
                       ${this.availableSpace !== null
                         ? html` • ${this.formatBytes(this.availableSpace)} available`
                         : ''}
