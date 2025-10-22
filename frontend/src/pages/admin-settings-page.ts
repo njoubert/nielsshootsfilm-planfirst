@@ -6,6 +6,7 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '../components/admin-header';
+import '../components/toast-notification';
 import type { Album, SiteConfig } from '../types/data-models';
 import {
   changePassword,
@@ -132,24 +133,6 @@ export class AdminSettingsPage extends LitElement {
     .btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
-    }
-
-    .success-message {
-      padding: 0.75rem;
-      background: var(--color-success-bg, #d4edda);
-      border: 1px solid var(--color-success, #c3e6cb);
-      border-radius: 4px;
-      color: var(--color-success-text, #155724);
-      margin-bottom: 1rem;
-    }
-
-    .error-message {
-      padding: 0.75rem;
-      background: var(--color-danger-bg, #f8d7da);
-      border: 1px solid var(--color-danger, #f5c6cb);
-      border-radius: 4px;
-      color: var(--color-danger-text, #721c24);
-      margin-bottom: 1rem;
     }
 
     .help-text {
@@ -350,9 +333,6 @@ export class AdminSettingsPage extends LitElement {
           <h1 class="page-title">Settings</h1>
           <p class="page-subtitle">Configure your photography portfolio</p>
         </div>
-
-        ${this.error ? html`<div class="error-message">${this.error}</div>` : ''}
-        ${this.success ? html`<div class="success-message">${this.success}</div>` : ''}
 
         <!-- General Site Settings -->
         <form @submit=${(e: Event) => this.handleSaveGeneral(e)}>
@@ -724,13 +704,6 @@ export class AdminSettingsPage extends LitElement {
           <div class="section">
             <h2 class="section-title">Change Password</h2>
 
-            ${this.passwordError
-              ? html`<div class="error-message">${this.passwordError}</div>`
-              : ''}
-            ${this.passwordSuccess
-              ? html`<div class="success-message">${this.passwordSuccess}</div>`
-              : ''}
-
             <div class="form-group">
               <label for="old-password">Current Password</label>
               <input
@@ -775,6 +748,42 @@ export class AdminSettingsPage extends LitElement {
           </div>
         </form>
       </div>
+
+      <toast-notification
+        .message=${this.success}
+        .type=${'success'}
+        .visible=${!!this.success}
+        @toast-close=${() => {
+          this.success = '';
+        }}
+      ></toast-notification>
+
+      <toast-notification
+        .message=${this.error}
+        .type=${'error'}
+        .visible=${!!this.error}
+        @toast-close=${() => {
+          this.error = '';
+        }}
+      ></toast-notification>
+
+      <toast-notification
+        .message=${this.passwordSuccess}
+        .type=${'success'}
+        .visible=${!!this.passwordSuccess}
+        @toast-close=${() => {
+          this.passwordSuccess = '';
+        }}
+      ></toast-notification>
+
+      <toast-notification
+        .message=${this.passwordError}
+        .type=${'error'}
+        .visible=${!!this.passwordError}
+        @toast-close=${() => {
+          this.passwordError = '';
+        }}
+      ></toast-notification>
     `;
   }
 }

@@ -5,6 +5,7 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import '../components/admin-header';
+import '../components/toast-notification';
 import type { Album, SiteConfig } from '../types/data-models';
 import {
   createAlbum,
@@ -202,6 +203,16 @@ export class AdminAlbumEditorPage extends LitElement {
       color: var(--color-info-text, #004085);
     }
 
+    .upload-warning {
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      background: var(--color-danger-bg, #f8d7da);
+      border: 1px solid var(--color-danger, #f5c6cb);
+      border-radius: 4px;
+      color: var(--color-danger-text, #721c24);
+      font-size: 0.875rem;
+    }
+
     .photos-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -283,28 +294,6 @@ export class AdminAlbumEditorPage extends LitElement {
       border-radius: 4px;
       font-size: 0.625rem;
       font-weight: 600;
-    }
-
-    .success-message {
-      padding: 0.75rem;
-      background: var(--color-success-bg, #d4edda);
-      border: 1px solid var(--color-success, #c3e6cb);
-      border-radius: 4px;
-      color: var(--color-success-text, #155724);
-      margin-bottom: 1rem;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .error-message {
-      padding: 0.75rem;
-      background: var(--color-danger-bg, #f8d7da);
-      border: 1px solid var(--color-danger, #f5c6cb);
-      border-radius: 4px;
-      color: var(--color-danger-text, #721c24);
-      margin-bottom: 1rem;
-      white-space: pre-wrap;
-      word-break: break-word;
     }
   `;
 
@@ -708,9 +697,6 @@ export class AdminAlbumEditorPage extends LitElement {
       </div>
 
       <div class="container">
-        ${this.error ? html`<div class="error-message">${this.error}</div>` : ''}
-        ${this.success ? html`<div class="success-message">${this.success}</div>` : ''}
-
         <form @submit=${(e: Event) => this.handleSubmit(e)}>
           <div class="form-section">
             <h2>Album Details</h2>
@@ -805,7 +791,7 @@ export class AdminAlbumEditorPage extends LitElement {
                 <h2>Photos (${this.album.photos?.length || 0})</h2>
 
                 ${this.getUploadDisabledMessage()
-                  ? html`<div class="error-message">${this.getUploadDisabledMessage()}</div>`
+                  ? html`<div class="upload-warning">${this.getUploadDisabledMessage()}</div>`
                   : ''}
 
                 <div class="photo-upload">
@@ -907,6 +893,24 @@ export class AdminAlbumEditorPage extends LitElement {
             `
           : ''}
       </div>
+
+      <toast-notification
+        .message=${this.success}
+        .type=${'success'}
+        .visible=${!!this.success}
+        @toast-close=${() => {
+          this.success = '';
+        }}
+      ></toast-notification>
+
+      <toast-notification
+        .message=${this.error}
+        .type=${'error'}
+        .visible=${!!this.error}
+        @toast-close=${() => {
+          this.error = '';
+        }}
+      ></toast-notification>
     `;
   }
 }
