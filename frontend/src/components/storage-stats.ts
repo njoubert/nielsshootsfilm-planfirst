@@ -35,9 +35,9 @@ export class StorageStatsComponent extends LitElement {
 
     .stats-card {
       background: var(--color-surface, white);
-      border: 1px solid var(--color-border, #ddd);
       border-radius: 8px;
       padding: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .stats-header {
@@ -312,7 +312,7 @@ export class StorageStatsComponent extends LitElement {
     return html`
       <div class="stats-card">
         <div class="stats-header">
-          <h2 class="stats-title">Storage Usage</h2>
+          <h2 class="stats-title">STORAGE USAGE</h2>
           <button class="refresh-btn" @click=${() => this.fetchStats()}>Refresh</button>
         </div>
 
@@ -326,7 +326,7 @@ export class StorageStatsComponent extends LitElement {
 
         <div class="usage-bar-container">
           <div class="usage-bar-label">
-            <span>Disk Usage</span>
+            <span>DISK USAGE</span>
             <span><strong>${this.stats.usage_percent.toFixed(1)}%</strong></span>
           </div>
           <div class="usage-bar">
@@ -344,25 +344,25 @@ export class StorageStatsComponent extends LitElement {
 
         <div class="storage-details">
           <div class="detail-item">
-            <div class="detail-label">Total Used</div>
+            <div class="detail-label">TOTAL USED</div>
             <div class="detail-value">${this.formatBytes(this.stats.used_bytes)}</div>
             <div class="detail-subtext">Uploads directory</div>
           </div>
 
           <div class="detail-item">
-            <div class="detail-label">Usable Space</div>
+            <div class="detail-label">USABLE SPACE</div>
             <div class="detail-value">${this.formatBytes(this.stats.usable_bytes)}</div>
             <div class="detail-subtext">Available for uploads</div>
           </div>
 
           <div class="detail-item">
-            <div class="detail-label">Reserved Space</div>
+            <div class="detail-label">RESERVED SPACE</div>
             <div class="detail-value">${this.formatBytes(this.stats.reserved_bytes)}</div>
             <div class="detail-subtext">${this.stats.reserved_percent}% kept in reserve</div>
           </div>
 
           <div class="detail-item">
-            <div class="detail-label">Originals</div>
+            <div class="detail-label">ORIGINALS</div>
             <div class="detail-value">
               ${this.formatBytes(this.stats.breakdown.originals_bytes)}
             </div>
@@ -370,13 +370,13 @@ export class StorageStatsComponent extends LitElement {
           </div>
 
           <div class="detail-item">
-            <div class="detail-label">Display</div>
+            <div class="detail-label">DISPLAY</div>
             <div class="detail-value">${this.formatBytes(this.stats.breakdown.display_bytes)}</div>
             <div class="detail-subtext">Web-optimized versions</div>
           </div>
 
           <div class="detail-item">
-            <div class="detail-label">Thumbnails</div>
+            <div class="detail-label">THUMBNAILS</div>
             <div class="detail-value">
               ${this.formatBytes(this.stats.breakdown.thumbnails_bytes)}
             </div>

@@ -4,8 +4,9 @@
  */
 
 import { LitElement, css, html } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { logout } from '../utils/admin-api';
+import { themeManager } from '../utils/theme-manager';
 
 @customElement('admin-header')
 export class AdminHeader extends LitElement {
@@ -13,6 +14,10 @@ export class AdminHeader extends LitElement {
     :host {
       display: block;
       background: var(--color-surface, white);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .header {
@@ -32,6 +37,7 @@ export class AdminHeader extends LitElement {
       color: var(--color-text-primary, #333);
       text-decoration: none;
       transition: color 0.2s;
+      text-transform: uppercase;
     }
 
     .site-title:hover {
@@ -50,6 +56,39 @@ export class AdminHeader extends LitElement {
       text-transform: uppercase;
     }
 
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .theme-toggle-btn {
+      padding: 0.5rem;
+      background: var(--color-border, #ddd);
+      color: var(--color-text-primary, #333);
+      border: none;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: grayscale(100%);
+      width: 2rem;
+      height: 2rem;
+      flex-shrink: 0;
+    }
+
+    .theme-toggle-btn:hover {
+      background: var(--color-border, #ccc);
+      transform: scale(1.05);
+    }
+
+    .theme-toggle-btn:active {
+      transform: scale(0.95);
+    }
+
     .logout-btn {
       padding: 0.5rem 1rem;
       background: var(--color-border, #ddd);
@@ -59,11 +98,19 @@ export class AdminHeader extends LitElement {
       font-size: 0.875rem;
       font-weight: 500;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: all 0.2s;
+      height: 2rem;
+      display: flex;
+      align-items: center;
     }
 
     .logout-btn:hover {
       background: var(--color-border, #ccc);
+      transform: scale(1.05);
+    }
+
+    .logout-btn:active {
+      transform: scale(0.95);
     }
 
     .nav-tabs {
@@ -120,6 +167,65 @@ export class AdminHeader extends LitElement {
   @property({ type: String })
   currentPage = '';
 
+  @state()
+  private currentTheme: 'light' | 'dark' = 'light';
+
+  @state()
+  private themeMode: 'system' | 'light' | 'dark' = 'system';
+
+  connectedCallback() {
+    super.connectedCallback();
+    // Subscribe to theme changes from the theme manager
+    this.currentTheme = themeManager.getCurrentTheme();
+    this.themeMode = themeManager.getMode();
+
+    themeManager.subscribe((theme) => {
+      this.currentTheme = theme;
+      this.themeMode = themeManager.getMode();
+    });
+  }
+
+  private toggleTheme() {
+    // Toggle through: system -> light -> dark -> system
+    const currentMode = themeManager.getMode();
+    console.log('Current theme mode:', currentMode, 'Current theme:', this.currentTheme);
+
+    if (currentMode === 'system') {
+      // Override system with opposite of current theme
+      const newMode = this.currentTheme === 'light' ? 'dark' : 'light';
+      console.log('Setting mode from system to:', newMode);
+      themeManager.setMode(newMode);
+    } else if (currentMode === 'light') {
+      console.log('Setting mode from light to dark');
+      themeManager.setMode('dark');
+    } else {
+      // dark -> back to system
+      console.log('Setting mode from dark to system');
+      themeManager.setMode('system');
+    }
+
+    console.log(
+      'After toggle - mode:',
+      themeManager.getMode(),
+      'theme:',
+      themeManager.getCurrentTheme()
+    );
+  }
+
+  private getThemeIcon(): string {
+    if (this.themeMode === 'system') {
+      return '🌓'; // System (auto)
+    }
+    return this.currentTheme === 'dark' ? '☀️' : '🌙';
+  }
+
+  private getThemeTooltip(): string {
+    if (this.themeMode === 'system') {
+      return `System theme (currently ${this.currentTheme})`;
+    }
+    return `Switch to ${this.currentTheme === 'light' ? 'dark' : 'light'} mode`;
+  }
+
   private async handleLogout() {
     try {
       await logout();
@@ -139,7 +245,16 @@ export class AdminHeader extends LitElement {
               <span class="admin-badge">Admin</span>
             </a>
           </div>
-          <button class="logout-btn" @click=${() => this.handleLogout()}>Logout</button>
+          <div class="header-actions">
+            <button
+              class="theme-toggle-btn"
+              @click=${() => this.toggleTheme()}
+              title="${this.getThemeTooltip()}"
+            >
+              ${this.getThemeIcon()}
+            </button>
+            <button class="logout-btn" @click=${() => this.handleLogout()}>Logout</button>
+          </div>
         </div>
 
         <nav class="nav-tabs">

@@ -276,8 +276,6 @@ export class AdminDashboardPage extends LitElement {
         </div>
       </div>
 
-      <storage-stats style="margin-bottom: 2rem;"></storage-stats>
-
       <div class="quick-actions">
         <h2 class="section-title">Quick Actions</h2>
         <div class="actions-grid">
@@ -306,10 +304,11 @@ export class AdminDashboardPage extends LitElement {
           </a>
         </div>
       </div>
+
+      <storage-stats style="margin-top: 2rem;"></storage-stats>
     `;
   }
 }
-
 declare global {
   interface HTMLElementTagNameMap {
     'admin-dashboard-page': AdminDashboardPage;
