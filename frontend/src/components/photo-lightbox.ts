@@ -90,10 +90,15 @@ export class PhotoLightbox extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
+      opacity: 0.6;
+      transition:
+        color 0.2s,
+        transform 0.2s;
     }
 
     .close-button:hover {
-      opacity: 0.7;
+      opacity: 1;
+      transform: scale(1.2);
     }
 
     .photo-container {
@@ -114,16 +119,20 @@ export class PhotoLightbox extends LitElement {
       color: var(--color-text-primary);
       font-size: 3rem;
       cursor: pointer;
-      transition: background 0.2s;
+      transition:
+        color 0.2s,
+        transform 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
       width: 60px;
       z-index: 5;
+      opacity: 0.6;
     }
 
     .nav-button:hover {
-      background: rgba(0, 0, 0, 0.5);
+      opacity: 1;
+      transform: scale(1.2);
     }
 
     .nav-button:disabled {
