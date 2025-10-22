@@ -416,11 +416,7 @@ export class AdminAlbumsPage extends LitElement {
                           >
                             Edit
                           </a>
-                          <a
-                            href="/albums/${album.slug}"
-                            class="btn btn-secondary btn-small"
-                            target="_blank"
-                          >
+                          <a href="/albums/${album.slug}" class="btn btn-secondary btn-small">
                             View
                           </a>
                           <button
