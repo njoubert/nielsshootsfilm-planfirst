@@ -5,10 +5,13 @@
 #   ./dev.sh                    - Stop then start both servers
 #   ./dev.sh start              - Start both servers
 #   ./dev.sh stop               - Stop both servers
+#   ./dev.sh status             - Check status of both servers
 #   ./dev.sh frontend start     - Start only frontend
 #   ./dev.sh frontend stop      - Stop only frontend
+#   ./dev.sh frontend status    - Check frontend status
 #   ./dev.sh backend start      - Start only backend
 #   ./dev.sh backend stop       - Stop only backend
+#   ./dev.sh backend status     - Check backend status
 
 set -e
 
@@ -42,6 +45,142 @@ stop_servers() {
     echo ""
     "$SCRIPT_DIR/frontend/scripts/stop-frontend.sh"
     echo ""
+}
+
+# Helper function to check backend status
+# Returns: 0 if running and responding, 1 if running but not responding, 2 if not running
+check_backend_status() {
+    if pgrep -f "go run.*cmd/admin" > /dev/null; then
+        # Process is running, check if responding
+        if curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/health 2>/dev/null | grep -q "200\|404"; then
+            return 0  # Running and responding
+        else
+            return 1  # Running but not responding
+        fi
+    else
+        return 2  # Not running
+    fi
+}
+
+# Helper function to check frontend status
+# Returns: 0 if running and responding, 1 if running but not responding, 2 if not running
+check_frontend_status() {
+    if pgrep -f "node_modules/.bin/vite" > /dev/null; then
+        # Process is running, check if responding
+        if curl -s -o /dev/null -w "%{http_code}" http://localhost:5173 2>/dev/null | grep -q "200"; then
+            return 0  # Running and responding
+        else
+            return 1  # Running but not responding
+        fi
+    else
+        return 2  # Not running
+    fi
+}
+
+status_backend() {
+    echo "=================================================="
+    echo "Backend Server Status"
+    echo "=================================================="
+    echo ""
+
+    check_backend_status
+    local status=$?
+
+    case $status in
+        0)
+            echo "✓ Backend server is RUNNING"
+            echo "  Process: $(pgrep -f 'go run.*cmd/admin')"
+            echo "  URL: http://localhost:8080"
+            echo "  Status: Responding to requests"
+            ;;
+        1)
+            echo "⚠ Backend server is RUNNING"
+            echo "  Process: $(pgrep -f 'go run.*cmd/admin')"
+            echo "  URL: http://localhost:8080"
+            echo "  Warning: Process running but not responding"
+            ;;
+        2)
+            echo "✗ Backend server is NOT running"
+            ;;
+    esac
+    echo ""
+}
+
+status_frontend() {
+    echo "=================================================="
+    echo "Frontend Server Status"
+    echo "=================================================="
+    echo ""
+
+    check_frontend_status
+    local status=$?
+
+    case $status in
+        0)
+            echo "✓ Frontend server is RUNNING"
+            echo "  Process: $(pgrep -f 'node_modules/.bin/vite')"
+            echo "  URL: http://localhost:5173"
+            echo "  Status: Responding to requests"
+            ;;
+        1)
+            echo "⚠ Frontend server is RUNNING"
+            echo "  Process: $(pgrep -f 'node_modules/.bin/vite')"
+            echo "  URL: http://localhost:5173"
+            echo "  Warning: Process running but not responding"
+            ;;
+        2)
+            echo "✗ Frontend server is NOT running"
+            ;;
+    esac
+    echo ""
+}
+
+status_servers() {
+    echo "=================================================="
+    echo "Development Servers Status"
+    echo "=================================================="
+    echo ""
+
+    # Check backend
+    check_backend_status
+    local backend_status=$?
+
+    case $backend_status in
+        0)
+            echo "✓ Backend:  RUNNING (http://localhost:8080)"
+            echo "            Responding to requests"
+            ;;
+        1)
+            echo "⚠ Backend:  RUNNING (http://localhost:8080)"
+            echo "            Warning: Not responding"
+            ;;
+        2)
+            echo "✗ Backend:  NOT running"
+            ;;
+    esac
+
+    echo ""
+
+    # Check frontend
+    check_frontend_status
+    local frontend_status=$?
+
+    case $frontend_status in
+        0)
+            echo "✓ Frontend: RUNNING (http://localhost:5173)"
+            echo "            Responding to requests"
+            ;;
+        1)
+            echo "⚠ Frontend: RUNNING (http://localhost:5173)"
+            echo "            Warning: Not responding"
+            ;;
+        2)
+            echo "✗ Frontend: NOT running"
+            ;;
+    esac
+
+    echo ""
+    echo "=================================================="
 }
 
 start_backend() {
@@ -157,10 +296,13 @@ show_usage() {
     echo "  ./dev.sh                    - Stop then start both servers"
     echo "  ./dev.sh start              - Start both servers"
     echo "  ./dev.sh stop               - Stop both servers"
+    echo "  ./dev.sh status             - Check status of both servers"
     echo "  ./dev.sh frontend start     - Start only frontend"
     echo "  ./dev.sh frontend stop      - Stop only frontend"
+    echo "  ./dev.sh frontend status    - Check frontend status"
     echo "  ./dev.sh backend start      - Start only backend"
     echo "  ./dev.sh backend stop       - Stop only backend"
+    echo "  ./dev.sh backend status     - Check backend status"
 }
 
 # Parse commands
@@ -177,6 +319,9 @@ elif [ $# -eq 1 ]; then
             ;;
         stop)
             stop_servers
+            ;;
+        status)
+            status_servers
             ;;
         *)
             echo "Error: Unknown command '$COMMAND'"
@@ -199,6 +344,9 @@ elif [ $# -eq 2 ]; then
                 stop)
                     stop_frontend
                     ;;
+                status)
+                    status_frontend
+                    ;;
                 *)
                     echo "Error: Unknown command '$COMMAND' for frontend"
                     echo ""
@@ -214,6 +362,9 @@ elif [ $# -eq 2 ]; then
                     ;;
                 stop)
                     stop_backend
+                    ;;
+                status)
+                    status_backend
                     ;;
                 *)
                     echo "Error: Unknown command '$COMMAND' for backend"
