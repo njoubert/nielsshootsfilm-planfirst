@@ -107,6 +107,10 @@ export class AppShell extends LitElement {
     // Load site configuration
     try {
       this.config = await fetchSiteConfig();
+      // Update document title with site title from config
+      if (this.config?.site?.title) {
+        document.title = this.config.site.title;
+      }
     } catch (error) {
       console.error('Failed to load site config:', error);
     }
