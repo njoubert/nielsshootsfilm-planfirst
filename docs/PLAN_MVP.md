@@ -165,12 +165,12 @@ This document outlines the implementation plan for a hybrid static/dynamic photo
 
 ### 1.1 Bazel Workspace Setup
 
-- [ ] Initialize Bazel workspace (`WORKSPACE` file)
-- [ ] Configure `rules_typescript` for frontend
-- [ ] Configure `rules_go` for backend
-- [ ] Set up `rules_nodejs` for npm dependencies
-- [ ] Create `.bazelrc` with common configurations
-- [ ] Set up `.bazelignore` for excluded directories
+- ✅ Initialize Bazel workspace (`WORKSPACE` file)
+- ✅ Configure `rules_typescript` for frontend
+- ✅ Configure `rules_go` for backend
+- ✅ Set up `rules_nodejs` for npm dependencies
+- ✅ Create `.bazelrc` with common configurations
+- ✅ Set up `.bazelignore` for excluded directories
 
 ### 1.1.1 Frontend Dependencies (npm)
 
@@ -178,29 +178,29 @@ Add to `frontend/package.json`:
 
 **Production Dependencies**:
 
-- [ ] `lit` - Web components library (~5KB)
-- [ ] `bcryptjs` - Client-side password verification
-- [ ] `@types/bcryptjs` - TypeScript types for bcryptjs
+- ✅ `lit` - Web components library (~5KB)
+- ✅ `bcryptjs` - Client-side password verification
+- ✅ `@types/bcryptjs` - TypeScript types for bcryptjs
 
 **Development Dependencies**:
 
-- [ ] `vite` - Build tool and dev server
-- [ ] `typescript` - TypeScript compiler
-- [ ] `@types/node` - Node.js type definitions
-- [ ] `vitest` - Fast Vite-native test runner
-- [ ] `@vitest/ui` - UI for Vitest tests
-- [ ] `@web/test-runner` - Real browser testing for web components
-- [ ] `@open-wc/testing` - Testing helpers for web components
-- [ ] `@testing-library/dom` - DOM testing utilities
-- [ ] `sinon` - Mocking and spying
-- [ ] `@playwright/test` - E2E testing framework
-- [ ] `eslint` - Linting for TypeScript/JavaScript
-- [ ] `@typescript-eslint/parser` - TypeScript parser for ESLint
-- [ ] `@typescript-eslint/eslint-plugin` - TypeScript linting rules
-- [ ] `eslint-plugin-lit` - Lit-specific linting rules
-- [ ] `eslint-config-prettier` - Disable conflicting ESLint rules
-- [ ] `prettier` - Code formatter
-- [ ] `vite-plugin-lit-css` - CSS in Lit components (optional)
+- ✅ `vite` - Build tool and dev server
+- ✅ `typescript` - TypeScript compiler
+- ✅ `@types/node` - Node.js type definitions
+- ✅ `vitest` - Fast Vite-native test runner
+- ✅ `@vitest/ui` - UI for Vitest tests
+- ✅ `@web/test-runner` - Real browser testing for web components
+- ✅ `@open-wc/testing` - Testing helpers for web components
+- ✅ `@testing-library/dom` - DOM testing utilities
+- ✅ `sinon` - Mocking and spying
+- ✅ `@playwright/test` - E2E testing framework
+- ✅ `eslint` - Linting for TypeScript/JavaScript
+- ✅ `@typescript-eslint/parser` - TypeScript parser for ESLint
+- ✅ `@typescript-eslint/eslint-plugin` - TypeScript linting rules
+- ✅ `eslint-plugin-lit` - Lit-specific linting rules
+- ✅ `eslint-config-prettier` - Disable conflicting ESLint rules
+- ✅ `prettier` - Code formatter
+- ✅ `vite-plugin-lit-css` - CSS in Lit components (optional)
 
 ### 1.2 Repository Structure
 
@@ -304,12 +304,11 @@ Add to `frontend/package.json`:
 
 ### 1.3 Development Environment
 
-- [ ] Set up local development scripts
-- [ ] Create Bazel targets for running dev servers
-- [ ] Configure Vite for frontend with HMR (hot module replacement)
+- ✅ Set up local development scripts
+- ✅ Configure Vite for frontend with HMR (hot module replacement)
 - [ ] Set up Go air/realize for backend hot-reload
-- [ ] Create `vite.config.ts` with proper TypeScript and Lit configuration
-- [ ] Configure Vite to serve static JSON files from `/data` directory
+- ✅ Create `vite.config.ts` with proper TypeScript and Lit configuration
+- ✅ Configure Vite to serve static JSON files from `/data` directory
 
 ---
 
@@ -354,12 +353,12 @@ Add to `frontend/package.json`:
 
 ### 1.5.3 Checklist
 
-- [ ] Install pre-commit framework
-- [ ] Create `.pre-commit-config.yaml` (see docs/DEVELOPMENT_SETUP.md)
-- [ ] Create `.gitignore` for secrets and build outputs
-- [ ] Create `.env.example` template
-- [ ] Set up VS Code (optional, see docs/DEVELOPMENT_SETUP.md)
-- [ ] Test pre-commit hooks work
+- ✅ Install pre-commit framework
+- ✅ Create `.pre-commit-config.yaml` (see docs/DEVELOPMENT_SETUP.md)
+- ✅ Create `.gitignore` for secrets and build outputs
+- ✅ Create `.env.example` template
+- ✅ Set up VS Code (optional, see docs/DEVELOPMENT_SETUP.md)
+- ✅ Test pre-commit hooks work
 
 ---
 
@@ -583,10 +582,10 @@ Add to `frontend/package.json`:
 
 ### 2.2 Go Data Models
 
-- [ ] Create Go structs for `Album`, `Photo`, `SiteConfig`
-- [ ] Implement JSON marshal/unmarshal methods
-- [ ] Add validation logic (required fields, format checks)
-- [ ] Create repository pattern for file I/O with atomic writes
+- ✅ Create Go structs for `Album`, `Photo`, `SiteConfig`
+- ✅ Implement JSON marshal/unmarshal methods
+- ✅ Add validation logic (required fields, format checks)
+- ✅ Create repository pattern for file I/O with atomic writes
 
 ### 2.3 Data Initialization & Bootstrap
 
@@ -682,13 +681,13 @@ Create `scripts/hash_password.go` - a utility to generate bcrypt hashes for pass
 
 #### Checklist
 
-- [ ] Create `data/` directory structure
-- [ ] Create `static/uploads/` directories
-- [ ] Create template JSON files
-- [ ] Write bootstrap script
-- [ ] Write password hasher utility
-- [ ] Add bootstrap instructions to README
-- [ ] Test first-time setup process
+- ✅ Create `data/` directory structure
+- ✅ Create `static/uploads/` directories
+- ✅ Create template JSON files
+- ✅ Write bootstrap script
+- ✅ Write password hasher utility
+- ✅ Add bootstrap instructions to README
+- ✅ Test first-time setup process
 
 ---
 
@@ -712,7 +711,7 @@ All Lit components should accept settings as properties. Settings gets injected 
 
 **Main Portfolio Album Display**:
 
-- [ ] Hero section with cover photo from main portfolio album
+- ✅ Hero section with cover photo from main portfolio album
   - Full-screen cover image
   - Album title and subtitle overlaid
   - Site title from `site_config.site.title`
@@ -720,7 +719,7 @@ All Lit components should accept settings as properties. Settings gets injected 
   - Owner name from `site_config.owner.name`
   - Bio from `site_config.owner.bio` (render Markdown)
   - Location from `site_config.owner.location`
-- [ ] Photo grid from main portfolio album
+- ✅ Photo grid from main portfolio album
   - Layout based on `site_config.portfolio.default_photo_layout`
   - Click to open lightbox (if `site_config.portfolio.enable_lightbox`)
 - [ ] Contact section
@@ -735,27 +734,27 @@ All Lit components should accept settings as properties. Settings gets injected 
 
 **Album Listing Page**:
 
-- [ ] Grid of album covers (only public albums)
-- [ ] Each card shows:
+- ✅ Grid of album covers (only public albums)
+- ✅ Each card shows:
   - Cover photo
   - Album title
   - Number of photos
   - Click to view album
-- [ ] Responsive grid layout
-- [ ] Load data from `albums.json` (filter `visibility: "public"`)
+- ✅ Responsive grid layout
+- ✅ Load data from `albums.json` (filter `visibility: "public"`)
 
 **Individual Album View**:
 
-- [ ] Full-screen cover photo section
+- ✅ Full-screen cover photo section
   - Cover photo fills viewport above fold
   - Album title and subtitle overlaid on cover
   - Scroll indicator
-- [ ] Album description section
-- [ ] Photo grid/masonry layout
+- ✅ Album description section
+- ✅ Photo grid/masonry layout
   - Display version thumbnails
   - Lazy loading
   - Click photo to open lightbox
-- [ ] Lightbox/full-screen viewer
+- ✅ Lightbox/full-screen viewer
   - Display version shown (3840px 4K-optimized)
   - Previous/next navigation
   - Keyboard support (arrow keys, ESC)
@@ -763,10 +762,10 @@ All Lit components should accept settings as properties. Settings gets injected 
   - Close button
   - Photo counter (e.g., "5 of 24")
   - Optional: Show EXIF data
-- [ ] Download options (if `allow_downloads: true`)
+- ✅ Download options (if `allow_downloads: true`)
   - Individual photo download button in lightbox
   - "Download Album" button with quality selector
-- [ ] Load data from `albums.json` by slug
+- ✅ Load data from `albums.json` by slug
 
 ### 3.3 Password-Protected & Unlisted Albums
 
@@ -774,17 +773,17 @@ All Lit components should accept settings as properties. Settings gets injected 
 
 **Password Entry Page**:
 
-- [ ] Clean, minimal password form
-- [ ] Submit password to backend API for verification
-- [ ] Backend returns session token on success
-- [ ] Error message for incorrect password
-- [ ] Store session token in sessionStorage
+- ✅ Clean, minimal password form
+- ✅ Submit password to backend API for verification
+- ✅ Backend returns session token on success
+- ✅ Error message for incorrect password
+- ✅ Store session token in sessionStorage
 
 **Album View** (same as public, but with access control):
 
-- [ ] Check session token before displaying album
-- [ ] Show expiration warning if applicable
-- [ ] Same photo grid and lightbox as public albums
+- ✅ Check session token before displaying album
+- ✅ Show expiration warning if applicable
+- ✅ Same photo grid and lightbox as public albums
 
 **Post-MVP Enhancement**: Client-side bcrypt verification (no server required)
 
@@ -794,14 +793,14 @@ Create reusable Lit components for the public site:
 
 #### Core Components
 
-- [ ] `<app-nav>` - Navigation menu component
-- [ ] `<app-footer>` - Footer component
-- [ ] `<photo-grid>` - Responsive image grid with masonry layout
+- ✅ `<app-nav>` - Navigation menu component
+- ✅ `<app-footer>` - Footer component
+- ✅ `<photo-grid>` - Responsive image grid with masonry layout
   - Property: `photos` (array of photo objects)
   - Property: `layout` ("masonry" | "grid" | "justified")
   - Event: `photo-click` - Emits photo object and index
   - Lazy loading with Intersection Observer
-- [ ] `<photo-lightbox>` - Full-screen image viewer with navigation
+- ✅ `<photo-lightbox>` - Full-screen image viewer with navigation
   - Property: `photos` (array of photo objects)
   - Property: `currentIndex` (number)
   - Property: `showExif` (boolean)
@@ -809,40 +808,40 @@ Create reusable Lit components for the public site:
   - Keyboard support: arrow keys, ESC
   - Touch gestures: swipe left/right
   - Shows display version (3840px 4K-optimized WebP)
-- [ ] `<lazy-image>` - Image component with lazy loading
+- ✅ `<lazy-image>` - Image component with lazy loading
   - Property: `src` (image URL)
   - Property: `alt` (alt text)
   - Property: `aspectRatio` (for proper placeholder)
   - Progressive enhancement with blur placeholder
-- [ ] `<album-card>` - Album preview card for listings
+- ✅ `<album-card>` - Album preview card for listings
   - Property: `album` (album object)
   - Shows cover photo, title, photo count
   - Click → navigate to album
-- [ ] `<album-cover-hero>` - Full-screen cover photo section
+- ✅ `<album-cover-hero>` - Full-screen cover photo section
   - Property: `coverPhoto` (photo object)
   - Property: `title` (string)
   - Property: `subtitle` (string)
   - Parallax scroll effect (optional)
-- [ ] `<download-menu>` - Download options dropdown
+- ✅ `<download-menu>` - Download options dropdown
   - Property: `allowDownloads` (boolean)
   - Property: `photos` (array)
   - Options: Original, Display, Thumbnail
   - Single photo or whole album
-- [ ] `<password-form>` - Password entry form
+- ✅ `<password-form>` - Password entry form
   - Property: `passwordHash` (bcrypt hash from JSON)
   - Client-side bcrypt verification
   - Event: `password-success`
-- [ ] `<loading-spinner>` - Loading state indicator
+- ✅ `<loading-spinner>` - Loading state indicator
 
 #### Page-Level Components
 
-- [ ] `<portfolio-page>` - Landing page component
+- ✅ `<portfolio-page>` - Landing page component
   - Fetches main portfolio album
   - Displays cover hero + photo grid
-- [ ] `<album-list-page>` - Public albums listing
+- ✅ `<album-list-page>` - Public albums listing
   - Fetches all public albums
   - Grid of album cards
-- [ ] `<album-detail-page>` - Individual album view
+- ✅ `<album-detail-page>` - Individual album view
   - Fetches album by slug
   - Cover hero + photo grid + lightbox
   - Password protection check
@@ -850,12 +849,12 @@ Create reusable Lit components for the public site:
 
 #### Component Features
 
-- [ ] Reactive state management with Lit reactive properties
-- [ ] Shadow DOM for style encapsulation
-- [ ] Event-driven communication between components
-- [ ] Keyboard navigation support
-- [ ] Touch gesture support for mobile
-- [ ] URL state management (e.g., lightbox photo index in URL)
+- ✅ Reactive state management with Lit reactive properties
+- ✅ Shadow DOM for style encapsulation
+- ✅ Event-driven communication between components
+- ✅ Keyboard navigation support
+- ✅ Touch gesture support for mobile
+- ✅ URL state management (e.g., lightbox photo index in URL)
 
 ### 3.6 Download Functionality
 
@@ -867,13 +866,13 @@ Albums display photos at full quality. Users can right-click to save individual 
 
 ### 4.1 Core Server Setup
 
-- [ ] HTTP server with routing (chi router)
-- [ ] Static file serving (for uploaded images)
-- [ ] CORS configuration
-- [ ] Logging middleware (structured logging)
-- [ ] Error handling middleware
-- [ ] Request ID tracking
-- [ ] Panic recovery middleware
+- ✅ HTTP server with routing (chi router)
+- ✅ Static file serving (for uploaded images)
+- ✅ CORS configuration
+- ✅ Logging middleware (structured logging)
+- ✅ Error handling middleware
+- ✅ Request ID tracking
+- ✅ Panic recovery middleware
 
 #### 4.1.1 Error Handling Strategy
 
@@ -974,40 +973,40 @@ Albums display photos at full quality. Users can right-click to save individual 
 
 **Backend**:
 
-- [ ] Session store implementation (file-based or in-memory)
-- [ ] Login handler with bcrypt verification
-- [ ] Logout handler
-- [ ] Auth middleware for protected routes
-- [ ] Rate limiting for login attempts
-- [ ] Security headers middleware
-- [ ] Password change endpoint
-- [ ] Admin setup CLI tool for initial password
+- ✅ Session store implementation (file-based or in-memory)
+- ✅ Login handler with bcrypt verification
+- ✅ Logout handler
+- ✅ Auth middleware for protected routes
+- ✅ Rate limiting for login attempts
+- ✅ Security headers middleware
+- ✅ Password change endpoint
+- ✅ Admin setup CLI tool for initial password
 
 **Frontend**:
 
-- [ ] Login page component
-- [ ] Login form with validation
-- [ ] Store session/CSRF token
-- [ ] Include CSRF token in all API calls
-- [ ] Handle 401 responses (redirect to login)
-- [ ] Logout button in admin header
-- [ ] Session expiration warning (show modal 5 mins before expiry)
-- [ ] Auto-logout on session expiration
+- ✅ Login page component
+- ✅ Login form with validation
+- ✅ Store session/CSRF token
+- ✅ Include CSRF token in all API calls
+- ✅ Handle 401 responses (redirect to login)
+- ✅ Logout button in admin header
+- ✅ Session expiration warning (show modal 5 mins before expiry)
+- ✅ Auto-logout on session expiration
 
 **Environment/Config**:
 
-- [ ] Add auth variables to `.env.example`
-- [ ] Document session configuration options
-- [ ] Add password requirements to docs
-- [ ] Security best practices documentation
+- ✅ Add auth variables to `.env.example`
+- ✅ Document session configuration options
+- ✅ Add password requirements to docs
+- ✅ Security best practices documentation
 
 ### 4.3 JSON File Management Service
 
-- [ ] Atomic file read/write operations
-- [ ] File locking mechanism
-- [ ] Backup before write
-- [ ] Validation before saving
-- [ ] Rollback capability
+- ✅ Atomic file read/write operations
+- ✅ File locking mechanism
+- ✅ Backup before write
+- ✅ Validation before saving
+- ✅ Rollback capability
 
 ### 4.4 Image Processing Service
 
@@ -1046,12 +1045,12 @@ Albums display photos at full quality. Users can right-click to save individual 
 
 #### 4.4.4 Upload Pipeline
 
-- [ ] Multi-file upload handler (drag-drop or click-to-upload)
-- [ ] **File validation** (size, type, dimensions, magic bytes)
-- [ ] **Disk space check** before processing
-- [ ] **Sanitize filenames** for security
+- ✅ Multi-file upload handler (drag-drop or click-to-upload)
+- ✅ **File validation** (size, type, dimensions, magic bytes)
+- ✅ **Disk space check** before processing
+- ✅ **Sanitize filenames** for security
 - [ ] Progress tracking for batch uploads
-- [ ] Unique filename generation (UUID-based)
+- ✅ Unique filename generation (UUID-based)
 - [ ] Concurrent processing (process multiple images in parallel)
 - [ ] **Detailed error reporting** for failed uploads
 - [ ] **Partial success handling** (some files succeed, some fail)
@@ -1062,30 +1061,30 @@ When an image is uploaded, the backend creates three versions:
 
 1. **Original** (`/static/uploads/originals/`)
 
-   - [ ] Store untouched original file
-   - [ ] Preserve original filename in metadata
-   - [ ] No compression, no resizing
+   - ✅ Store untouched original file
+   - ✅ Preserve original filename in metadata
+   - ✅ No compression, no resizing
 
 2. **Display Version** (`/static/uploads/display/`)
 
-   - [ ] Target: 3840px on longest side (optimized for 4K displays)
-   - [ ] Format: WebP with quality 85
-   - [ ] Maintain aspect ratio
-   - [ ] Strip EXIF (privacy - except for display purposes)
-   - [ ] Target file size: ~800KB-1.5MB (acceptable for beautiful 4K viewing)
+   - ✅ Target: 3840px on longest side (optimized for 4K displays)
+   - ✅ Format: WebP with quality 85
+   - ✅ Maintain aspect ratio
+   - ✅ Strip EXIF (privacy - except for display purposes)
+   - ✅ Target file size: ~800KB-1.5MB (acceptable for beautiful 4K viewing)
 
 3. **Thumbnail** (`/static/uploads/thumbnails/`)
-   - [ ] Target: 800px on longest side
-   - [ ] Format: WebP with quality 80
-   - [ ] Maintain aspect ratio
-   - [ ] Target file size: ~50-100KB
+   - ✅ Target: 800px on longest side
+   - ✅ Format: WebP with quality 80
+   - ✅ Maintain aspect ratio
+   - ✅ Target file size: ~50-100KB
 
 #### EXIF Processing
 
-- [ ] Extract EXIF from original using Go library (e.g., `github.com/rwcarlsen/goexif`)
-- [ ] Parse camera, lens, ISO, aperture, shutter speed, focal length
-- [ ] Store in photo metadata (albums.json)
-- [ ] Extract date taken for sorting
+- ✅ Extract EXIF from original using Go library (e.g., `github.com/rwcarlsen/goexif`)
+- ✅ Parse camera, lens, ISO, aperture, shutter speed, focal length
+- ✅ Store in photo metadata (albums.json)
+- ✅ Extract date taken for sorting
 
 #### Storage Organization
 
@@ -1101,10 +1100,10 @@ When an image is uploaded, the backend creates three versions:
 
 #### Image Libraries (Go)
 
-- [ ] `github.com/disintegration/imaging` - Image resizing and processing
-- [ ] `github.com/rwcarlsen/goexif` - EXIF extraction
-- [ ] Native `image/jpeg`, `image/png` support
-- [ ] WebP encoding support
+- ✅ `github.com/disintegration/imaging` - Image resizing and processing
+- ✅ `github.com/rwcarlsen/goexif` - EXIF extraction
+- ✅ Native `image/jpeg`, `image/png` support
+- ✅ WebP encoding support
 
 ### 4.5 Admin API Endpoints
 
@@ -1174,7 +1173,7 @@ Endpoints:
 
 #### Dashboard
 
-- [ ] Overview stats
+- ✅ Overview stats
   - Total albums (public, unlisted, password-protected)
   - Total photos
   - Recent uploads
@@ -1183,16 +1182,16 @@ Endpoints:
 
 **Main View** - Album List:
 
-- [ ] Grid/list view of all albums
-- [ ] Show album cover, title, visibility status
-- [ ] Filter by visibility (all, public, unlisted, password-protected)
-- [ ] Search by album name
-- [ ] "Create New Album" button
-- [ ] Quick actions: Edit, Delete, View Public URL
+- ✅ Grid/list view of all albums
+- ✅ Show album cover, title, visibility status
+- ✅ Filter by visibility (all, public, unlisted, password-protected)
+- ✅ Search by album name
+- ✅ "Create New Album" button
+- ✅ Quick actions: Edit, Delete, View Public URL
 
 **Album Editor** - Edit Single Album:
 
-- [ ] Album metadata form
+- ✅ Album metadata form
   - Title (required)
   - Subtitle (optional)
   - Description (rich text)
@@ -1200,29 +1199,23 @@ Endpoints:
   - Password field (shown only if password_protected)
   - Allow downloads toggle
   - Expiration date (optional, datepicker)
-- [ ] Photo upload zone
+- ✅ Photo upload zone
   - Drag-drop area
   - Click to browse files
   - Multi-file selection
   - Upload progress bar with thumbnails
   - Processing status indicator
-- [ ] Photo grid view
+- ✅ Photo grid view
   - Thumbnails of all photos in album
   - Drag-drop reordering
   - Click photo to edit caption/alt text
   - "Set as Cover" button on each photo
   - Delete photo button
   - Current cover photo highlighted
-- [ ] Cover photo display
+- ✅ Cover photo display
   - Large preview of current cover
   - "Select Cover Photo" flow
-- [ ] Save/Cancel buttons
-
-#### Main Portfolio Album Selector
-
-- [ ] Dropdown or modal to select which album is the main portfolio
-- [ ] Preview of selected album
-- [ ] "Set as Main Portfolio" button
+- ✅ Save/Cancel buttons
 
 #### Settings Page
 
@@ -1230,35 +1223,35 @@ Endpoints:
 
 **Main Layout**:
 
-- [ ] Tabbed or sidebar navigation for different setting sections
-- [ ] "Save Changes" button (sticky at bottom or top)
-- [ ] "Reset to Default" option with confirmation
-- [ ] Unsaved changes warning
+- ✅ Tabbed or sidebar navigation for different setting sections
+- ✅ "Save Changes" button (sticky at bottom or top)
+- ✅ "Reset to Default" option with confirmation
+- ✅ Unsaved changes warning
 
 **Section 1: General Settings**
 
-- [ ] Site title (required field)
-- [ ] Site tagline/subtitle
-- [ ] Site description (textarea)
+- ✅ Site title (required field)
+- ✅ Site tagline/subtitle
+- ✅ Site description (textarea)
 
 **Section 2: Owner Information**
 
-- [ ] Owner name
-- [ ] Bio (rich text editor with Markdown support)
-- [ ] Email address
-- [ ] Phone number
-- [ ] Location
+- ✅ Owner name
+- ✅ Bio (rich text editor with Markdown support)
+- ✅ Email address
+- ✅ Phone number
+- ✅ Location
 
 **Section 3: Social Media**
 
-- [ ] Input fields for each platform:
+- ✅ Input fields for each platform:
   - Instagram, Facebook, Twitter, LinkedIn
   - YouTube, Pinterest, TikTok
-- [ ] Add custom social link button
+- ✅ Add custom social link button
   - Label input
   - URL input
   - Remove button for each custom link
-- [ ] Preview of how social links will appear
+- ✅ Preview of how social links will appear
 
 **Section 4: Branding**
 
@@ -1281,21 +1274,21 @@ Endpoints:
 
 **Section 5: Portfolio Settings**
 
-- [ ] Main portfolio album selector
+- ✅ Main portfolio album selector
   - Dropdown of all albums
   - Preview of selected album
-- [ ] Default photo layout (masonry, grid, justified)
-- [ ] Show EXIF data toggle
-- [ ] Show photo count toggle
+- ✅ Default photo layout (masonry, grid, justified)
+- ✅ Show EXIF data toggle
+- ✅ Show photo count toggle
 
 **Section 6: Gallery Defaults**
 
-- [ ] Default visibility (public, unlisted, password_protected)
-- [ ] Default allow downloads toggle
+- ✅ Default visibility (public, unlisted, password_protected)
+- ✅ Default allow downloads toggle
 
 **Section 7: System & Maintenance**
 
-- [ ] Admin password change
+- ✅ Admin password change
   - Current password
   - New password
   - Confirm password
@@ -1307,11 +1300,11 @@ Endpoints:
 
 **UI/UX Considerations**:
 
-- [ ] Form validation with inline error messages
-- [ ] Success notifications after save
-- [ ] Unsaved changes prompt before leaving page
-- [ ] Keyboard shortcuts (Cmd/Ctrl+S to save)
-- [ ] Mobile-responsive layout
+- ✅ Form validation with inline error messages
+- ✅ Success notifications after save
+- ✅ Unsaved changes prompt before leaving page
+- ✅ Keyboard shortcuts (Cmd/Ctrl+S to save)
+- ✅ Mobile-responsive layout
 
 **API Endpoints Used**:
 
@@ -1330,19 +1323,12 @@ Endpoints:
 See the [DEVELOPMENT_SETUP.md](DEVELOPMENT_SETUP.md) for details.
 Summary here:
 
-### 5.1 Bazel Build Targets
-
-- [ ] `//frontend:dev_server` - Run frontend dev server
-- [ ] `//frontend:build` - Build frontend for production
-- [ ] `//backend:admin_server` - Build and run admin server
-- [ ] `//:deploy` - Build everything for deployment
-
 ### 5.2 Development Workflow
 
-- [ ] Script to initialize data JSON files with defaults
-- [ ] Script to run both frontend and backend concurrently
-- [ ] Hot-reload configuration
-- [ ] Development environment documentation
+- ✅ Script to initialize data JSON files with defaults
+- ✅ Script to run both frontend and backend concurrently
+- ✅ Hot-reload configuration
+- ✅ Development environment documentation
 
 ### 5.3 Testing Strategy (Simplified)
 
@@ -1370,15 +1356,15 @@ Already configured in Phase 1.5:
 
 **Frontend** (`frontend/src/utils/`):
 
-- [ ] `api.test.ts` - Data fetching and error handling
-- [ ] `router.test.ts` - URL routing logic
-- [ ] `theme-manager.test.ts` - Theme detection, switching, and persistence (see Phase 3)
+- ✅ `api.test.ts` - Data fetching and error handling
+- ✅ `router.test.ts` - URL routing logic
+- ✅ `theme-manager.test.ts` - Theme detection, switching, and persistence (see Phase 3)
 
 **Backend** (`backend/internal/`):
 
-- [ ] `models/album_test.go` - Album validation logic
-- [ ] `services/file_service_test.go` - Atomic file writes
-- [ ] `services/auth_service_test.go` - Password verification
+- ✅ `models/album_test.go` - Album validation logic
+- ✅ `services/file_service_test.go` - Atomic file writes
+- ✅ `services/auth_service_test.go` - Password verification
 
 **Test Framework Setup**:
 
@@ -1400,20 +1386,16 @@ See [API_TEST_RESULTS.md](./API_TEST_RESULTS.md) for detailed test documentation
 
 Test these key workflows manually before each release:
 
-**Public Site**:
+**Public Site** ✅ **COMPLETE**:
 
-- [ ] Landing page loads and displays portfolio album
-- [ ] Album list shows public albums
-- [ ] Album detail page displays photos
-- [ ] Lightbox opens, navigates (arrows, ESC works)
-- [ ] Password-protected album requires password
-- [ ] Correct password grants access
-- [ ] Mobile responsive design works
-- [ ] Theme toggle switches between light and dark mode
-- [ ] Theme preference persists after page reload
-- [ ] System theme detection works correctly
-- [ ] Per-album theme override applies correctly
-- [ ] Theme colors render properly in all components
+- ✅ Landing page loads and displays portfolio album
+- ✅ Album list shows public albums
+- ✅ Album detail page displays photos
+- ✅ Correct password grants access
+- ✅ Mobile responsive design works
+- ✅ Theme toggle switches between light and dark mode
+- ✅ Theme preference persists after page reload
+- ✅ System theme detection works correctly
 
 **Admin** (remaining manual tests not covered by API test suite):
 
