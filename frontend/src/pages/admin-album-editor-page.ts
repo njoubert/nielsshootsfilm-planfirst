@@ -200,6 +200,8 @@ export class AdminAlbumEditorPage extends LitElement {
       font-size: 0.875rem;
       font-family: inherit;
       box-sizing: border-box;
+      background: var(--color-surface, white);
+      color: var(--color-text-primary, #333);
     }
 
     textarea {
