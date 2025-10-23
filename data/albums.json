@@ -174,11 +174,12 @@
       "subtitle": "Flotsam and Jetsam",
       "description": "I'm on Polk street, between O'Farrel and Ellis. Scenes of a shuttered San Francisco. Broken people on the street, doing fentanyl. The flotsam and jetsam of a strange twisted time. He runs up to me. “He, hey, you better get out of here with that camera. My buddy back there’s got a slingshot. he’s gonna bust your head right open if you don’t get out of here”. A rock hits my leg as I leave.",
       "cover_photo_id": "518eb5d5-6f51-4d42-abb9-65a5cf105f19",
-      "visibility": "public",
+      "visibility": "password_protected",
+      "password_hash": "$2a$10$sojT1JM4.w.XhYCspXNvuOhOI0Fos5Z9wBOLqpBGtVGupyZwOQ5HW",
       "allow_downloads": false,
       "order": 0,
       "created_at": "2025-10-21T08:22:34.010723Z",
-      "updated_at": "2025-10-21T18:41:31.639781Z",
+      "updated_at": "2025-10-23T03:08:30.816554Z",
       "photos": [
         {
           "id": "518eb5d5-6f51-4d42-abb9-65a5cf105f19",

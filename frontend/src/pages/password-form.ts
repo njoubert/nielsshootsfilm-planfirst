@@ -1,15 +1,18 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import * as bcrypt from 'bcryptjs';
 import '../components/loading-spinner';
-import { storeAlbumToken, verifyAlbumPassword } from '../utils/api';
+import { storeAlbumToken } from '../utils/api';
 
 /**
  * Password entry form for password-protected albums.
+ * Verifies password client-side against bcrypt hash for static site compatibility.
  */
 @customElement('password-form')
 export class PasswordForm extends LitElement {
   @property({ type: String }) albumId = '';
   @property({ type: String }) albumTitle = '';
+  @property({ type: String }) passwordHash = '';
 
   @state() private password = '';
   @state() private error = '';
@@ -158,14 +161,23 @@ export class PasswordForm extends LitElement {
       return;
     }
 
+    if (!this.passwordHash) {
+      this.error = 'Album configuration error - no password hash';
+      return;
+    }
+
     try {
       this.loading = true;
       this.error = '';
 
-      const result = await verifyAlbumPassword(this.albumId, this.password);
+      // Verify password client-side using bcrypt
+      const isValid = await bcrypt.compare(this.password, this.passwordHash);
 
-      if (result.success && result.token) {
-        storeAlbumToken(this.albumId, result.token);
+      if (isValid) {
+        // Generate a simple token (timestamp) to indicate successful verification
+        const token = `${this.albumId}_${Date.now()}`;
+        storeAlbumToken(this.albumId, token);
+
         this.dispatchEvent(
           new CustomEvent('password-success', {
             bubbles: true,
@@ -173,7 +185,7 @@ export class PasswordForm extends LitElement {
           })
         );
       } else {
-        this.error = result.error || 'Invalid password';
+        this.error = 'Invalid password';
       }
     } catch (err) {
       this.error = 'An error occurred. Please try again.';

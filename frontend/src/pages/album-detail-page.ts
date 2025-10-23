@@ -183,6 +183,7 @@ export class AlbumDetailPage extends LitElement {
           <password-form
             .albumId=${this.album.id}
             .albumTitle=${this.album.title}
+            .passwordHash=${this.album.password_hash || ''}
             @password-success=${() => this.handlePasswordSuccess()}
           ></password-form>
         </div>
