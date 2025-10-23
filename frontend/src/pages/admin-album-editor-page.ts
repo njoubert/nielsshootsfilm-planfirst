@@ -6,6 +6,7 @@ import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import '../components/admin-header';
 import '../components/toast-notification';
+import '../components/upload-placeholder';
 import type { Album, SiteConfig } from '../types/data-models';
 import {
   createAlbum,
@@ -16,6 +17,7 @@ import {
   setCoverPhoto,
   updateAlbum,
   uploadPhotos,
+  type UploadProgress,
 } from '../utils/admin-api';
 import { fetchSiteConfig } from '../utils/api';
 import { onLogout } from '../utils/auth-state';
@@ -210,6 +212,26 @@ export class AdminAlbumEditorPage extends LitElement {
       color: var(--color-info-text, #004085);
     }
 
+    .upload-summary {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: var(--color-surface, white);
+      border: 1px solid var(--color-border, #ddd);
+      border-radius: 0;
+      display: flex;
+      gap: 1.5rem;
+      font-size: 0.875rem;
+      color: var(--color-text-primary, #333);
+    }
+
+    .upload-summary span {
+      font-weight: 500;
+    }
+
+    .upload-summary .error-count {
+      color: var(--color-danger, #dc3545);
+    }
+
     .upload-warning {
       margin-bottom: 1rem;
       padding: 0.75rem;
@@ -358,6 +380,9 @@ export class AdminAlbumEditorPage extends LitElement {
 
   @state()
   private albumPassword: string = '';
+
+  @state()
+  private uploadProgress: Map<string, UploadProgress> = new Map();
 
   private unsubscribeLogout?: () => void;
 
@@ -571,12 +596,42 @@ export class AdminAlbumEditorPage extends LitElement {
       return;
     }
 
+    // Limit to 100 files per batch
+    if (files.length > 100) {
+      this.error = `Too many files selected. Maximum 100 files per batch. You selected ${files.length} files.`;
+      return;
+    }
+
     this.uploading = true;
     this.error = '';
     this.success = '';
 
+    // Initialize progress tracking for all files
+    const newProgress = new Map<string, UploadProgress>();
+    files.forEach((file) => {
+      newProgress.set(file.name, {
+        filename: file.name,
+        status: 'uploading',
+        progress: 0,
+      });
+    });
+    this.uploadProgress = newProgress;
+
     try {
-      const result = await uploadPhotos(this.albumId, files);
+      const result = await uploadPhotos(
+        this.albumId,
+        files,
+        (progress: UploadProgress) => {
+          // Update progress for this file
+          const updated = new Map(this.uploadProgress);
+          updated.set(progress.filename, progress);
+          this.uploadProgress = updated;
+        },
+        3 // Upload 3 files concurrently
+      );
+
+      // Clear upload progress after completion
+      this.uploadProgress = new Map();
 
       // Reload album to show new photos and refresh storage stats
       await Promise.all([this.loadAlbum(), this.loadStorageStats()]);
@@ -601,6 +656,8 @@ export class AdminAlbumEditorPage extends LitElement {
         this.error = 'No files were processed';
       }
     } catch (err) {
+      // Clear upload progress on error
+      this.uploadProgress = new Map();
       this.error = err instanceof Error ? err.message : 'Upload failed';
     } finally {
       this.uploading = false;
@@ -930,13 +987,54 @@ export class AdminAlbumEditorPage extends LitElement {
                   />
                 </div>
 
-                ${this.uploading
-                  ? html`<div class="upload-progress">Uploading photos...</div>`
+                ${this.uploadProgress.size > 0
+                  ? html`<div class="upload-summary">
+                      ${(() => {
+                        const progressArray = Array.from(this.uploadProgress.values());
+                        const uploading = progressArray.filter(
+                          (p) => p.status === 'uploading'
+                        ).length;
+                        const processing = progressArray.filter(
+                          (p) => p.status === 'processing'
+                        ).length;
+                        const complete = progressArray.filter(
+                          (p) => p.status === 'complete'
+                        ).length;
+                        const errors = progressArray.filter((p) => p.status === 'error').length;
+                        return html`
+                          <span>Uploading: ${uploading}</span>
+                          <span>Processing: ${processing}</span>
+                          <span>Complete: ${complete}</span>
+                          ${errors > 0
+                            ? html`<span class="error-count">Errors: ${errors}</span>`
+                            : ''}
+                        `;
+                      })()}
+                    </div>`
                   : ''}
-                ${this.album.photos && this.album.photos.length > 0
+                ${(this.album.photos && this.album.photos.length > 0) ||
+                this.uploadProgress.size > 0
                   ? html`
                       <div class="photos-grid">
-                        ${this.album.photos.map(
+                        <!-- Upload placeholders -->
+                        ${Array.from(this.uploadProgress.values()).map(
+                          (progress) => html`
+                            <upload-placeholder
+                              filename=${progress.filename}
+                              status=${progress.status}
+                              progress=${progress.progress}
+                              error=${progress.error || ''}
+                              @dismiss=${() => {
+                                // Remove error from progress tracking
+                                const updated = new Map(this.uploadProgress);
+                                updated.delete(progress.filename);
+                                this.uploadProgress = updated;
+                              }}
+                            ></upload-placeholder>
+                          `
+                        )}
+                        <!-- Existing photos -->
+                        ${this.album.photos?.map(
                           (photo) => html`
                             <div
                               class="photo-item ${this.draggedPhotoId === photo.id

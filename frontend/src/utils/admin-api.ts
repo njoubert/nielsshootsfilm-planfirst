@@ -201,34 +201,200 @@ export interface UploadPhotosResponse {
   errors: string[];
 }
 
+export interface UploadProgress {
+  filename: string;
+  status: 'uploading' | 'processing' | 'complete' | 'error';
+  progress: number; // 0-100 for uploading, undefined for other states
+  error?: string;
+}
+
+export interface UploadProgressCallback {
+  (progress: UploadProgress): void;
+}
+
 /**
- * Upload photos to an album.
+ * Upload a single photo to an album using XMLHttpRequest for real progress tracking.
+ * @returns Promise that resolves with the uploaded photo data or rejects with error
  */
-export async function uploadPhotos(albumId: string, files: File[]): Promise<UploadPhotosResponse> {
-  const formData = new FormData();
-  files.forEach((file) => {
+function uploadSinglePhoto(
+  albumId: string,
+  file: File,
+  onProgress: UploadProgressCallback
+): Promise<{ id: string; filename_original: string; url_thumbnail: string }> {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
     formData.append('photos', file);
-  });
 
-  const response = await fetch(`${API_BASE_URL}/api/admin/albums/${albumId}/photos/upload`, {
-    method: 'POST',
-    credentials: 'include',
-    body: formData,
-  });
+    const xhr = new XMLHttpRequest();
 
-  if (!response.ok) {
-    // Try to get detailed error message
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const errorData = (await response.json()) as { error?: string; message?: string };
-      throw new Error(errorData.error || errorData.message || 'Failed to upload photos');
-    } else {
-      const error = await response.text();
-      throw new Error(error || 'Failed to upload photos');
+    // Track upload progress (0-100%)
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        const percentComplete = Math.round((e.loaded / e.total) * 100);
+        onProgress({
+          filename: file.name,
+          status: 'uploading',
+          progress: percentComplete,
+        });
+      }
+    });
+
+    // Upload complete, now processing on server
+    xhr.upload.addEventListener('load', () => {
+      onProgress({
+        filename: file.name,
+        status: 'processing',
+        progress: 100,
+      });
+    });
+
+    // Handle response from server
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const response = JSON.parse(xhr.responseText) as UploadPhotosResponse;
+          if (response.uploaded && response.uploaded.length > 0) {
+            onProgress({
+              filename: file.name,
+              status: 'complete',
+              progress: 100,
+            });
+            resolve(response.uploaded[0]);
+          } else if (response.errors && response.errors.length > 0) {
+            onProgress({
+              filename: file.name,
+              status: 'error',
+              progress: 0,
+              error: response.errors[0],
+            });
+            reject(new Error(response.errors[0]));
+          } else {
+            onProgress({
+              filename: file.name,
+              status: 'error',
+              progress: 0,
+              error: 'Unknown error',
+            });
+            reject(new Error('Unknown error'));
+          }
+        } catch {
+          onProgress({
+            filename: file.name,
+            status: 'error',
+            progress: 0,
+            error: 'Failed to parse response',
+          });
+          reject(new Error('Failed to parse server response'));
+        }
+      } else {
+        // HTTP error
+        let errorMessage = `Upload failed (${xhr.status})`;
+        try {
+          const contentType = xhr.getResponseHeader('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = JSON.parse(xhr.responseText) as { error?: string; message?: string };
+            errorMessage = errorData.error || errorData.message || errorMessage;
+          } else {
+            errorMessage = xhr.responseText || errorMessage;
+          }
+        } catch {
+          // Ignore parse errors, use default message
+        }
+
+        onProgress({
+          filename: file.name,
+          status: 'error',
+          progress: 0,
+          error: errorMessage,
+        });
+        reject(new Error(errorMessage));
+      }
+    });
+
+    // Handle network errors
+    xhr.addEventListener('error', () => {
+      onProgress({
+        filename: file.name,
+        status: 'error',
+        progress: 0,
+        error: 'Network error',
+      });
+      reject(new Error('Network error'));
+    });
+
+    // Handle aborted uploads
+    xhr.addEventListener('abort', () => {
+      onProgress({
+        filename: file.name,
+        status: 'error',
+        progress: 0,
+        error: 'Upload cancelled',
+      });
+      reject(new Error('Upload cancelled'));
+    });
+
+    // Open and send request
+    xhr.open('POST', `${API_BASE_URL}/api/admin/albums/${albumId}/photos/upload`);
+    xhr.withCredentials = true; // Include cookies for authentication
+    xhr.send(formData);
+  });
+}
+
+/**
+ * Upload photos to an album with real progress tracking.
+ * Uploads files concurrently (up to 3 at a time) with per-file progress callbacks.
+ *
+ * @param albumId - The album ID to upload to
+ * @param files - Array of files to upload
+ * @param onProgress - Optional callback for tracking upload progress per file
+ * @param concurrency - Maximum number of concurrent uploads (default: 3)
+ * @returns Promise that resolves with aggregated upload results
+ */
+export async function uploadPhotos(
+  albumId: string,
+  files: File[],
+  onProgress?: UploadProgressCallback,
+  concurrency = 3
+): Promise<UploadPhotosResponse> {
+  const uploaded: Array<{ id: string; filename_original: string; url_thumbnail: string }> = [];
+  const errors: string[] = [];
+
+  // Helper to process a single file
+  const processFile = async (file: File) => {
+    try {
+      const result = await uploadSinglePhoto(albumId, file, (progress) => {
+        if (onProgress) {
+          onProgress(progress);
+        }
+      });
+      uploaded.push(result);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      errors.push(`${file.name}: ${errorMessage}`);
+    }
+  };
+
+  // Process files with concurrency limit
+  const queue = [...files];
+  const active = new Set<Promise<void>>();
+
+  while (queue.length > 0 || active.size > 0) {
+    // Fill up to concurrency limit
+    while (active.size < concurrency && queue.length > 0) {
+      const file = queue.shift()!;
+      const promise = processFile(file).finally(() => {
+        active.delete(promise);
+      });
+      active.add(promise);
+    }
+
+    // Wait for at least one to complete before continuing
+    if (active.size > 0) {
+      await Promise.race(active);
     }
   }
 
-  return response.json() as Promise<UploadPhotosResponse>;
+  return { uploaded, errors };
 }
 
 /**
