@@ -1,7 +1,7 @@
 import { expect, fixture, html } from '@open-wc/testing';
 import { describe, it } from 'vitest';
-import { UploadPlaceholder } from './upload-placeholder';
 import './upload-placeholder';
+import { UploadPlaceholder } from './upload-placeholder';
 
 describe('UploadPlaceholder', () => {
   it('renders with default values', async () => {

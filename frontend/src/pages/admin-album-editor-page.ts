@@ -10,6 +10,7 @@ import '../components/upload-placeholder';
 import type { Album, SiteConfig } from '../types/data-models';
 import {
   createAlbum,
+  deleteAlbum,
   deletePhoto,
   fetchAlbumById,
   reorderPhotos,
@@ -384,6 +385,12 @@ export class AdminAlbumEditorPage extends LitElement {
   @state()
   private uploadProgress: Map<string, UploadProgress> = new Map();
 
+  @state()
+  private completedUploads: Map<
+    string,
+    { id: string; filename_original: string; url_thumbnail: string }
+  > = new Map();
+
   private unsubscribeLogout?: () => void;
 
   connectedCallback() {
@@ -616,6 +623,7 @@ export class AdminAlbumEditorPage extends LitElement {
       });
     });
     this.uploadProgress = newProgress;
+    this.completedUploads = new Map(); // Clear previous completed uploads
 
     try {
       const result = await uploadPhotos(
@@ -626,15 +634,26 @@ export class AdminAlbumEditorPage extends LitElement {
           const updated = new Map(this.uploadProgress);
           updated.set(progress.filename, progress);
           this.uploadProgress = updated;
+
+          // Store completed upload data to render thumbnail immediately
+          if (progress.status === 'complete' && progress.uploadedPhoto) {
+            const completedMap = new Map(this.completedUploads);
+            completedMap.set(progress.filename, progress.uploadedPhoto);
+            this.completedUploads = completedMap;
+          }
         },
         3 // Upload 3 files concurrently
       );
 
-      // Clear upload progress after completion
-      this.uploadProgress = new Map();
+      // Reload album to get the actual photos from the server
+      await this.loadAlbum();
 
-      // Reload album to show new photos and refresh storage stats
-      await Promise.all([this.loadAlbum(), this.loadStorageStats()]);
+      // Refresh storage stats to show updated disk usage
+      await this.loadStorageStats();
+
+      // Clear upload progress and completed uploads after album is loaded
+      this.uploadProgress = new Map();
+      this.completedUploads = new Map();
 
       // Handle results based on success/failure counts
       const uploadedCount = result.uploaded.length;
@@ -685,6 +704,24 @@ export class AdminAlbumEditorPage extends LitElement {
       this.success = 'Cover photo updated';
     } catch (err) {
       this.error = err instanceof Error ? err.message : 'Failed to set cover';
+    }
+  }
+
+  private async handleDeleteAlbum() {
+    if (!this.album) return;
+
+    const confirmed = confirm(
+      `Are you sure you want to delete the album "${this.album.title}"? This action cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await deleteAlbum(this.album.id);
+      // Redirect immediately to albums list
+      window.location.href = '/admin/albums';
+    } catch (error) {
+      this.error = `Failed to delete album: ${error instanceof Error ? error.message : 'Unknown error'}`;
     }
   }
 
@@ -926,9 +963,23 @@ export class AdminAlbumEditorPage extends LitElement {
           </div>
 
           <div class="form-section">
-            <button type="submit" class="btn btn-primary" ?disabled=${this.saving}>
-              ${this.saving ? 'Saving...' : isNew ? 'Create Album' : 'Save Changes'}
-            </button>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <button type="submit" class="btn btn-primary" ?disabled=${this.saving}>
+                ${this.saving ? 'Saving...' : isNew ? 'Create Album' : 'Save Changes'}
+              </button>
+              ${!isNew
+                ? html`
+                    <button
+                      type="button"
+                      class="btn btn-danger"
+                      @click=${() => this.handleDeleteAlbum()}
+                      ?disabled=${this.saving}
+                    >
+                      Delete Album
+                    </button>
+                  `
+                : ''}
+            </div>
           </div>
         </form>
 
@@ -1013,12 +1064,26 @@ export class AdminAlbumEditorPage extends LitElement {
                     </div>`
                   : ''}
                 ${(this.album.photos && this.album.photos.length > 0) ||
-                this.uploadProgress.size > 0
+                this.uploadProgress.size > 0 ||
+                this.completedUploads.size > 0
                   ? html`
                       <div class="photos-grid">
-                        <!-- Upload placeholders -->
-                        ${Array.from(this.uploadProgress.values()).map(
-                          (progress) => html`
+                        <!-- Upload placeholders or completed thumbnails -->
+                        ${Array.from(this.uploadProgress.values()).map((progress) => {
+                          // If this file is complete and we have the thumbnail, show it
+                          const completedPhoto = this.completedUploads.get(progress.filename);
+                          if (completedPhoto && progress.status === 'complete') {
+                            return html`
+                              <div class="photo-item">
+                                <img
+                                  src=${completedPhoto.url_thumbnail}
+                                  alt=${completedPhoto.filename_original}
+                                />
+                              </div>
+                            `;
+                          }
+                          // Otherwise show the progress placeholder
+                          return html`
                             <upload-placeholder
                               filename=${progress.filename}
                               status=${progress.status}
@@ -1031,8 +1096,8 @@ export class AdminAlbumEditorPage extends LitElement {
                                 this.uploadProgress = updated;
                               }}
                             ></upload-placeholder>
-                          `
-                        )}
+                          `;
+                        })}
                         <!-- Existing photos -->
                         ${this.album.photos?.map(
                           (photo) => html`

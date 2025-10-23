@@ -206,6 +206,12 @@ export interface UploadProgress {
   status: 'uploading' | 'processing' | 'complete' | 'error';
   progress: number; // 0-100 for uploading, undefined for other states
   error?: string;
+  uploadedPhoto?: {
+    // Partial photo data returned from server on completion
+    id: string;
+    filename_original: string;
+    url_thumbnail: string;
+  };
 }
 
 export interface UploadProgressCallback {
@@ -254,12 +260,14 @@ function uploadSinglePhoto(
         try {
           const response = JSON.parse(xhr.responseText) as UploadPhotosResponse;
           if (response.uploaded && response.uploaded.length > 0) {
+            const uploadedPhoto = response.uploaded[0];
             onProgress({
               filename: file.name,
               status: 'complete',
               progress: 100,
+              uploadedPhoto: uploadedPhoto,
             });
-            resolve(response.uploaded[0]);
+            resolve(uploadedPhoto);
           } else if (response.errors && response.errors.length > 0) {
             onProgress({
               filename: file.name,
