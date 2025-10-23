@@ -7,7 +7,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import '../components/admin-header';
 import '../components/toast-notification';
 import '../components/upload-placeholder';
-import type { Album, SiteConfig } from '../types/data-models';
+import type { Album, Photo, SiteConfig } from '../types/data-models';
 import {
   createAlbum,
   deleteAlbum,
@@ -393,6 +393,74 @@ export class AdminAlbumEditorPage extends LitElement {
 
   private unsubscribeLogout?: () => void;
 
+  // ============================================================================
+  // Upload State Management Helpers
+  // ============================================================================
+
+  /**
+   * Initialize upload progress tracking for a batch of files.
+   */
+  private initializeUploadProgress(files: File[]): void {
+    const newProgress = new Map<string, UploadProgress>();
+    files.forEach((file) => {
+      newProgress.set(file.name, {
+        filename: file.name,
+        status: 'uploading',
+        progress: 0,
+      });
+    });
+    this.uploadProgress = newProgress;
+    this.completedUploads = new Map();
+  }
+
+  /**
+   * Update progress for a single file.
+   */
+  private updateFileProgress(progress: UploadProgress): void {
+    this.uploadProgress = new Map(this.uploadProgress).set(progress.filename, progress);
+
+    // Store completed upload data to render thumbnail immediately
+    if (progress.status === 'complete' && progress.uploadedPhoto) {
+      this.completedUploads = new Map(this.completedUploads).set(
+        progress.filename,
+        progress.uploadedPhoto
+      );
+    }
+  }
+
+  /**
+   * Remove a file from upload progress tracking (e.g., after dismissing an error).
+   */
+  private removeFileProgress(filename: string): void {
+    const updated = new Map(this.uploadProgress);
+    updated.delete(filename);
+    this.uploadProgress = updated;
+  }
+
+  /**
+   * Clear all upload tracking after completion.
+   */
+  private clearUploadTracking(): void {
+    this.uploadProgress = new Map();
+    this.completedUploads = new Map();
+  }
+
+  /**
+   * Add newly uploaded photos to the album.
+   */
+  private addPhotosToAlbum(photos: Photo[]): void {
+    if (!this.album || photos.length === 0) return;
+
+    this.album = {
+      ...this.album,
+      photos: [...(this.album.photos || []), ...photos],
+    };
+  }
+
+  // ============================================================================
+  // Lifecycle Methods
+  // ============================================================================
+
   connectedCallback() {
     super.connectedCallback();
     void this.loadData();
@@ -614,46 +682,26 @@ export class AdminAlbumEditorPage extends LitElement {
     this.success = '';
 
     // Initialize progress tracking for all files
-    const newProgress = new Map<string, UploadProgress>();
-    files.forEach((file) => {
-      newProgress.set(file.name, {
-        filename: file.name,
-        status: 'uploading',
-        progress: 0,
-      });
-    });
-    this.uploadProgress = newProgress;
-    this.completedUploads = new Map(); // Clear previous completed uploads
+    this.initializeUploadProgress(files);
 
     try {
       const result = await uploadPhotos(
         this.albumId,
         files,
         (progress: UploadProgress) => {
-          // Update progress for this file
-          const updated = new Map(this.uploadProgress);
-          updated.set(progress.filename, progress);
-          this.uploadProgress = updated;
-
-          // Store completed upload data to render thumbnail immediately
-          if (progress.status === 'complete' && progress.uploadedPhoto) {
-            const completedMap = new Map(this.completedUploads);
-            completedMap.set(progress.filename, progress.uploadedPhoto);
-            this.completedUploads = completedMap;
-          }
+          this.updateFileProgress(progress);
         },
         3 // Upload 3 files concurrently
       );
 
-      // Reload album to get the actual photos from the server
-      await this.loadAlbum();
+      // Append newly uploaded photos to the album (no need to reload!)
+      this.addPhotosToAlbum(result.uploaded);
 
       // Refresh storage stats to show updated disk usage
       await this.loadStorageStats();
 
-      // Clear upload progress and completed uploads after album is loaded
-      this.uploadProgress = new Map();
-      this.completedUploads = new Map();
+      // Clear upload progress and completed uploads after photos are added
+      this.clearUploadTracking();
 
       // Handle results based on success/failure counts
       const uploadedCount = result.uploaded.length;
@@ -676,7 +724,7 @@ export class AdminAlbumEditorPage extends LitElement {
       }
     } catch (err) {
       // Clear upload progress on error
-      this.uploadProgress = new Map();
+      this.clearUploadTracking();
       this.error = err instanceof Error ? err.message : 'Upload failed';
     } finally {
       this.uploading = false;
@@ -708,7 +756,7 @@ export class AdminAlbumEditorPage extends LitElement {
   }
 
   private async handleDeleteAlbum() {
-    if (!this.album) return;
+    if (!this.album?.id) return;
 
     const confirmed = confirm(
       `Are you sure you want to delete the album "${this.album.title}"? This action cannot be undone.`
@@ -721,7 +769,9 @@ export class AdminAlbumEditorPage extends LitElement {
       // Redirect immediately to albums list
       window.location.href = '/admin/albums';
     } catch (error) {
-      this.error = `Failed to delete album: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      this.error = `Failed to delete album: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`;
     }
   }
 
@@ -1089,12 +1139,7 @@ export class AdminAlbumEditorPage extends LitElement {
                               status=${progress.status}
                               progress=${progress.progress}
                               error=${progress.error || ''}
-                              @dismiss=${() => {
-                                // Remove error from progress tracking
-                                const updated = new Map(this.uploadProgress);
-                                updated.delete(progress.filename);
-                                this.uploadProgress = updated;
-                              }}
+                              @dismiss=${() => this.removeFileProgress(progress.filename)}
                             ></upload-placeholder>
                           `;
                         })}

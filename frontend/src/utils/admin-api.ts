@@ -3,7 +3,7 @@
  * These functions interact with the Go admin server endpoints.
  */
 
-import type { Album, SiteConfig } from '../types/data-models';
+import type { Album, Photo, SiteConfig } from '../types/data-models';
 import { dispatchLoginEvent, dispatchLogoutEvent } from './auth-state';
 
 const API_BASE_URL = 'http://localhost:8080';
@@ -193,11 +193,7 @@ export async function fetchAllAlbums(): Promise<Album[]> {
 // ============================================================================
 
 export interface UploadPhotosResponse {
-  uploaded: Array<{
-    id: string;
-    filename_original: string;
-    url_thumbnail: string;
-  }>;
+  uploaded: Photo[]; // Full photo data from backend
   errors: string[];
 }
 
@@ -206,12 +202,7 @@ export interface UploadProgress {
   status: 'uploading' | 'processing' | 'complete' | 'error';
   progress: number; // 0-100 for uploading, undefined for other states
   error?: string;
-  uploadedPhoto?: {
-    // Partial photo data returned from server on completion
-    id: string;
-    filename_original: string;
-    url_thumbnail: string;
-  };
+  uploadedPhoto?: Photo; // Full photo data returned from server on completion
 }
 
 export interface UploadProgressCallback {
@@ -226,7 +217,7 @@ function uploadSinglePhoto(
   albumId: string,
   file: File,
   onProgress: UploadProgressCallback
-): Promise<{ id: string; filename_original: string; url_thumbnail: string }> {
+): Promise<Photo> {
   return new Promise((resolve, reject) => {
     const formData = new FormData();
     formData.append('photos', file);
@@ -364,7 +355,7 @@ export async function uploadPhotos(
   onProgress?: UploadProgressCallback,
   concurrency = 3
 ): Promise<UploadPhotosResponse> {
-  const uploaded: Array<{ id: string; filename_original: string; url_thumbnail: string }> = [];
+  const uploaded: Photo[] = [];
   const errors: string[] = [];
 
   // Helper to process a single file

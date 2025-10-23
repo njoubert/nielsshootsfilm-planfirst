@@ -167,4 +167,4 @@ server: {
 
 - You may not turn off tests without explicit permission
 - You may not remove checks from the pre-commit hooks.
-- Use MCP servers for git interactions, always use raw git commands on the command line to commit, push, pull, branch, merge, rebase, etc.
+- Never use MCP servers for git interactions, always use raw git commands on the command line to commit, push, pull, branch, merge, rebase, etc.
