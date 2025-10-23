@@ -715,19 +715,19 @@ All Lit components should accept settings as properties. Settings gets injected 
   - Full-screen cover image
   - Album title and subtitle overlaid
   - Site title from `site_config.site.title`
-- [ ] About section
+- ✅ About section
   - Owner name from `site_config.owner.name`
   - Bio from `site_config.owner.bio` (render Markdown)
   - Location from `site_config.owner.location`
 - ✅ Photo grid from main portfolio album
   - Layout based on `site_config.portfolio.default_photo_layout`
   - Click to open lightbox (if `site_config.portfolio.enable_lightbox`)
-- [ ] Contact section
+- ✅ Contact section
   - Email (if `site_config.contact.show_email`)
   - Phone (if `site_config.contact.show_phone`)
   - Social links from `site_config.social`
-- [ ] Responsive design (mobile-first)
-- [ ] Load data from `site_config.json` (for main portfolio album ID) and `albums.json`
+- ✅ Responsive design (mobile-first)
+- ✅ Load data from `site_config.json` (for main portfolio album ID) and `albums.json`
 - [ ] Apply branding colors from `site_config.branding`
 
 ### 3.2 Public Albums
