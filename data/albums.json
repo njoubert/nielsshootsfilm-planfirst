@@ -172,14 +172,14 @@
       "slug": "ofarrel-and-polk",
       "title": "O'Farrel and Polk",
       "subtitle": "Flotsam and Jetsam",
-      "description": "I'm on Polk street, between O'Farrel and Ellis. Scenes of a shuttered San Francisco. Broken people on the street, doing fentanyl. The flotsam and jetsam of a strange twisted time. He runs up to me. “He, hey, you better get out of here with that camera. My buddy back there’s got a slingshot. he’s gonna bust your head right open if you don’t get out of here”. A rock hits my leg as I leave.",
+      "description": "I'm on Polk street, between O'Farrel and Ellis. Scenes of a shuttered San Francisco. Broken people on the street. fentanyl. The flotsam and jetsam of a strange twisted time. He runs up to me. “He, hey, you better get out of here with that camera. My buddy back there’s got a slingshot. he’s gonna bust your head right open if you don’t get out of here”. A rock hits my leg as I leave.",
       "cover_photo_id": "518eb5d5-6f51-4d42-abb9-65a5cf105f19",
       "visibility": "public",
       "password_hash": "$2a$10$sojT1JM4.w.XhYCspXNvuOhOI0Fos5Z9wBOLqpBGtVGupyZwOQ5HW",
       "allow_downloads": false,
       "order": 0,
       "created_at": "2025-10-21T08:22:34.010723Z",
-      "updated_at": "2025-10-23T06:06:16.050098Z",
+      "updated_at": "2025-10-23T06:48:36.060078Z",
       "photos": [
         {
           "id": "518eb5d5-6f51-4d42-abb9-65a5cf105f19",
@@ -512,12 +512,12 @@
       "slug": "the-big-one",
       "title": "The big one",
       "subtitle": "asdfasdfagsdsdfg",
-      "description": "**Lorem** ipsum dolor sit amet, consectetur adipiscing elit. Morbi sed lectus in nibh vulputate aliquam. Fusce non eros id odio gravida ultricies sit amet sollicitudin nisi. Pellentesque condimentum felis semper magna ultrices commodo. Sed malesuada ipsum vel velit feugiat porta. Nam porttitor viverra nunc, et ullamcorper odio viverra quis. Vestibulum ullamcorper, leo nec porta semper, justo nisl sagittis massa, a dictum felis justo in neque. Quisque vestibulum nisi congue sodales faucibus.\n\nQuisque eu leo quis risus pulvinar luctus. Nunc consectetur, lectus vel imperdiet rhoncus, dolor elit rutrum elit, nec mattis metus libero id neque. Maecenas non mauris et massa ornare mattis. Aliquam nec velit a felis dictum dapibus. Phasellus finibus leo nec erat laoreet, in volutpat mi interdum. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Phasellus velit nulla, dictum at diam et, elementum scelerisque magna.\n\nEtiam tempor est vitae risus sagittis, ut mollis sapien viverra. Curabitur urna sem, facilisis vitae iaculis eget, commodo sit amet diam. Mauris sed lacinia diam. Quisque viverra enim erat, non mattis diam ornare eu. Maecenas non sapien sapien. Donec molestie tincidunt sapien, imperdiet malesuada neque aliquet nec. Fusce interdum volutpat fringilla. Sed mollis massa id neque rhoncus blandit. Vestibulum in dolor tempus felis consectetur sodales in ac lorem. Etiam ultrices lacinia dictum. Morbi justo urna, euismod a urna quis, pharetra maximus nibh. Ut faucibus tempus volutpat. In hac habitasse platea dictumst.\n\nQuisque pharetra id felis in aliquet. Curabitur fermentum malesuada nisl eu posuere. In cursus enim rutrum justo viverra, ac fermentum erat interdum. Morbi euismod ex nec eros consequat, nec tincidunt erat pellentesque. Duis nec sollicitudin eros, in dictum dolor. Praesent luctus tincidunt ultricies. Nullam ante nisi, dignissim quis tortor eu, eleifend condimentum quam. Mauris eleifend porttitor nisl, eget molestie dolor condimentum sed. Nullam massa orci, pretium molestie laoreet sed, bibendum non quam. Donec posuere ex enim, at blandit nunc luctus in.\n\nPraesent quis mattis enim, at mollis odio. Aenean et pretium orci. Donec at mauris auctor, convallis ipsum vel, malesuada nunc. Donec tincidunt ex ac dui gravida, at accumsan erat elementum. Fusce id dolor id lacus imperdiet vulputate a a neque. Sed bibendum felis sit amet velit cursus iaculis. Vivamus mauris metus, sagittis non tempor in, tempor eu orci. Nulla facilisi.",
+      "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi sed lectus in nibh vulputate aliquam. Fusce non eros id odio gravida ultricies sit amet sollicitudin nisi. Pellentesque condimentum felis semper magna ultrices commodo. Sed malesuada ipsum vel velit feugiat porta. Nam porttitor viverra nunc, et ullamcorper odio viverra quis. Vestibulum ullamcorper, leo nec porta semper, justo nisl sagittis massa, a dictum felis justo in neque. Quisque vestibulum nisi congue sodales faucibus.",
       "visibility": "public",
       "allow_downloads": true,
       "order": 0,
       "created_at": "2025-10-23T06:18:10.926541Z",
-      "updated_at": "2025-10-23T06:26:58.429826Z",
+      "updated_at": "2025-10-23T06:42:34.885822Z",
       "photos": [
         {
           "id": "e446ccfa-49b0-4450-836b-98f9daf5dbc0",

@@ -91,10 +91,25 @@ export class AdminAlbumEditorPage extends LitElement {
       cursor: not-allowed;
     }
 
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
+    .layout-wrapper {
+      display: flex;
+      min-height: calc(100vh - 180px);
+    }
+
+    .sidebar {
+      width: 400px;
+      flex-shrink: 0;
+      background: var(--color-background, #f5f5f5);
+      border-right: 1px solid var(--color-border, #ddd);
       padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      padding: 2rem;
+      overflow-y: auto;
     }
 
     .loading,
@@ -1034,318 +1049,329 @@ export class AdminAlbumEditorPage extends LitElement {
         <h1 class="page-title">${isNew ? 'Create Album' : 'Edit Album'}</h1>
       </div>
 
-      <div class="container">
-        <form @submit=${(e: Event) => this.handleSubmit(e)}>
-          <div class="form-section">
-            <h2>Album Details</h2>
+      <div class="layout-wrapper">
+        <div class="sidebar">
+          <form @submit=${(e: Event) => this.handleSubmit(e)}>
+            <div class="form-section">
+              <h2>Album Details</h2>
 
-            <div class="form-group">
-              <label for="title">Title *</label>
-              <input
-                type="text"
-                id="title"
-                .value=${this.album.title || ''}
-                @input=${(e: Event) =>
-                  this.updateField('title', (e.target as HTMLInputElement).value)}
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="subtitle">Subtitle</label>
-              <input
-                type="text"
-                id="subtitle"
-                .value=${this.album.subtitle || ''}
-                @input=${(e: Event) =>
-                  this.updateField('subtitle', (e.target as HTMLInputElement).value)}
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="description">Description</label>
-              <textarea
-                id="description"
-                .value=${this.album.description || ''}
-                @input=${(e: Event) =>
-                  this.updateField('description', (e.target as HTMLTextAreaElement).value)}
-              ></textarea>
-            </div>
-
-            <div class="form-row">
               <div class="form-group">
-                <label for="visibility">Visibility</label>
-                <select
-                  id="visibility"
-                  .value=${this.album.visibility || 'public'}
-                  @change=${(e: Event) => {
-                    const select = e.target as HTMLSelectElement;
-                    const value = select.value as 'public' | 'unlisted' | 'password_protected';
-                    this.updateField('visibility', value);
-                    // Auto-save unless switching to password_protected (user needs to enter password first)
-                    if (value !== 'password_protected') {
-                      void this.autoSave();
-                    }
-                  }}
-                >
-                  <option value="public">Public</option>
-                  <option value="unlisted">Unlisted</option>
-                  <option value="password_protected">Password Protected</option>
-                </select>
-              </div>
-
-              ${this.album.visibility === 'password_protected'
-                ? html`
-                    <div class="form-group">
-                      <label for="album_password">Album Password *</label>
-                      <input
-                        type="password"
-                        id="album_password"
-                        placeholder="Enter password for this album"
-                        @input=${(e: Event) => {
-                          const input = e.target as HTMLInputElement;
-                          this.albumPassword = input.value;
-                        }}
-                      />
-                      <small style="color: var(--color-text-secondary, #666); font-size: 0.875rem;">
-                        ${this.album.password_hash
-                          ? 'Leave blank to keep current password'
-                          : 'Required for password-protected albums'}
-                      </small>
-                    </div>
-                  `
-                : html` <div class="form-group"></div> `}
-            </div>
-
-            <div class="form-group">
-              <div class="checkbox-group">
+                <label for="title">Title *</label>
                 <input
-                  type="checkbox"
-                  id="allow_downloads"
-                  .checked=${this.album.allow_downloads ?? true}
-                  @change=${(e: Event) => {
-                    this.updateField('allow_downloads', (e.target as HTMLInputElement).checked);
-                    void this.autoSave();
-                  }}
+                  type="text"
+                  id="title"
+                  .value=${this.album.title || ''}
+                  @input=${(e: Event) =>
+                    this.updateField('title', (e.target as HTMLInputElement).value)}
+                  required
                 />
-                <label for="allow_downloads">Allow downloads</label>
+              </div>
+
+              <div class="form-group">
+                <label for="subtitle">Subtitle</label>
+                <input
+                  type="text"
+                  id="subtitle"
+                  .value=${this.album.subtitle || ''}
+                  @input=${(e: Event) =>
+                    this.updateField('subtitle', (e.target as HTMLInputElement).value)}
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="description">Description</label>
+                <textarea
+                  id="description"
+                  .value=${this.album.description || ''}
+                  @input=${(e: Event) =>
+                    this.updateField('description', (e.target as HTMLTextAreaElement).value)}
+                ></textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="visibility">Visibility</label>
+                  <select
+                    id="visibility"
+                    .value=${this.album.visibility || 'public'}
+                    @change=${(e: Event) => {
+                      const select = e.target as HTMLSelectElement;
+                      const value = select.value as 'public' | 'unlisted' | 'password_protected';
+                      this.updateField('visibility', value);
+                      // Auto-save unless switching to password_protected (user needs to enter password first)
+                      if (value !== 'password_protected') {
+                        void this.autoSave();
+                      }
+                    }}
+                  >
+                    <option value="public">Public</option>
+                    <option value="unlisted">Unlisted</option>
+                    <option value="password_protected">Password Protected</option>
+                  </select>
+                </div>
+
+                ${this.album.visibility === 'password_protected'
+                  ? html`
+                      <div class="form-group">
+                        <label for="album_password">Album Password *</label>
+                        <input
+                          type="password"
+                          id="album_password"
+                          placeholder="Enter password for this album"
+                          @input=${(e: Event) => {
+                            const input = e.target as HTMLInputElement;
+                            this.albumPassword = input.value;
+                          }}
+                        />
+                        <small
+                          style="color: var(--color-text-secondary, #666); font-size: 0.875rem;"
+                        >
+                          ${this.album.password_hash
+                            ? 'Leave blank to keep current password'
+                            : 'Required for password-protected albums'}
+                        </small>
+                      </div>
+                    `
+                  : html` <div class="form-group"></div> `}
+              </div>
+
+              <div class="form-group">
+                <div class="checkbox-group">
+                  <input
+                    type="checkbox"
+                    id="allow_downloads"
+                    .checked=${this.album.allow_downloads ?? true}
+                    @change=${(e: Event) => {
+                      this.updateField('allow_downloads', (e.target as HTMLInputElement).checked);
+                      void this.autoSave();
+                    }}
+                  />
+                  <label for="allow_downloads">Allow downloads</label>
+                </div>
+              </div>
+
+              <div
+                style="display: flex; justify-content: flex-start; gap: 1rem; margin-top: 1.5rem;"
+              >
+                ${!isNew
+                  ? html`
+                      <button
+                        type="button"
+                        class="btn btn-secondary"
+                        @click=${(e: Event) => this.handleView(e)}
+                        ?disabled=${this.saving}
+                        style="width: 220px;"
+                      >
+                        View
+                      </button>
+                    `
+                  : ''}
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  ?disabled=${this.saving}
+                  style="width: 220px;"
+                >
+                  ${this.saving ? 'Saving...' : isNew ? 'Create Album' : 'Save'}
+                </button>
               </div>
             </div>
+          </form>
 
-            <div style="display: flex; justify-content: flex-start; gap: 1rem; margin-top: 1.5rem;">
-              ${!isNew
-                ? html`
+          ${!isNew
+            ? html`
+                <div class="form-section">
+                  <h2>Danger Zone</h2>
+                  <div style="display: flex; gap: 1rem; align-items: center;">
+                    ${this.album.photos && this.album.photos.length > 0
+                      ? html`
+                          <button
+                            type="button"
+                            class="btn btn-danger"
+                            @click=${() => this.handleDeleteAllPhotos()}
+                            ?disabled=${this.saving || this.uploading}
+                            style="width: 220px;"
+                          >
+                            Delete All Photos
+                          </button>
+                        `
+                      : ''}
                     <button
                       type="button"
-                      class="btn btn-secondary"
-                      @click=${(e: Event) => this.handleView(e)}
+                      class="btn btn-danger"
+                      @click=${() => this.handleDeleteAlbum()}
                       ?disabled=${this.saving}
                       style="width: 220px;"
                     >
-                      View
+                      Delete Album
                     </button>
-                  `
-                : ''}
-              <button
-                type="submit"
-                class="btn btn-primary"
-                ?disabled=${this.saving}
-                style="width: 220px;"
-              >
-                ${this.saving ? 'Saving...' : isNew ? 'Create Album' : 'Save'}
-              </button>
-            </div>
-          </div>
-        </form>
+                  </div>
+                </div>
+              `
+            : ''}
+        </div>
 
-        ${!isNew
-          ? html`
-              <div class="form-section">
-                <h2>Danger Zone</h2>
-                <div style="display: flex; gap: 1rem; align-items: center;">
-                  ${this.album.photos && this.album.photos.length > 0
+        <div class="main-content">
+          ${!isNew
+            ? html`
+                <div class="form-section">
+                  <h2>Photos (${this.album.photos?.length || 0})</h2>
+
+                  ${this.getUploadDisabledMessage()
+                    ? html`<div class="upload-warning">${this.getUploadDisabledMessage()}</div>`
+                    : ''}
+
+                  <div class="photo-upload">
+                    <div
+                      class="upload-area ${this.dragging
+                        ? 'dragging'
+                        : ''} ${this.isUploadDisabled() ? 'disabled' : ''}"
+                      @click=${() => {
+                        if (this.isUploadDisabled()) return;
+                        const input = this.shadowRoot?.querySelector(
+                          'input[type="file"]'
+                        ) as HTMLInputElement;
+                        input?.click();
+                      }}
+                      @dragover=${(e: DragEvent) => {
+                        if (this.isUploadDisabled()) {
+                          e.preventDefault();
+                          return;
+                        }
+                        this.handleDragOver(e);
+                      }}
+                      @dragleave=${() => this.handleDragLeave()}
+                      @drop=${(e: DragEvent) => {
+                        if (this.isUploadDisabled()) {
+                          e.preventDefault();
+                          return;
+                        }
+                        this.handleDrop(e);
+                      }}
+                    >
+                      <p>Drag photos here or click to browse</p>
+                      <p style="font-size: 0.875rem; color: var(--color-text-secondary, #666);">
+                        Up to ${this.siteConfig?.storage?.max_image_size_mb || 50}MB each
+                        ${this.availableSpace !== null
+                          ? html` • ${this.formatBytes(this.availableSpace)} available`
+                          : ''}
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      style="display: none;"
+                      ?disabled=${this.isUploadDisabled()}
+                      @change=${(e: Event) => this.handleFileSelect(e)}
+                    />
+                  </div>
+
+                  ${this.uploadProgress.size > 0
+                    ? html`<div class="upload-summary">
+                        ${(() => {
+                          const progressArray = Array.from(this.uploadProgress.values());
+                          const uploading = progressArray.filter(
+                            (p) => p.status === 'uploading'
+                          ).length;
+                          const processing = progressArray.filter(
+                            (p) => p.status === 'processing'
+                          ).length;
+                          const complete = progressArray.filter(
+                            (p) => p.status === 'complete'
+                          ).length;
+                          const errors = progressArray.filter((p) => p.status === 'error').length;
+                          return html`
+                            <span>Uploading: ${uploading}</span>
+                            <span>Processing: ${processing}</span>
+                            <span>Complete: ${complete}</span>
+                            ${errors > 0
+                              ? html`<span class="error-count">Errors: ${errors}</span>`
+                              : ''}
+                          `;
+                        })()}
+                      </div>`
+                    : ''}
+                  ${(this.album.photos && this.album.photos.length > 0) ||
+                  this.uploadProgress.size > 0 ||
+                  this.completedUploads.size > 0
                     ? html`
-                        <button
-                          type="button"
-                          class="btn btn-danger"
-                          @click=${() => this.handleDeleteAllPhotos()}
-                          ?disabled=${this.saving || this.uploading}
-                          style="width: 220px;"
-                        >
-                          Delete All Photos
-                        </button>
+                        <div class="photos-grid">
+                          <!-- Upload placeholders or completed thumbnails -->
+                          ${Array.from(this.uploadProgress.values()).map((progress) => {
+                            // If this file is complete and we have the thumbnail, show it
+                            const completedPhoto = this.completedUploads.get(progress.filename);
+                            if (completedPhoto && progress.status === 'complete') {
+                              return html`
+                                <div class="photo-item">
+                                  <img
+                                    src=${completedPhoto.url_thumbnail}
+                                    alt=${completedPhoto.filename_original}
+                                  />
+                                </div>
+                              `;
+                            }
+                            // Otherwise show the progress placeholder
+                            return html`
+                              <upload-placeholder
+                                filename=${progress.filename}
+                                status=${progress.status}
+                                progress=${progress.progress}
+                                error=${progress.error || ''}
+                                @dismiss=${() => this.removeFileProgress(progress.filename)}
+                              ></upload-placeholder>
+                            `;
+                          })}
+                          <!-- Existing photos -->
+                          ${this.album.photos?.map(
+                            (photo) => html`
+                              <div
+                                class="photo-item ${this.draggedPhotoId === photo.id
+                                  ? 'dragging'
+                                  : ''} ${this.dragOverPhotoId === photo.id ? 'drag-over' : ''}"
+                                draggable="true"
+                                @dragstart=${(e: DragEvent) =>
+                                  this.handlePhotoDragStart(e, photo.id)}
+                                @dragend=${(e: DragEvent) => this.handlePhotoDragEnd(e)}
+                                @dragover=${(e: DragEvent) => this.handlePhotoDragOver(e, photo.id)}
+                                @dragleave=${(e: DragEvent) =>
+                                  this.handlePhotoDragLeave(e, photo.id)}
+                                @drop=${(e: DragEvent) => this.handlePhotoDrop(e, photo.id)}
+                              >
+                                ${photo.id === this.album.cover_photo_id
+                                  ? html`<span class="cover-badge">COVER</span>`
+                                  : ''}
+                                <img src=${photo.url_thumbnail} alt=${photo.alt_text || ''} />
+                                <div class="photo-overlay">
+                                  ${photo.id !== this.album.cover_photo_id
+                                    ? html`
+                                        <button
+                                          class="btn btn-primary"
+                                          type="button"
+                                          @click=${() => this.handleSetCover(photo.id)}
+                                        >
+                                          Set Cover
+                                        </button>
+                                      `
+                                    : ''}
+                                  <button
+                                    class="btn btn-danger"
+                                    type="button"
+                                    @click=${() => this.handleDeletePhoto(photo.id)}
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            `
+                          )}
+                        </div>
                       `
                     : ''}
-                  <button
-                    type="button"
-                    class="btn btn-danger"
-                    @click=${() => this.handleDeleteAlbum()}
-                    ?disabled=${this.saving}
-                    style="width: 220px;"
-                  >
-                    Delete Album
-                  </button>
                 </div>
-              </div>
-            `
-          : ''}
-        ${!isNew
-          ? html`
-              <div class="form-section">
-                <h2>Photos (${this.album.photos?.length || 0})</h2>
-
-                ${this.getUploadDisabledMessage()
-                  ? html`<div class="upload-warning">${this.getUploadDisabledMessage()}</div>`
-                  : ''}
-
-                <div class="photo-upload">
-                  <div
-                    class="upload-area ${this.dragging ? 'dragging' : ''} ${this.isUploadDisabled()
-                      ? 'disabled'
-                      : ''}"
-                    @click=${() => {
-                      if (this.isUploadDisabled()) return;
-                      const input = this.shadowRoot?.querySelector(
-                        'input[type="file"]'
-                      ) as HTMLInputElement;
-                      input?.click();
-                    }}
-                    @dragover=${(e: DragEvent) => {
-                      if (this.isUploadDisabled()) {
-                        e.preventDefault();
-                        return;
-                      }
-                      this.handleDragOver(e);
-                    }}
-                    @dragleave=${() => this.handleDragLeave()}
-                    @drop=${(e: DragEvent) => {
-                      if (this.isUploadDisabled()) {
-                        e.preventDefault();
-                        return;
-                      }
-                      this.handleDrop(e);
-                    }}
-                  >
-                    <p>Drag photos here or click to browse</p>
-                    <p style="font-size: 0.875rem; color: var(--color-text-secondary, #666);">
-                      Up to ${this.siteConfig?.storage?.max_image_size_mb || 50}MB each
-                      ${this.availableSpace !== null
-                        ? html` • ${this.formatBytes(this.availableSpace)} available`
-                        : ''}
-                    </p>
-                  </div>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    style="display: none;"
-                    ?disabled=${this.isUploadDisabled()}
-                    @change=${(e: Event) => this.handleFileSelect(e)}
-                  />
-                </div>
-
-                ${this.uploadProgress.size > 0
-                  ? html`<div class="upload-summary">
-                      ${(() => {
-                        const progressArray = Array.from(this.uploadProgress.values());
-                        const uploading = progressArray.filter(
-                          (p) => p.status === 'uploading'
-                        ).length;
-                        const processing = progressArray.filter(
-                          (p) => p.status === 'processing'
-                        ).length;
-                        const complete = progressArray.filter(
-                          (p) => p.status === 'complete'
-                        ).length;
-                        const errors = progressArray.filter((p) => p.status === 'error').length;
-                        return html`
-                          <span>Uploading: ${uploading}</span>
-                          <span>Processing: ${processing}</span>
-                          <span>Complete: ${complete}</span>
-                          ${errors > 0
-                            ? html`<span class="error-count">Errors: ${errors}</span>`
-                            : ''}
-                        `;
-                      })()}
-                    </div>`
-                  : ''}
-                ${(this.album.photos && this.album.photos.length > 0) ||
-                this.uploadProgress.size > 0 ||
-                this.completedUploads.size > 0
-                  ? html`
-                      <div class="photos-grid">
-                        <!-- Upload placeholders or completed thumbnails -->
-                        ${Array.from(this.uploadProgress.values()).map((progress) => {
-                          // If this file is complete and we have the thumbnail, show it
-                          const completedPhoto = this.completedUploads.get(progress.filename);
-                          if (completedPhoto && progress.status === 'complete') {
-                            return html`
-                              <div class="photo-item">
-                                <img
-                                  src=${completedPhoto.url_thumbnail}
-                                  alt=${completedPhoto.filename_original}
-                                />
-                              </div>
-                            `;
-                          }
-                          // Otherwise show the progress placeholder
-                          return html`
-                            <upload-placeholder
-                              filename=${progress.filename}
-                              status=${progress.status}
-                              progress=${progress.progress}
-                              error=${progress.error || ''}
-                              @dismiss=${() => this.removeFileProgress(progress.filename)}
-                            ></upload-placeholder>
-                          `;
-                        })}
-                        <!-- Existing photos -->
-                        ${this.album.photos?.map(
-                          (photo) => html`
-                            <div
-                              class="photo-item ${this.draggedPhotoId === photo.id
-                                ? 'dragging'
-                                : ''} ${this.dragOverPhotoId === photo.id ? 'drag-over' : ''}"
-                              draggable="true"
-                              @dragstart=${(e: DragEvent) => this.handlePhotoDragStart(e, photo.id)}
-                              @dragend=${(e: DragEvent) => this.handlePhotoDragEnd(e)}
-                              @dragover=${(e: DragEvent) => this.handlePhotoDragOver(e, photo.id)}
-                              @dragleave=${(e: DragEvent) => this.handlePhotoDragLeave(e, photo.id)}
-                              @drop=${(e: DragEvent) => this.handlePhotoDrop(e, photo.id)}
-                            >
-                              ${photo.id === this.album.cover_photo_id
-                                ? html`<span class="cover-badge">COVER</span>`
-                                : ''}
-                              <img src=${photo.url_thumbnail} alt=${photo.alt_text || ''} />
-                              <div class="photo-overlay">
-                                ${photo.id !== this.album.cover_photo_id
-                                  ? html`
-                                      <button
-                                        class="btn btn-primary"
-                                        type="button"
-                                        @click=${() => this.handleSetCover(photo.id)}
-                                      >
-                                        Set Cover
-                                      </button>
-                                    `
-                                  : ''}
-                                <button
-                                  class="btn btn-danger"
-                                  type="button"
-                                  @click=${() => this.handleDeletePhoto(photo.id)}
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </div>
-                          `
-                        )}
-                      </div>
-                    `
-                  : ''}
-              </div>
-            `
-          : ''}
+              `
+            : ''}
+        </div>
       </div>
 
       <toast-notification

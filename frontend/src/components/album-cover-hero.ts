@@ -23,6 +23,7 @@ export class AlbumCoverHero extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
+      animation: fadeIn 0.3s ease-in;
     }
 
     .background {
