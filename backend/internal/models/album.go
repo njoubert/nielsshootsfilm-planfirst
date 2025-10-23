@@ -73,9 +73,8 @@ func (a *Album) Validate() error {
 	if a.Visibility != "public" && a.Visibility != "unlisted" && a.Visibility != "password_protected" {
 		return errors.New("album visibility must be public, unlisted, or password_protected")
 	}
-	if a.Visibility == "password_protected" && a.PasswordHash == "" {
-		return errors.New("password_protected albums must have a password_hash")
-	}
+	// Note: We don't validate password_hash here because it may be set via a separate API call
+	// after album creation. The set-password endpoint handles password setting.
 	return nil
 }
 

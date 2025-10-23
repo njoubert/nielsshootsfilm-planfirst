@@ -80,16 +80,8 @@ func TestAlbumValidation(t *testing.T) {
 			wantErr: true,
 			errMsg:  "album visibility must be public, unlisted, or password_protected",
 		},
-		{
-			name: "password_protected without hash",
-			album: Album{
-				Title:      "Test Album",
-				Slug:       "test-album",
-				Visibility: "password_protected",
-			},
-			wantErr: true,
-			errMsg:  "password_protected albums must have a password_hash",
-		},
+		// Note: We no longer validate password_hash during album validation
+		// because it can be set via a separate API call after creation
 	}
 
 	for _, tt := range tests {
