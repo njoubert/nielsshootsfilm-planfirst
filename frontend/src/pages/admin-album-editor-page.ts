@@ -27,9 +27,11 @@ import { onLogout } from '../utils/auth-state';
 export class AdminAlbumEditorPage extends LitElement {
   static styles = css`
     :host {
-      display: block;
-      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
       background: var(--color-background, #f5f5f5);
+      overflow: hidden;
     }
 
     .page-header {
@@ -37,6 +39,7 @@ export class AdminAlbumEditorPage extends LitElement {
       border-bottom: 1px solid var(--color-border, #ddd);
       padding: 1.5rem 2rem;
       margin-bottom: 0;
+      flex-shrink: 0;
     }
 
     .page-title {
@@ -93,23 +96,35 @@ export class AdminAlbumEditorPage extends LitElement {
 
     .layout-wrapper {
       display: flex;
-      min-height: calc(100vh - 180px);
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
     }
 
     .sidebar {
-      width: 400px;
+      width: 450px;
       flex-shrink: 0;
-      background: var(--color-background, #f5f5f5);
+      background: var(--color-surface, white);
       border-right: 1px solid var(--color-border, #ddd);
-      padding: 2rem;
+      padding: 0;
       overflow-y: auto;
+      overflow-x: hidden;
     }
 
     .main-content {
       flex: 1;
       min-width: 0;
-      padding: 2rem;
+      padding: 0;
       overflow-y: auto;
+      overflow-x: hidden;
+      background: var(--color-background, #f5f5f5);
+    }
+
+    /* Responsive sidebar scaling beyond 1600px */
+    @media (min-width: 1600px) {
+      .sidebar {
+        width: calc(450px + (100vw - 1600px) * 0.25);
+      }
     }
 
     .loading,
@@ -123,11 +138,31 @@ export class AdminAlbumEditorPage extends LitElement {
     }
 
     .form-section {
-      background: var(--color-surface, white);
+      background: transparent;
       border-radius: 0;
       padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      box-shadow: var(--shadow-sm);
+      margin-bottom: 0;
+      box-shadow: none;
+      border-bottom: 1px solid var(--color-border, #ddd);
+    }
+
+    .form-section:first-child {
+      margin-top: 0;
+      padding-top: 1.5rem;
+    }
+
+    .form-section:last-child {
+      border-bottom: none;
+    }
+
+    .sidebar .form-section {
+      background: transparent;
+    }
+
+    .main-content .form-section {
+      background: transparent;
+      border-bottom: none;
+      padding: 1.5rem;
     }
 
     .form-section h2 {
@@ -137,6 +172,10 @@ export class AdminAlbumEditorPage extends LitElement {
       color: var(--color-text-primary, #333);
       text-transform: uppercase;
       letter-spacing: 0.05em;
+    }
+
+    .main-content .form-section h2 {
+      color: var(--color-text-primary, #333);
     }
 
     .form-group {
@@ -164,7 +203,7 @@ export class AdminAlbumEditorPage extends LitElement {
     }
 
     textarea {
-      min-height: 100px;
+      min-height: 200px;
       resize: vertical;
     }
 
@@ -196,12 +235,30 @@ export class AdminAlbumEditorPage extends LitElement {
     }
 
     .upload-area {
-      border: 2px dashed var(--color-border, #ddd);
+      border: 2px dashed rgba(255, 255, 255, 0.3);
       border-radius: 0;
       padding: 2rem;
       text-align: center;
       cursor: pointer;
       transition: all 0.2s;
+      background: rgba(255, 255, 255, 0.03);
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .upload-area p {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    @media (prefers-color-scheme: light) {
+      .upload-area {
+        background: var(--color-surface, white);
+        border: 2px dashed var(--color-border, #ddd);
+        color: var(--color-text-primary, #333);
+      }
+
+      .upload-area p {
+        color: var(--color-text-primary, #333);
+      }
     }
 
     .upload-area:hover {
@@ -275,7 +332,7 @@ export class AdminAlbumEditorPage extends LitElement {
       position: relative;
       border-radius: 0;
       overflow: hidden;
-      background: var(--color-background);
+      background: rgba(255, 255, 255, 0.05);
       aspect-ratio: 1;
       display: flex;
       align-items: center;
@@ -285,6 +342,12 @@ export class AdminAlbumEditorPage extends LitElement {
       transition:
         transform 0.2s,
         box-shadow 0.2s;
+    }
+
+    @media (prefers-color-scheme: light) {
+      .photo-item {
+        background: rgba(0, 0, 0, 0.05);
+      }
     }
 
     .photo-item:hover {
@@ -1160,7 +1223,7 @@ export class AdminAlbumEditorPage extends LitElement {
                         class="btn btn-secondary"
                         @click=${(e: Event) => this.handleView(e)}
                         ?disabled=${this.saving}
-                        style="width: 220px;"
+                        style="flex: 1;"
                       >
                         View
                       </button>
@@ -1170,7 +1233,7 @@ export class AdminAlbumEditorPage extends LitElement {
                   type="submit"
                   class="btn btn-primary"
                   ?disabled=${this.saving}
-                  style="width: 220px;"
+                  style="flex: 1;"
                 >
                   ${this.saving ? 'Saving...' : isNew ? 'Create Album' : 'Save'}
                 </button>
@@ -1190,7 +1253,7 @@ export class AdminAlbumEditorPage extends LitElement {
                             class="btn btn-danger"
                             @click=${() => this.handleDeleteAllPhotos()}
                             ?disabled=${this.saving || this.uploading}
-                            style="width: 220px;"
+                            style="flex: 1;"
                           >
                             Delete All Photos
                           </button>
@@ -1201,7 +1264,7 @@ export class AdminAlbumEditorPage extends LitElement {
                       class="btn btn-danger"
                       @click=${() => this.handleDeleteAlbum()}
                       ?disabled=${this.saving}
-                      style="width: 220px;"
+                      style="flex: 1;"
                     >
                       Delete Album
                     </button>
