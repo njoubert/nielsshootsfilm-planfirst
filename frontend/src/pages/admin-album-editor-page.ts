@@ -625,10 +625,11 @@ export class AdminAlbumEditorPage extends LitElement {
       if (response.ok) {
         const stats = (await response.json()) as {
           available_bytes: number;
+          usable_bytes: number;
           total_bytes: number;
           usage_percent: number;
         };
-        this.availableSpace = stats.available_bytes;
+        this.availableSpace = stats.usable_bytes;
         this.totalSpace = stats.total_bytes;
         this.usagePercent = stats.usage_percent;
       }
