@@ -1428,23 +1428,36 @@ Admin Frontend ✅ **COMPLETE**:
 - ✅ Individual photo deletion
 - ✅ Enhanced router with dynamic params and auth guards
 
-**Manual Browser Testing** (Phase 5.5):
+**Manual Browser Testing** (Phase 5.5): ✅ **COMPLETE**
 
-- [ ] Admin login page loads and accepts credentials
-- [ ] Successful login redirects to albums dashboard
-- [ ] Albums dashboard displays all albums with thumbnails
-- [ ] "New Album" button navigates to editor
-- [ ] Album editor form accepts all metadata inputs
-- [ ] Save new album creates album and redirects to edit mode
-- [ ] Photo drag-and-drop upload works
-- [ ] Photo click-to-browse upload works
-- [ ] Uploaded photos display in grid
-- [ ] Set cover photo updates album thumbnail
-- [ ] Delete photo removes from album
-- [ ] Save existing album updates successfully
-- [ ] Delete album (with confirmation) removes album
-- [ ] Logout button clears session and redirects to login
-- [ ] Auth guards prevent unauthorized access to admin pages
-- [ ] Mobile responsive design works for admin interface
+All 15 MVP tests completed:
+
+- ✅ Admin login page loads and accepts credentials
+- ✅ Successful login redirects to albums dashboard
+- ✅ Albums dashboard displays all albums with thumbnails
+- ✅ "New Album" button navigates to editor
+- ✅ Album editor form accepts all metadata inputs
+- ✅ Save new album creates album and redirects to edit mode
+- ✅ Photo drag-and-drop upload works
+- ✅ Photo click-to-browse upload works
+- ✅ Uploaded photos display in grid
+- ✅ Set cover photo updates album thumbnail
+- ✅ Delete photo removes from album
+- ✅ Photo reordering with drag-and-drop works correctly
+- ✅ Save existing album updates successfully
+- ✅ Delete album (with confirmation) removes album
+- ✅ Storage stats display correctly with 20% reserved space
+- ✅ Logout button clears session and redirects to login
+- ✅ Auth guards prevent unauthorized access to admin pages
+- ✅ Landing page loads portfolio album with photos in grid
+- ✅ Lightbox works with arrows and ESC key
+- ✅ Public albums list displays correctly
+- ✅ Password-protected albums require password entry
+- ✅ Client-side bcrypt password verification works (static site compatible)
+- ✅ Correct password grants access, incorrect shows error
+- ✅ Theme system works (light/dark toggle, persistence)
+- ✅ Mobile responsive design works for admin and public pages
+
+**All manual E2E testing complete!** 🎉
 
 ---
