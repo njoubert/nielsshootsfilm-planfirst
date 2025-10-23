@@ -99,6 +99,18 @@
 - **Simple > Complete**: Ship working code fast, iterate later
 - **Skip unnecessary boilerplate**: Don't create files/code that won't be used immediately
 
+## Planning Work
+
+- You should prefer to make a plan before tackling any major work.
+- Write the plan inside /docs/plan/\*.md files.
+- Plans should be concise and to the point.
+- Make sure to list the risks of a plan.
+- Make sure to highlight the complex parts.
+- Make sure to highlight unknowns and ask for user input.
+- List dependencies on other work.
+- Do a rough T-shirt size estimate of the work (Small, Medium, Large).
+- Flag if this would need a major architectural change.
+
 ## Where to find plans and where to save reports
 
 This project uses specific documentation files to outline plans.
