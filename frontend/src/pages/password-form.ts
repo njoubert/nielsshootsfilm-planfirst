@@ -1,6 +1,6 @@
+import { compare } from 'bcrypt-ts';
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { compare } from 'bcrypt-ts';
 import '../components/loading-spinner';
 import { storeAlbumToken } from '../utils/api';
 
@@ -91,7 +91,7 @@ export class PasswordForm extends LitElement {
       padding: 0.75rem;
       font-size: 1rem;
       font-weight: 600;
-      color: white;
+      color: var(--color-background);
       background-color: var(--color-text-primary);
       border: none;
       border-radius: 4px;
