@@ -743,6 +743,58 @@ export class AdminAlbumEditorPage extends LitElement {
     }
   }
 
+  private async handleDeleteAllPhotos() {
+    if (!this.albumId || !this.album?.photos || this.album.photos.length === 0) return;
+
+    const photoCount = this.album.photos.length;
+    const confirmed = confirm(
+      `Are you sure you want to delete ALL ${photoCount} photo(s) from this album? The album itself will remain. This action cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    this.saving = true;
+    this.error = '';
+    this.success = '';
+
+    try {
+      // Delete photos sequentially to avoid race conditions with JSON file writes
+      // Each deletion is a read-modify-write cycle on albums.json
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const photo of this.album.photos) {
+        try {
+          await deletePhoto(this.albumId, photo.id);
+          successCount++;
+        } catch (err) {
+          console.error(`Failed to delete photo ${photo.id}:`, err);
+          failCount++;
+        }
+      }
+
+      // Reload album to get fresh state from server
+      await this.loadAlbum();
+      await this.loadStorageStats();
+
+      // Report results
+      if (failCount === 0) {
+        this.success = `Successfully deleted all ${successCount} photo(s)`;
+      } else if (successCount > 0) {
+        this.error = `Deleted ${successCount} photo(s), but ${failCount} failed`;
+      } else {
+        this.error = `Failed to delete all ${photoCount} photo(s)`;
+      }
+    } catch (err) {
+      this.error = err instanceof Error ? err.message : 'Failed to delete photos';
+      // Still reload to show current state
+      await this.loadAlbum();
+      await this.loadStorageStats();
+    } finally {
+      this.saving = false;
+    }
+  }
+
   private async handleSetCover(photoId: string) {
     if (!this.albumId) return;
 
@@ -1036,7 +1088,24 @@ export class AdminAlbumEditorPage extends LitElement {
         ${!isNew
           ? html`
               <div class="form-section">
-                <h2>Photos (${this.album.photos?.length || 0})</h2>
+                <div
+                  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;"
+                >
+                  <h2 style="margin: 0;">Photos (${this.album.photos?.length || 0})</h2>
+                  ${this.album.photos && this.album.photos.length > 0
+                    ? html`
+                        <button
+                          type="button"
+                          class="btn btn-danger"
+                          @click=${() => this.handleDeleteAllPhotos()}
+                          ?disabled=${this.saving || this.uploading}
+                          style="margin: 0;"
+                        >
+                          Delete All Photos
+                        </button>
+                      `
+                    : ''}
+                </div>
 
                 ${this.getUploadDisabledMessage()
                   ? html`<div class="upload-warning">${this.getUploadDisabledMessage()}</div>`
