@@ -876,7 +876,16 @@ export class AdminAlbumEditorPage extends LitElement {
 
     try {
       await deletePhoto(this.albumId, photoId);
-      await this.loadAlbum();
+
+      // Update local state without reloading
+      this.album = {
+        ...this.album,
+        photos: (this.album.photos || []).filter((p) => p.id !== photoId),
+      };
+
+      // Refresh storage stats to show updated disk usage
+      await this.loadStorageStats();
+
       this.success = 'Photo deleted';
     } catch (err) {
       this.error = err instanceof Error ? err.message : 'Failed to delete photo';
