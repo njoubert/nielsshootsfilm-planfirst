@@ -34,7 +34,6 @@ export class LazyImage extends LitElement {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: opacity 0.3s ease;
     }
 
     img.loading {

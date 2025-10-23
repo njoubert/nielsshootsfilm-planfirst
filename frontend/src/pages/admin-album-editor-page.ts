@@ -162,6 +162,12 @@ export class AdminAlbumEditorPage extends LitElement {
     .checkbox-group input[type='checkbox'] {
       width: auto;
       margin: 0;
+      flex-shrink: 0;
+    }
+
+    .checkbox-group label {
+      margin: 0;
+      line-height: 1;
     }
 
     .form-row {
@@ -383,6 +389,9 @@ export class AdminAlbumEditorPage extends LitElement {
   private albumPassword: string = '';
 
   @state()
+  private hasUnsavedChanges = false;
+
+  @state()
   private uploadProgress: Map<string, UploadProgress> = new Map();
 
   @state()
@@ -599,6 +608,7 @@ export class AdminAlbumEditorPage extends LitElement {
         }
 
         this.success = 'Album updated successfully';
+        this.hasUnsavedChanges = false; // Clear unsaved changes flag
         // Clear password field after successful save
         this.albumPassword = '';
       } else {
@@ -624,6 +634,55 @@ export class AdminAlbumEditorPage extends LitElement {
       this.error = err instanceof Error ? err.message : 'Failed to save album';
     } finally {
       this.saving = false;
+    }
+  }
+
+  /**
+   * Auto-save album when certain fields change (visibility, allow_downloads).
+   * Skips validation for password since it may not be set yet.
+   */
+  private async autoSave() {
+    if (this.albumId === 'new' || !this.albumId || this.saving) return;
+
+    this.saving = true;
+    this.error = '';
+    this.success = '';
+
+    try {
+      await updateAlbum(this.albumId, this.album);
+      this.success = 'Changes saved automatically';
+      this.hasUnsavedChanges = false; // Clear unsaved changes flag
+      // Clear success message after 2 seconds
+      setTimeout(() => {
+        this.success = '';
+      }, 2000);
+    } catch (err) {
+      this.error = err instanceof Error ? err.message : 'Failed to auto-save';
+    } finally {
+      this.saving = false;
+    }
+  }
+
+  private async handleView(e: Event) {
+    e.preventDefault();
+
+    // Check for unsaved changes
+    if (this.hasUnsavedChanges) {
+      const shouldSave = confirm(
+        'You have unsaved changes. Would you like to save them before viewing the album?'
+      );
+
+      if (shouldSave) {
+        // Save first
+        await this.handleSubmit(e);
+        // Only navigate if save was successful
+        if (this.error) return;
+      }
+    }
+
+    // Navigate to album view using slug
+    if (this.album?.slug) {
+      window.location.href = `/albums/${this.album.slug}`;
     }
   }
 
@@ -915,6 +974,10 @@ export class AdminAlbumEditorPage extends LitElement {
 
   private updateField<K extends keyof Album>(field: K, value: Album[K]) {
     this.album = { ...this.album, [field]: value };
+    // Mark as having unsaved changes (unless auto-save fields)
+    if (field !== 'visibility' && field !== 'allow_downloads') {
+      this.hasUnsavedChanges = true;
+    }
   }
 
   private formatBytes(bytes: number): string {
@@ -1019,6 +1082,10 @@ export class AdminAlbumEditorPage extends LitElement {
                     const select = e.target as HTMLSelectElement;
                     const value = select.value as 'public' | 'unlisted' | 'password_protected';
                     this.updateField('visibility', value);
+                    // Auto-save unless switching to password_protected (user needs to enter password first)
+                    if (value !== 'password_protected') {
+                      void this.autoSave();
+                    }
                   }}
                 >
                   <option value="public">Public</option>
@@ -1056,31 +1123,37 @@ export class AdminAlbumEditorPage extends LitElement {
                   type="checkbox"
                   id="allow_downloads"
                   .checked=${this.album.allow_downloads ?? true}
-                  @change=${(e: Event) =>
-                    this.updateField('allow_downloads', (e.target as HTMLInputElement).checked)}
+                  @change=${(e: Event) => {
+                    this.updateField('allow_downloads', (e.target as HTMLInputElement).checked);
+                    void this.autoSave();
+                  }}
                 />
                 <label for="allow_downloads">Allow downloads</label>
               </div>
             </div>
-          </div>
 
-          <div class="form-section">
-            <div style="display: flex; gap: 1rem; align-items: center;">
-              <button type="submit" class="btn btn-primary" ?disabled=${this.saving}>
-                ${this.saving ? 'Saving...' : isNew ? 'Create Album' : 'Save Changes'}
-              </button>
+            <div style="display: flex; justify-content: flex-start; gap: 1rem; margin-top: 1.5rem;">
               ${!isNew
                 ? html`
                     <button
                       type="button"
-                      class="btn btn-danger"
-                      @click=${() => this.handleDeleteAlbum()}
+                      class="btn btn-secondary"
+                      @click=${(e: Event) => this.handleView(e)}
                       ?disabled=${this.saving}
+                      style="width: 220px;"
                     >
-                      Delete Album
+                      View
                     </button>
                   `
                 : ''}
+              <button
+                type="submit"
+                class="btn btn-primary"
+                ?disabled=${this.saving}
+                style="width: 220px;"
+              >
+                ${this.saving ? 'Saving...' : isNew ? 'Create Album' : 'Save'}
+              </button>
             </div>
           </div>
         </form>
@@ -1088,10 +1161,8 @@ export class AdminAlbumEditorPage extends LitElement {
         ${!isNew
           ? html`
               <div class="form-section">
-                <div
-                  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;"
-                >
-                  <h2 style="margin: 0;">Photos (${this.album.photos?.length || 0})</h2>
+                <h2>Danger Zone</h2>
+                <div style="display: flex; gap: 1rem; align-items: center;">
                   ${this.album.photos && this.album.photos.length > 0
                     ? html`
                         <button
@@ -1099,13 +1170,29 @@ export class AdminAlbumEditorPage extends LitElement {
                           class="btn btn-danger"
                           @click=${() => this.handleDeleteAllPhotos()}
                           ?disabled=${this.saving || this.uploading}
-                          style="margin: 0;"
+                          style="width: 220px;"
                         >
                           Delete All Photos
                         </button>
                       `
                     : ''}
+                  <button
+                    type="button"
+                    class="btn btn-danger"
+                    @click=${() => this.handleDeleteAlbum()}
+                    ?disabled=${this.saving}
+                    style="width: 220px;"
+                  >
+                    Delete Album
+                  </button>
                 </div>
+              </div>
+            `
+          : ''}
+        ${!isNew
+          ? html`
+              <div class="form-section">
+                <h2>Photos (${this.album.photos?.length || 0})</h2>
 
                 ${this.getUploadDisabledMessage()
                   ? html`<div class="upload-warning">${this.getUploadDisabledMessage()}</div>`
