@@ -1,6 +1,6 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import * as bcrypt from 'bcryptjs';
+import { compare } from 'bcrypt-ts';
 import '../components/loading-spinner';
 import { storeAlbumToken } from '../utils/api';
 
@@ -171,7 +171,7 @@ export class PasswordForm extends LitElement {
       this.error = '';
 
       // Verify password client-side using bcrypt
-      const isValid = await bcrypt.compare(this.password, this.passwordHash);
+      const isValid = await compare(this.password, this.passwordHash);
 
       if (isValid) {
         // Generate a simple token (timestamp) to indicate successful verification

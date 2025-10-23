@@ -516,7 +516,7 @@
       "order": 0,
       "created_at": "2025-10-22T06:18:12.865638Z",
       "updated_at": "2025-10-22T06:18:12.865638Z",
-      "photos": null
+      "photos": []
     },
     {
       "id": "6668a12d-a39e-4f43-8bfc-4c6c8ada6a09",
@@ -527,7 +527,7 @@
       "order": 0,
       "created_at": "2025-10-22T06:18:21.745304Z",
       "updated_at": "2025-10-22T06:18:21.745304Z",
-      "photos": null
+      "photos": []
     },
     {
       "id": "abac4479-3742-4067-a37c-c4d4dfb223b1",
@@ -538,7 +538,7 @@
       "order": 0,
       "created_at": "2025-10-22T06:18:32.298599Z",
       "updated_at": "2025-10-22T06:18:34.664041Z",
-      "photos": null
+      "photos": []
     }
   ]
 }

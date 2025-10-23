@@ -104,7 +104,7 @@ export class AlbumCard extends LitElement {
     if (!this.album) return html``;
 
     const coverPhoto =
-      this.album.photos.find((p) => p.id === this.album?.cover_photo_id) || this.album.photos[0];
+      this.album.photos?.find((p) => p.id === this.album?.cover_photo_id) || this.album.photos?.[0];
 
     return html`
       <div class="card" @click=${() => this.handleClick()}>
