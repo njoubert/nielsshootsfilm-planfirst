@@ -330,8 +330,7 @@ export class StorageStatsComponent extends LitElement {
 
         <div class="usage-bar-container">
           <div class="usage-bar-label">
-            <span>DISK USAGE</span>
-            <span><strong>${this.stats.usage_percent.toFixed(1)}%</strong></span>
+            <span>DISK USAGE (${this.stats.usage_percent.toFixed(1)}%)</span>
           </div>
           <div class="usage-bar">
             <div

@@ -196,3 +196,155 @@ func TestStorageHandler_GetStats_NonexistentDirectory(t *testing.T) {
 	// Let's just check it doesn't panic
 	assert.NotEqual(t, 0, w.Code, "should return some status code")
 }
+
+func TestStorageHandler_GetStats_ReservedPercentageCalculation(t *testing.T) {
+	// This test verifies that reserved_percent is correctly calculated as
+	// (100 - max_disk_usage_percent) and that reserved_bytes is calculated
+	// as a percentage of TOTAL disk space, not available or used space.
+	tests := []struct {
+		name                string
+		maxDiskUsagePercent int
+		expectedReserved    int
+	}{
+		{
+			name:                "default 80% max usage",
+			maxDiskUsagePercent: 80,
+			expectedReserved:    20,
+		},
+		{
+			name:                "95% max usage (minimum reserve)",
+			maxDiskUsagePercent: 95,
+			expectedReserved:    5,
+		},
+		{
+			name:                "50% max usage",
+			maxDiskUsagePercent: 50,
+			expectedReserved:    50,
+		},
+		{
+			name:                "10% max usage (maximum reserve)",
+			maxDiskUsagePercent: 10,
+			expectedReserved:    90,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create temporary directories
+			tmpDataDir := t.TempDir()
+			tmpUploadDir := t.TempDir()
+
+			// Create upload subdirectories
+			require.NoError(t, os.MkdirAll(filepath.Join(tmpUploadDir, "originals"), 0750))
+			require.NoError(t, os.MkdirAll(filepath.Join(tmpUploadDir, "display"), 0750))
+			require.NoError(t, os.MkdirAll(filepath.Join(tmpUploadDir, "thumbnails"), 0750))
+
+			// Create services
+			fileService, err := services.NewFileService(tmpDataDir)
+			require.NoError(t, err, "NewFileService should succeed")
+
+			configService := services.NewSiteConfigService(fileService)
+
+			// Set config with specified max usage
+			config := &models.SiteConfig{
+				Storage: models.StorageConfig{
+					MaxDiskUsagePercent: tt.maxDiskUsagePercent,
+				},
+			}
+			err = configService.Update(config)
+			require.NoError(t, err, "should update config")
+
+			// Create handler
+			handler := NewStorageHandler(configService, tmpUploadDir)
+
+			// Create test request
+			req := httptest.NewRequest("GET", "/api/admin/storage/stats", nil)
+			w := httptest.NewRecorder()
+
+			// Call handler
+			handler.GetStats(w, req)
+
+			// Check response
+			require.Equal(t, http.StatusOK, w.Code, "should return 200 OK")
+
+			// Parse response
+			var stats StorageStats
+			err = json.NewDecoder(w.Body).Decode(&stats)
+			require.NoError(t, err, "should decode response")
+
+			// Verify reserved_percent is correct
+			assert.Equal(t, tt.expectedReserved, stats.ReservedPercent,
+				"reserved_percent should be (100 - max_disk_usage_percent)")
+
+			// Verify reserved_bytes is calculated from TOTAL disk space
+			expectedReservedBytes := int64(float64(stats.TotalBytes) * float64(tt.expectedReserved) / 100.0)
+			assert.Equal(t, expectedReservedBytes, stats.ReservedBytes,
+				"reserved_bytes should be %d%% of total_bytes (%d), got %d",
+				tt.expectedReserved, stats.TotalBytes, stats.ReservedBytes)
+
+			// Verify usable_bytes = available_bytes - reserved_bytes
+			expectedUsableBytes := stats.AvailableBytes - stats.ReservedBytes
+			if expectedUsableBytes < 0 {
+				expectedUsableBytes = 0
+			}
+			assert.Equal(t, expectedUsableBytes, stats.UsableBytes,
+				"usable_bytes should be available_bytes - reserved_bytes")
+
+			// Verify that reserved calculation uses total, not available
+			// reserved_bytes should NOT equal (available_bytes * reserved_percent)
+			wrongCalculation := int64(float64(stats.AvailableBytes) * float64(tt.expectedReserved) / 100.0)
+			if stats.AvailableBytes != stats.TotalBytes {
+				// Only assert this if there's a difference (disk has some usage)
+				assert.NotEqual(t, wrongCalculation, stats.ReservedBytes,
+					"reserved_bytes should be calculated from total_bytes, not available_bytes")
+			}
+		})
+	}
+}
+
+func TestStorageHandler_GetStats_DefaultMaxDiskUsage(t *testing.T) {
+	// Test that when max_disk_usage_percent is 0 or not set, it defaults to 80%
+	tmpDataDir := t.TempDir()
+	tmpUploadDir := t.TempDir()
+
+	// Create upload subdirectories
+	require.NoError(t, os.MkdirAll(filepath.Join(tmpUploadDir, "originals"), 0750))
+	require.NoError(t, os.MkdirAll(filepath.Join(tmpUploadDir, "display"), 0750))
+	require.NoError(t, os.MkdirAll(filepath.Join(tmpUploadDir, "thumbnails"), 0750))
+
+	// Create services
+	fileService, err := services.NewFileService(tmpDataDir)
+	require.NoError(t, err, "NewFileService should succeed")
+
+	configService := services.NewSiteConfigService(fileService)
+
+	// Set config with 0 (should default to 80)
+	config := &models.SiteConfig{
+		Storage: models.StorageConfig{
+			MaxDiskUsagePercent: 0,
+		},
+	}
+	err = configService.Update(config)
+	require.NoError(t, err, "should update config")
+
+	// Create handler
+	handler := NewStorageHandler(configService, tmpUploadDir)
+
+	// Create test request
+	req := httptest.NewRequest("GET", "/api/admin/storage/stats", nil)
+	w := httptest.NewRecorder()
+
+	// Call handler
+	handler.GetStats(w, req)
+
+	// Check response
+	require.Equal(t, http.StatusOK, w.Code, "should return 200 OK")
+
+	// Parse response
+	var stats StorageStats
+	err = json.NewDecoder(w.Body).Decode(&stats)
+	require.NoError(t, err, "should decode response")
+
+	// Should default to 80% max usage = 20% reserved
+	assert.Equal(t, 20, stats.ReservedPercent, "should default to 20% reserved (80% max usage)")
+}

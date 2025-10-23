@@ -308,4 +308,161 @@ describe('storage-stats', () => {
     expect(text).to.include('Web-optimized versions');
     expect(text).to.include('Preview images');
   });
+
+  it('should display reserved space with correct percentage', async () => {
+    const mockStats = {
+      total_bytes: 1000000000000, // 1 TB
+      used_bytes: 100000000000, // 100 GB
+      available_bytes: 900000000000, // 900 GB
+      reserved_bytes: 200000000000, // 200 GB (20%)
+      usable_bytes: 700000000000, // 700 GB
+      reserved_percent: 20, // 20% reserved (80% max usage)
+      usage_percent: 10.0,
+      breakdown: {
+        originals_bytes: 50000000000,
+        display_bytes: 30000000000,
+        thumbnails_bytes: 20000000000,
+      },
+      warning: undefined,
+    };
+
+    fetchStub.resolves(
+      new Response(JSON.stringify(mockStats), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    const el = await fixture<StorageStatsComponent>(html`<storage-stats></storage-stats>`);
+    await el.updateComplete;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    await el.updateComplete;
+
+    const text = el.shadowRoot?.textContent || '';
+
+    // Should show reserved space section
+    expect(text).to.include('RESERVED SPACE');
+    expect(text).to.include('186.26 GB'); // 200 GB formatted
+    expect(text).to.include('20% kept in reserve');
+
+    // Should show usable space section
+    expect(text).to.include('USABLE SPACE');
+    expect(text).to.include('651.91 GB'); // 700 GB formatted
+    expect(text).to.include('Available for uploads');
+  });
+
+  it('should display reserved space bar correctly', async () => {
+    const mockStats = {
+      total_bytes: 1000000000000,
+      used_bytes: 100000000000,
+      available_bytes: 900000000000,
+      reserved_bytes: 200000000000,
+      usable_bytes: 700000000000,
+      reserved_percent: 20,
+      usage_percent: 10.0,
+      breakdown: {
+        originals_bytes: 50000000000,
+        display_bytes: 30000000000,
+        thumbnails_bytes: 20000000000,
+      },
+    };
+
+    fetchStub.resolves(
+      new Response(JSON.stringify(mockStats), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    const el = await fixture<StorageStatsComponent>(html`<storage-stats></storage-stats>`);
+    await el.updateComplete;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    await el.updateComplete;
+
+    const reservedBar = el.shadowRoot?.querySelector('.usage-bar-reserved') as HTMLElement;
+    expect(reservedBar).to.exist;
+    expect(reservedBar.style.width).to.equal('20%');
+    expect(reservedBar.title).to.include('Reserved space');
+    expect(reservedBar.title).to.include('20%');
+  });
+
+  it('should handle different reserved percentages', async () => {
+    const testCases = [
+      { reserved_percent: 5, max_usage: 95 },
+      { reserved_percent: 20, max_usage: 80 },
+      { reserved_percent: 50, max_usage: 50 },
+    ];
+
+    for (const testCase of testCases) {
+      fetchStub.resetHistory();
+
+      const mockStats = {
+        total_bytes: 1000000000000,
+        used_bytes: 100000000000,
+        available_bytes: 900000000000,
+        reserved_bytes: testCase.reserved_percent * 10000000000, // 10GB per percent
+        usable_bytes: 900000000000 - testCase.reserved_percent * 10000000000,
+        reserved_percent: testCase.reserved_percent,
+        usage_percent: 10.0,
+        breakdown: {
+          originals_bytes: 50000000000,
+          display_bytes: 30000000000,
+          thumbnails_bytes: 20000000000,
+        },
+      };
+
+      fetchStub.resolves(
+        new Response(JSON.stringify(mockStats), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+
+      const el = await fixture<StorageStatsComponent>(html`<storage-stats></storage-stats>`);
+      await el.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      await el.updateComplete;
+
+      const text = el.shadowRoot?.textContent || '';
+      expect(text).to.include(`${testCase.reserved_percent}% kept in reserve`);
+
+      const reservedBar = el.shadowRoot?.querySelector('.usage-bar-reserved') as HTMLElement;
+      expect(reservedBar?.style.width).to.equal(`${testCase.reserved_percent}%`);
+    }
+  });
+
+  it('should show usable bytes as available minus reserved', async () => {
+    const mockStats = {
+      total_bytes: 1000000000000, // 1 TB
+      used_bytes: 100000000000, // 100 GB used
+      available_bytes: 900000000000, // 900 GB available
+      reserved_bytes: 200000000000, // 200 GB reserved
+      usable_bytes: 700000000000, // 700 GB usable (available - reserved)
+      reserved_percent: 20,
+      usage_percent: 10.0,
+      breakdown: {
+        originals_bytes: 50000000000,
+        display_bytes: 30000000000,
+        thumbnails_bytes: 20000000000,
+      },
+    };
+
+    fetchStub.resolves(
+      new Response(JSON.stringify(mockStats), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    const el = await fixture<StorageStatsComponent>(html`<storage-stats></storage-stats>`);
+    await el.updateComplete;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    await el.updateComplete;
+
+    // Verify the calculation: usable should be available - reserved
+    // 900 GB - 200 GB = 700 GB
+    const text = el.shadowRoot?.textContent || '';
+    expect(text).to.include('USABLE SPACE');
+    expect(text).to.include('651.91 GB'); // 700 GB formatted
+  });
 });

@@ -162,6 +162,38 @@ Run the development servers in two separate terminals:
 - Backend API: <http://localhost:8080>
 - Admin Interface: <http://localhost:5173/admin>
 
+### Testing
+
+Run tests using the unified test script:
+
+```bash
+# Run all unit tests (backend and frontend)
+./test.sh
+
+# Run specific test suites
+./test.sh backend   # Backend unit tests only
+./test.sh frontend  # Frontend unit tests only
+./test.sh api       # API integration tests + schema validation
+
+# Run specific backend tests
+./test.sh -- backend/internal/handlers
+./test.sh -- backend/...
+
+# Run specific frontend tests
+./test.sh -- storage-stats.test.ts
+./test.sh -- frontend/src/components/storage-stats.test.ts
+
+# Or run tests directly in each directory
+cd backend && go test ./...
+cd frontend && npm test
+```
+
+The test script automatically:
+
+- Detects whether to run Go or npm tests based on the path
+- Exits immediately after tests complete (no waiting for input)
+- Provides colored output for easy scanning
+
 ## Architecture Overview
 
 ```text

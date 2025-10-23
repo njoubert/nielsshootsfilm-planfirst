@@ -37,6 +37,22 @@
 
   **Status checks**: The status commands check if processes are running AND if they're responding to HTTP requests. Returns clear indicators: ✓ (running), ⚠ (running but not responding), or ✗ (not running).
 
+- **`./test.sh`** - Run tests (intelligently dispatches to npm or go)
+
+  - `./test.sh` - Run all unit tests (backend and frontend)
+  - `./test.sh backend` - Run all backend unit tests only
+  - `./test.sh frontend` - Run all frontend unit tests only
+  - `./test.sh api` - Run API integration tests and schema validation
+  - `./test.sh -- backend/...` - Run all backend tests
+  - `./test.sh -- backend/internal/handlers` - Run specific backend package tests
+  - `./test.sh -- storage-stats.test.ts` - Run specific frontend test file
+  - `./test.sh -- frontend/src/components/storage-stats.test.ts` - Run frontend test with full path
+  - The `--` separator is optional: `./test.sh backend/...` works too
+  - Use this instead of `npm test` or `go test`
+  - Automatically detects test type from file path (backend vs frontend)
+  - Exits automatically after tests complete (no manual intervention needed)
+  - Provides colored output for easy scanning
+
 - **`./format.sh`** - Format all code (runs prettier, gofmt, etc.)
 
   - Use this instead of `npm run format` or `go fmt`
@@ -59,6 +75,7 @@
 - They ensure proper working directories and error handling
 - They follow project conventions and best practices
 - They're tested and maintained as part of the project
+- The test script intelligently detects test type from file path (no need to specify backend vs frontend)
 
 ## Coding Principles
 

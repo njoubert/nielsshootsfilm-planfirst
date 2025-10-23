@@ -4,7 +4,7 @@
 #   - backend/scripts/
 #   - frontend/scripts/
 #   - scripts/
-#   - Root convenience scripts: dev.sh, format.sh, provision.sh, build.sh, bootstrap.sh
+#   - Root convenience scripts: dev.sh, format.sh, provision.sh, build.sh, bootstrap.sh, test.sh
 
 set -e
 
@@ -12,7 +12,7 @@ EXIT_CODE=0
 
 for file in "$@"; do
     case "$file" in
-        backend/scripts/*|frontend/scripts/*|scripts/*|dev.sh|format.sh|provision.sh|build.sh|bootstrap.sh)
+        backend/scripts/*|frontend/scripts/*|scripts/*|dev.sh|format.sh|provision.sh|build.sh|bootstrap.sh|test.sh)
             # Allowed location
             ;;
         *)
@@ -21,7 +21,7 @@ for file in "$@"; do
             echo "     • backend/scripts/"
             echo "     • frontend/scripts/"
             echo "     • scripts/"
-            echo "     • Root convenience scripts: dev.sh, format.sh, provision.sh, build.sh, bootstrap.sh"
+            echo "     • Root convenience scripts: dev.sh, format.sh, provision.sh, build.sh, bootstrap.sh, test.sh"
             EXIT_CODE=1
             ;;
     esac

@@ -6,5 +6,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
     include: ['src/**/*.test.ts'],
+    // Prevent watch mode from pausing on test failures
+    watch: false,
   },
 });
