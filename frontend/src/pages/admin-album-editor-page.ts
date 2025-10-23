@@ -12,6 +12,7 @@ import {
   deletePhoto,
   fetchAlbumById,
   reorderPhotos,
+  setAlbumPassword,
   setCoverPhoto,
   updateAlbum,
   uploadPhotos,
@@ -355,6 +356,9 @@ export class AdminAlbumEditorPage extends LitElement {
   @state()
   private usagePercent: number | null = null;
 
+  @state()
+  private albumPassword: string = '';
+
   private unsubscribeLogout?: () => void;
 
   connectedCallback() {
@@ -401,6 +405,7 @@ export class AdminAlbumEditorPage extends LitElement {
     this.availableSpace = null;
     this.totalSpace = null;
     this.usagePercent = null;
+    this.albumPassword = '';
   }
 
   private async loadData() {
@@ -473,11 +478,29 @@ export class AdminAlbumEditorPage extends LitElement {
     this.success = '';
 
     try {
+      // Validate password for password-protected albums
+      if (
+        this.album.visibility === 'password_protected' &&
+        !this.album.password_hash &&
+        !this.albumPassword
+      ) {
+        this.error = 'Password is required for password-protected albums';
+        this.saving = false;
+        return;
+      }
+
       if (this.albumId && this.albumId !== 'new') {
         // Update existing album
         await updateAlbum(this.albumId, this.album);
 
+        // Set password if visibility is password_protected and password was entered
+        if (this.album.visibility === 'password_protected' && this.albumPassword) {
+          await setAlbumPassword(this.albumId, this.albumPassword);
+        }
+
         this.success = 'Album updated successfully';
+        // Clear password field after successful save
+        this.albumPassword = '';
       } else {
         // Create new album
         const newAlbum = await createAlbum({
@@ -488,6 +511,11 @@ export class AdminAlbumEditorPage extends LitElement {
           allow_downloads: this.album.allow_downloads,
           order: this.album.order,
         });
+
+        // Set password if visibility is password_protected
+        if (this.album.visibility === 'password_protected' && this.albumPassword) {
+          await setAlbumPassword(newAlbum.id, this.albumPassword);
+        }
 
         // Redirect to edit page to upload photos
         window.location.href = `/admin/albums/${newAlbum.id}/edit`;
@@ -803,16 +831,27 @@ export class AdminAlbumEditorPage extends LitElement {
                 </select>
               </div>
 
-              <div class="form-group">
-                <label for="order">Display Order</label>
-                <input
-                  type="number"
-                  id="order"
-                  .value=${String(this.album.order || 0)}
-                  @input=${(e: Event) =>
-                    this.updateField('order', Number((e.target as HTMLInputElement).value))}
-                />
-              </div>
+              ${this.album.visibility === 'password_protected'
+                ? html`
+                    <div class="form-group">
+                      <label for="album_password">Album Password *</label>
+                      <input
+                        type="password"
+                        id="album_password"
+                        placeholder="Enter password for this album"
+                        @input=${(e: Event) => {
+                          const input = e.target as HTMLInputElement;
+                          this.albumPassword = input.value;
+                        }}
+                      />
+                      <small style="color: var(--color-text-secondary, #666); font-size: 0.875rem;">
+                        ${this.album.password_hash
+                          ? 'Leave blank to keep current password'
+                          : 'Required for password-protected albums'}
+                      </small>
+                    </div>
+                  `
+                : html` <div class="form-group"></div> `}
             </div>
 
             <div class="form-group">
