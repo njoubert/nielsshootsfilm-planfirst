@@ -104,9 +104,16 @@ install_node() {
         NPM_VERSION=$(npm --version)
         print_success "npm ready: v$NPM_VERSION"
     else
-        print_error "npm not found"
-        exit 1
+        if [[ "$OS" == "macos" ]]; then
+            print_info "Installing npm via Homebrew..."
+            brew install npm
+            print_success "npm installed"
+        elif [[ "$OS" == "linux" ]]; then
+            print_info "Installing npm via nvm recommended"
+            print_warning "Please install npm manually"
+        fi
     fi
+
 }
 
 # Install Go

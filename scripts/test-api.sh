@@ -18,6 +18,7 @@ TESTS_PASSED=0
 TESTS_FAILED=0
 
 # Cleanup function
+# shellcheck disable=SC2329  # Function is invoked via trap
 cleanup() {
     # shellcheck disable=SC2317  # Invoked via trap
     rm -f "$COOKIE_FILE"

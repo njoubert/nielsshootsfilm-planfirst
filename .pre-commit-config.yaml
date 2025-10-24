@@ -9,7 +9,7 @@ repos:
   # General / Multi-language
   # ====================
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       # Prevent committing large files
       - id: check-added-large-files
@@ -91,17 +91,19 @@ repos:
         args: ['--fix']
         exclude: 'CHANGELOG.md'
 
-  # ====================
-  # Shell scripts
-  # ====================
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.9.0.6
-    hooks:
-      - id: shellcheck
-
   # Local hooks for custom checks
   - repo: local
     hooks:
+      # ====================
+      # Shell scripts
+      # ====================
+      # Use system shellcheck (installed via Homebrew) to avoid architecture issues
+      - id: shellcheck
+        name: shellcheck
+        entry: shellcheck
+        language: system
+        types: [shell]
+        args: ['-x']
       # Check for JavaScript files in frontend/src (should only have TypeScript)
       - id: check-no-js-files
         name: Check No JavaScript Files in Frontend
