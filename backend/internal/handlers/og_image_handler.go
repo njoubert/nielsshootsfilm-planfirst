@@ -108,13 +108,13 @@ func (h *OGImageHandler) ServeOGImage(w http.ResponseWriter, r *http.Request) {
 	// uploadDir is like "../static/uploads"
 	// We need to construct: workDir + uploadDir + "/display/xxx.webp"
 	workDir, _ := os.Getwd()
-	
+
 	// Extract the part after "uploads/" from the URL
 	relativePath := ""
 	if len(imagePath) > len("uploads/") {
 		relativePath = imagePath[len("uploads/"):]
 	}
-	
+
 	fullPath := filepath.Join(workDir, h.uploadDir, relativePath)
 
 	// Check if file exists

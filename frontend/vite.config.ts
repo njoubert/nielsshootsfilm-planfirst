@@ -18,6 +18,10 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
+      '/og-image': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
     },
     fs: {
       // Allow serving files from parent directory (for /data)
