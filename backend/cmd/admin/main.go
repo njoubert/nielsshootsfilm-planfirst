@@ -93,6 +93,7 @@ func main() {
 	authHandler := handlers.NewAuthHandler(authService, logger)
 	configHandler := handlers.NewConfigHandler(configService, logger)
 	storageHandler := handlers.NewStorageHandler(configService, uploadDir)
+	ogImageHandler := handlers.NewOGImageHandler(albumService, configService, uploadDir, logger)
 
 	// Start session cleanup goroutine
 	authHandler.StartSessionCleanup()
@@ -121,6 +122,9 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
+
+	// Open Graph image endpoint (public)
+	r.Get("/og-image", ogImageHandler.ServeOGImage)
 
 	// Public API endpoints (for frontend)
 	r.Route("/api", func(r chi.Router) {
