@@ -86,3 +86,6 @@ backend/bin/
 # Temporary files
 tmp/
 temp/
+
+# Script artifacts
+scripts/go.sum
