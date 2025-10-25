@@ -150,6 +150,29 @@ install_go() {
         print_error "Go installation failed"
         exit 1
     fi
+
+    if command_exists goimports; then
+        print_success "Goimports already installed"
+    else
+        if [[ "$OS" == "macos" ]]; then
+            print_info "Installing Goimports via Homebrew..."
+            brew install goimports
+            print_success "Goimports installed"
+        elif [[ "$OS" == "linux" ]]; then
+            print_info "Installing Goimports..."
+            print_info "Visit: https://go.dev/doc/install"
+            print_warning "Please install goimports manually"
+        fi
+    fi
+
+    # Verify Go installation
+    if command_exists go; then
+        print_success "Go ready: $(go version | awk '{print $3}')"
+    else
+        print_error "Go installation failed"
+        exit 1
+    fi
+
 }
 
 # Install frontend dependencies
