@@ -50,7 +50,7 @@ Create `/var/www/admin-backend/.env`:
 
 ```bash
 DATA_DIR=/var/www/nielsshootsfilm.com/data
-STATIC_DIR=/var/www/nielsshootsfilm.com/uploads
+UPLOAD_DIR=/var/www/nielsshootsfilm.com/uploads
 PORT=8080
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD_HASH=<paste_hash_from_step_2>
@@ -249,7 +249,7 @@ sudo chmod 600 /var/www/admin-backend/.env
 | Variable              | Example                                | Description                         |
 | --------------------- | -------------------------------------- | ----------------------------------- |
 | `DATA_DIR`            | `/var/www/nielsshootsfilm.com/data`    | Where JSON files are stored         |
-| `STATIC_DIR`          | `/var/www/nielsshootsfilm.com/uploads` | Where uploaded images go            |
+| `UPLOAD_DIR`          | `/var/www/nielsshootsfilm.com/uploads` | Where uploaded images go            |
 | `PORT`                | `8080`                                 | Backend server port (internal only) |
 | `ADMIN_USERNAME`      | `admin`                                | Admin login username                |
 | `ADMIN_PASSWORD_HASH` | `$2a$10$...`                           | Bcrypt hash of admin password       |

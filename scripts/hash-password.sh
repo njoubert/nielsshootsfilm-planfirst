@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# Wrapper for scripts/hash_password.go
+# Wrapper for backend hash-password utility
 
 set -e
 
-cd "$(dirname "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+BACKEND_DIR="$PROJECT_ROOT/backend"
 
-if [ ! -f "scripts/hash_password.go" ]; then
-    echo "Error: scripts/hash_password.go not found"
+if [ ! -d "$BACKEND_DIR" ]; then
+    echo "Error: backend directory not found at $BACKEND_DIR"
     exit 1
 fi
 
@@ -14,5 +16,6 @@ echo "Password Hasher Utility"
 echo "======================="
 echo ""
 
-# Run the Go program
-go run scripts/hash_password.go "$@"
+# Run the Go program from the backend directory where go.mod exists
+cd "$BACKEND_DIR"
+go run ./cmd/hash-password "$@"

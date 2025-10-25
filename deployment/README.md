@@ -181,7 +181,7 @@ scp -r data/ user@server:/var/www/nielsshootsfilm.com/data/
 # Set up environment variables on the server
 # Create /var/www/admin-backend/.env with:
 # DATA_DIR=/var/www/nielsshootsfilm.com/data
-# STATIC_DIR=/var/www/nielsshootsfilm.com/uploads
+# UPLOAD_DIR=/var/www/nielsshootsfilm.com/uploads
 # PORT=8080
 # ADMIN_USERNAME=your_username
 # ADMIN_PASSWORD_HASH=your_bcrypt_hash

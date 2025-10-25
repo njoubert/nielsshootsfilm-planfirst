@@ -73,13 +73,123 @@ echo "Go installed: ${GO_INSTALLED_VERSION}"
 # Install libvips for image processing
 echo ""
 echo "Installing libvips for image processing..."
-apt-get install -y \
-    libvips-dev \
-    libvips-tools
+echo "Using prebuilt binary to avoid package conflicts with PHP/WordPress..."
 
-# Verify libvips installation
-VIPS_VERSION=$(vips --version | head -n1)
-echo "libvips installed: ${VIPS_VERSION}"
+# Download prebuilt libvips binary (avoids all package conflicts)
+cd /tmp
+VIPS_VERSION="8.12.2"
+VIPS_TARBALL="vips-${VIPS_VERSION}-linux-x64.tar.gz"
+
+echo "Attempting to download prebuilt libvips..."
+if wget -q "https://github.com/libvips/libvips/releases/download/v${VIPS_VERSION}/${VIPS_TARBALL}" 2>/dev/null; then
+    # Prebuilt binary exists
+    tar xzf "${VIPS_TARBALL}"
+    cd "vips-${VIPS_VERSION}" || exit 1
+    cp -r ./* /usr/local/
+    ldconfig
+    cd /tmp || exit 1
+    rm -rf "${VIPS_TARBALL}" "vips-${VIPS_VERSION}"
+
+    if command -v vips &> /dev/null; then
+        VIPS_VERSION_INSTALLED=$(vips --version | head -n1)
+        echo "✓ libvips installed from prebuilt binary: ${VIPS_VERSION_INSTALLED}"
+    else
+        echo "Prebuilt binary failed, trying build from source..."
+        BUILD_FROM_SOURCE=1
+    fi
+else
+    echo "No prebuilt binary available, building from source..."
+    BUILD_FROM_SOURCE=1
+fi
+
+# If prebuilt didn't work, build from source with minimal dependencies
+if [ "${BUILD_FROM_SOURCE}" = "1" ]; then
+    echo "Building libvips from source with minimal dependencies..."
+
+    # Install only the build tools (not dev libraries that conflict)
+    apt-get install -y \
+        build-essential \
+        pkg-config \
+        automake \
+        libtool \
+        libffi-dev \
+        gettext \
+        libmount-dev \
+        libexpat1-dev
+
+    # Install only image libraries that don't conflict
+    apt-get install -y \
+        libjpeg-dev \
+        libpng-dev \
+        libwebp-dev || true
+
+    # Install glib in a custom prefix to avoid conflicts with system
+    echo "Installing glib in custom prefix /opt/libvips-deps..."
+    mkdir -p /opt/libvips-deps
+
+    cd /tmp
+    GLIB_VERSION="2.56.4"
+    wget -q "https://download.gnome.org/sources/glib/2.56/glib-${GLIB_VERSION}.tar.xz"
+    tar xf "glib-${GLIB_VERSION}.tar.xz"
+    cd "glib-${GLIB_VERSION}"
+
+    # Configure with CFLAGS to disable treating warnings as errors
+    CFLAGS="-Wno-error" ./configure --prefix=/opt/libvips-deps --with-pcre=internal
+    make -j"$(nproc)"
+    make install
+
+    cd /tmp
+    rm -rf "glib-${GLIB_VERSION}" "glib-${GLIB_VERSION}.tar.xz"
+
+    # Download and build libvips using our custom glib
+    cd /tmp
+    wget -q "https://github.com/libvips/libvips/releases/download/v8.10.6/vips-8.10.6.tar.gz"
+    tar xzf "vips-8.10.6.tar.gz"
+    cd "vips-8.10.6"
+
+    # Configure with custom glib and minimal dependencies
+    echo "Configuring libvips with custom glib..."
+    PKG_CONFIG_PATH="/opt/libvips-deps/lib/pkgconfig:$PKG_CONFIG_PATH" \
+    CFLAGS="-I/opt/libvips-deps/include" \
+    LDFLAGS="-L/opt/libvips-deps/lib" \
+    ./configure --prefix=/usr/local \
+        --disable-dependency-tracking \
+        --without-python \
+        --without-magick \
+        --without-orc \
+        --without-pango \
+        --without-fftw \
+        --without-giflib \
+        --without-librsvg \
+        --without-libexif \
+        --without-lcms \
+        --without-OpenEXR \
+        --without-nifti \
+        --without-heif \
+        --without-poppler \
+        --without-matio
+
+    echo "Building libvips (this may take a few minutes)..."
+    make -j"$(nproc)"
+
+    echo "Installing libvips..."
+    make install
+
+    # Add custom glib lib path to ldconfig
+    echo "/opt/libvips-deps/lib" > /etc/ld.so.conf.d/libvips-deps.conf
+    ldconfig
+
+    cd /tmp
+    rm -rf "vips-8.10.6" "vips-8.10.6.tar.gz"
+
+    if command -v vips &> /dev/null; then
+        VIPS_VERSION_INSTALLED=$(vips --version | head -n1)
+        echo "✓ libvips installed from source: ${VIPS_VERSION_INSTALLED}"
+    else
+        echo "⚠ WARNING: libvips installation incomplete"
+        echo "  The backend may have limited image processing capabilities"
+    fi
+fi
 
 # Install Apache if not already installed
 if ! command -v apache2 &> /dev/null; then

@@ -141,9 +141,12 @@ export class AdminLoginPage extends LitElement {
 
       this.success = true;
 
-      // Redirect to admin dashboard after short delay
+      // Redirect to admin dashboard after short delay to show success message
       setTimeout(() => {
-        window.location.href = '/admin';
+        // Use history API to navigate without full page reload
+        // This allows the auth state to be properly set
+        window.history.pushState({}, '', '/admin');
+        window.dispatchEvent(new PopStateEvent('popstate'));
       }, 500);
     } catch (err) {
       this.error = err instanceof Error ? err.message : 'Login failed';
