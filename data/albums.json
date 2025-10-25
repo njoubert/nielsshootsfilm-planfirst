@@ -512,30 +512,13 @@
       "slug": "south-africa",
       "title": "The First Year of Film",
       "subtitle": "2024-2025",
-      "cover_photo_id": "36ff031f-343c-498e-986b-86f8eb84c91f",
+      "cover_photo_id": "879134d7-047a-4c30-a142-25011ba9bead",
       "visibility": "public",
       "allow_downloads": false,
       "order": 0,
       "created_at": "2025-10-23T09:28:21.530126Z",
-      "updated_at": "2025-10-23T09:59:09.81242Z",
+      "updated_at": "2025-10-25T06:01:15.233347Z",
       "photos": [
-        {
-          "id": "40f2f24a-cb78-4135-9255-cd1077937d0d",
-          "filename_original": "_D853385-jpeg-5mpix.jpg",
-          "url_original": "/uploads/originals/61de0563-b52d-4c0b-bd7f-7c774319a4fa.jpg",
-          "url_display": "/uploads/display/61de0563-b52d-4c0b-bd7f-7c774319a4fa_display.webp",
-          "url_thumbnail": "/uploads/thumbnails/61de0563-b52d-4c0b-bd7f-7c774319a4fa_thumbnail.webp",
-          "order": 2,
-          "width": 1500,
-          "height": 1875,
-          "file_size_original": 1626338,
-          "file_size_display": 929636,
-          "file_size_thumbnail": 111306,
-          "exif": {
-            "date_taken": "2024-11-04T20:50:13-08:00"
-          },
-          "uploaded_at": "2025-10-23T09:32:54.078535Z"
-        },
         {
           "id": "879134d7-047a-4c30-a142-25011ba9bead",
           "filename_original": "A7R05326-positive-jpeg-5mpix.jpg",
