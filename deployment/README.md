@@ -1,318 +1,175 @@
-# Deployment Configuration
+# Deployment Guide
 
-This directory contains server configuration files for deploying the photography portfolio website.
-
-## Files
-
-- `apache-site.conf` - Apache VirtualHost configuration template
-- `apache-site-{domain}.conf` - Generated configuration (created by `scripts/generate-apache-config.sh`)
+This guide covers deploying the nielsshootsfilm photography portfolio to production.
 
 ## Quick Start
 
-### 1. Configure Environment
+**From your local machine:**
 
-Copy `.env.example` to `.env` in the project root and set your domain:
+1. **Deploy Frontend:**
 
-```bash
-cp .env.example .env
-# Edit .env and set: SITE_URL=nielsshootsfilm.com
-```
+   ```bash
+   ./scripts/deploy-frontend.sh
+   ssh njoubert.com
+   cd ~/nielsshootsfilm-frontend-build
+   ./server-build-frontend.sh
+   ```
 
-### 2. Generate Apache Configuration
+2. **Deploy Backend:**
 
-```bash
-./scripts/generate-apache-config.sh
-```
+   ```bash
+   ./scripts/deploy-backend.sh
+   ssh njoubert.com
+   cd ~/nielsshootsfilm-backend-build
+   ./server-build-backend.sh
+   ```
 
-This creates `apache-site-{yourdomain}.conf` based on your existing Apache setup.
+## Architecture
 
-### 3. Merge with Your Existing Apache Configuration
+- **Frontend**: Single-page Lit application built with Vite, served as static files
+- **Backend**: Go admin server running as systemd service on `localhost:8080`
+- **Web Server**: Apache with reverse proxy forwarding `/api/*` to backend
+- **Data**: JSON files in `/var/www/nielsshootsfilm.com/data/`
+- **Uploads**: Photos in `/var/www/nielsshootsfilm.com/uploads/`
 
-The generated configuration is designed to **merge** with your existing Apache config, not replace it.
-
-**If you already have a working Apache configuration:**
-
-1. Open your existing config: `/etc/apache2/sites-available/nielsshootsfilm.com.conf`
-2. Review the generated config: `deployment/apache-site-nielsshootsfilm.com.conf`
-3. Add the marked sections (SPA routing, cache control, security headers) to your existing config
-4. The template preserves your existing:
-   - SSL configuration
-   - Subdomain redirects
-   - VirtualDocumentRoot setup
-   - Logging configuration
-
-**If starting from scratch:**
-
-```bash
-# Copy the generated configuration
-sudo cp deployment/apache-site-nielsshootsfilm.com.conf /etc/apache2/sites-available/nielsshootsfilm.com.conf
-
-# Enable required Apache modules (including proxy for Go backend)
-sudo a2enmod rewrite headers expires deflate ssl proxy proxy_http
-
-# Enable the site
-sudo a2ensite nielsshootsfilm.com
-
-# Test configuration
-sudo apache2ctl configtest
-
-# Reload Apache
-sudo systemctl reload apache2
-```
-
-### 4. Deploy Website Files
-
-```bash
-# Build the frontend
-cd ../frontend
-./scripts/build.sh
-
-# Copy to web server (adjust domain to match your SITE_URL)
-sudo mkdir -p /var/www/nielsshootsfilm.com
-sudo cp -r build/* /var/www/nielsshootsfilm.com/
-
-# Set proper permissions
-sudo chown -R www-data:www-data /var/www/nielsshootsfilm.com
-sudo chmod -R 755 /var/www/nielsshootsfilm.com
-```
-
-## Apache Configuration Features
-
-### SPA Routing Support
-
-The configuration includes proper SPA fallback - all non-file requests are served `index.html` so your client-side router can handle the navigation.
-
-### Cache Control
-
-- **Assets** (`/assets/*`): 1 year cache with immutable flag
-- **Images** (`/uploads/*`): 1 year cache with immutable flag
-- **Data** (`/data/*`): No caching (may be updated by admin backend)
-
-### Compression
-
-Automatic compression enabled for:
-
-- CSS and JavaScript files
-- WebP images
-
-### Security Headers
-
-- `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: SAMEORIGIN`
-- `X-XSS-Protection: 1; mode=block`
-- `Referrer-Policy: strict-origin-when-cross-origin`
-
-### SSL/HTTPS Support
-
-The configuration includes commented-out HTTPS/SSL sections. Uncomment after obtaining an SSL certificate (e.g., via Let's Encrypt).
-
-## SSL Certificate with Let's Encrypt
-
-```bash
-# Install certbot
-sudo apt-get update
-sudo apt-get install certbot python3-certbot-apache
-
-# Obtain certificate (interactive)
-sudo certbot --apache -d nielsshootsfilm.com -d www.nielsshootsfilm.com
-
-# Or non-interactive
-sudo certbot --apache -d nielsshootsfilm.com -d www.nielsshootsfilm.com --non-interactive --agree-tos --email your@email.com
-
-# Certbot will automatically configure HTTPS and set up auto-renewal
-```
-
-After obtaining the certificate, you can uncomment the HTTPS VirtualHost section in the Apache config and reload Apache.
-
-## Directory Structure on Server
+## Server Structure
 
 ```text
 /var/www/nielsshootsfilm.com/
-├── index.html
-├── assets/
-│   ├── main-[hash].js
-│   └── main-[hash].css
-├── data/
-│   ├── site_config.json
-│   ├── albums.json
-│   └── blog_posts.json
-└── uploads/
+├── index.html                 # Frontend SPA entry point
+├── assets/                    # JS/CSS bundles
+├── data/                      # JSON data files (albums, config)
+│   └── .backups/              # Automatic backups
+└── uploads/                   # Photo storage
     ├── originals/
     ├── display/
     └── thumbnails/
+
+/var/www/admin-backend/
+├── admin                      # Backend binary
+└── .env                       # Environment variables
 ```
 
-## Updating Content
+## First-Time Server Setup
 
-### Option 1: Rebuild and Redeploy
+1. **Provision the server:**
+
+   ```bash
+   # Run once on a fresh Ubuntu 20.04 server
+   cd deployment
+   ./server-provision.sh
+   ```
+
+   This installs: Go, Apache, libvips, and configures the environment.
+
+2. **Configure Apache:**
+
+   - Copy `apache-site-nielsshootsfilm.com.conf` to `/etc/apache2/sites-available/`
+   - Enable required modules: `sudo a2enmod proxy proxy_http ssl`
+   - Enable the site and reload Apache
+
+3. **Set up systemd service:**
+
+   - Copy `photo-admin.service` to `/etc/systemd/system/`
+   - Create `/var/www/admin-backend/.env` with credentials
+   - Enable and start: `sudo systemctl enable --now photo-admin`
+
+4. **Configure data directories:**
+
+   ```bash
+   sudo mkdir -p /var/www/nielsshootsfilm.com/data/.backups
+   sudo mkdir -p /var/www/nielsshootsfilm.com/uploads/{originals,display,thumbnails}
+   sudo chown -R www-data:www-data /var/www/nielsshootsfilm.com/data
+   sudo chown -R www-data:www-data /var/www/nielsshootsfilm.com/uploads
+   sudo chmod -R 775 /var/www/nielsshootsfilm.com/data
+   ```
+
+## Environment Variables
+
+Create `/var/www/admin-backend/.env`:
 
 ```bash
-# On your development machine
-cd frontend
-./scripts/build.sh
-
-# Deploy to server (adjust domain to match your SITE_URL)
-rsync -avz --delete build/ user@server:/var/www/nielsshootsfilm.com/
+DATA_DIR=/var/www/nielsshootsfilm.com/data
+UPLOAD_DIR=/var/www/nielsshootsfilm.com/uploads
+PORT=8080
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD_HASH=<use ./scripts/hash-password.sh to generate>
 ```
 
-### Option 2: Deploy Admin Backend
+## Deployment Scripts
 
-Deploy the Go admin backend to allow remote content updates through the admin interface.
+**Local scripts** (run from your machine):
 
-#### Build the Backend
+- `./scripts/deploy-frontend.sh` - Copy frontend source to server
+- `./scripts/deploy-backend.sh` - Copy backend source to server
+
+**Server scripts** (run on the server):
+
+- `./server-build-frontend.sh` - Build and install frontend
+- `./server-build-backend.sh` - Build and install backend
+
+## Monitoring
+
+**Check service status:**
 
 ```bash
-# On your development machine
-cd backend
-./scripts/build.sh
-
-# This creates backend/bin/admin
-```
-
-#### Deploy to Server
-
-```bash
-# Copy the binary to your server
-scp backend/bin/admin user@server:/var/www/admin-backend/admin
-
-# Copy data files to server (if starting fresh)
-scp -r data/ user@server:/var/www/nielsshootsfilm.com/data/
-
-# Set up environment variables on the server
-# Create /var/www/admin-backend/.env with:
-# DATA_DIR=/var/www/nielsshootsfilm.com/data
-# UPLOAD_DIR=/var/www/nielsshootsfilm.com/uploads
-# PORT=8080
-# ADMIN_USERNAME=your_username
-# ADMIN_PASSWORD_HASH=your_bcrypt_hash
-```
-
-#### Create Systemd Service
-
-Create `/etc/systemd/system/photo-admin.service`:
-
-```ini
-[Unit]
-Description=Photography Portfolio Admin Backend
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=/var/www/admin-backend
-EnvironmentFile=/var/www/admin-backend/.env
-ExecStart=/var/www/admin-backend/admin
-Restart=always
-RestartSec=10
-
-# Security hardening
-NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=strict
-ProtectHome=true
-ReadWritePaths=/var/www/nielsshootsfilm.com/data /var/www/nielsshootsfilm.com/uploads
-
-[Install]
-WantedBy=multi-user.target
-```
-
-#### Start the Service
-
-```bash
-# Reload systemd
-sudo systemctl daemon-reload
-
-# Enable service to start on boot
-sudo systemctl enable photo-admin
-
-# Start the service
-sudo systemctl start photo-admin
-
-# Check status
 sudo systemctl status photo-admin
+```
 
-# View logs
+**View logs:**
+
+```bash
 sudo journalctl -u photo-admin -f
 ```
 
-#### Generate Password Hash
-
-Use the included script to generate a bcrypt password hash:
+**Test backend directly:**
 
 ```bash
-cd backend
-./scripts/hash-password.sh your_password
-# Copy the output hash to your .env file as ADMIN_PASSWORD_HASH
+curl http://localhost:8080/healthz
+```
+
+**Test through Apache:**
+
+```bash
+curl https://nielsshootsfilm.com/api/config
 ```
 
 ## Troubleshooting
 
-### Permission Denied Errors
+**Backend won't start:**
+
+- Check logs: `sudo journalctl -u photo-admin -n 50`
+- Verify environment variables in `.env`
+- Ensure data directories exist and have correct permissions
+
+**Permission errors:**
 
 ```bash
-sudo chown -R www-data:www-data /var/www/nielsshootsfilm.com
-sudo chmod -R 755 /var/www/nielsshootsfilm.com
+sudo chown -R www-data:www-data /var/www/nielsshootsfilm.com/data
+sudo chown -R www-data:www-data /var/www/nielsshootsfilm.com/uploads
+sudo chmod -R 775 /var/www/nielsshootsfilm.com/data
 ```
 
-### Apache Won't Start
+**Frontend not loading:**
 
-```bash
-# Check configuration
-sudo apache2ctl configtest
+- Check Apache error logs: `sudo tail -f /var/log/apache2/error.log`
+- Verify files exist in `/var/www/nielsshootsfilm.com/`
+- Check Apache configuration: `sudo apache2ctl configtest`
 
-# Check Apache logs
-sudo tail -f /var/log/apache2/error.log
-```
+**API calls failing:**
 
-### SPA Routes Return 404
+- Ensure Apache proxy modules are enabled
+- Verify backend is running on localhost:8080
+- Check Apache access logs: `sudo tail -f /var/log/apache2/access.log`
 
-Ensure `mod_rewrite` is enabled:
+## Configuration Files
 
-```bash
-sudo a2enmod rewrite
-sudo systemctl restart apache2
-```
+- `apache-site-nielsshootsfilm.com.conf` - Apache reverse proxy configuration
+- `photo-admin.service` - systemd service definition
+- `server-provision.sh` - Server provisioning script for Ubuntu 20.04
 
-### Images Not Loading
+## Notes
 
-Check permissions and verify the path in your Apache config matches your actual deployment directory.
-
-## Alternative: .htaccess Configuration
-
-If you prefer using `.htaccess` instead of VirtualHost configuration, create this file in `/var/www/nielsshootsfilm.com/.htaccess`:
-
-```apache
-# Enable rewrite engine
-RewriteEngine On
-
-# Explicitly exclude static file directories from SPA fallback
-# These should serve actual files, not index.html
-RewriteRule ^assets/ - [L]
-RewriteRule ^uploads/ - [L]
-RewriteRule ^data/ - [L]
-
-# Don't rewrite if the file or directory exists
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-
-# Serve index.html for all other routes (SPA fallback)
-# This handles routes like /albums, /album/some-slug, etc.
-RewriteRule ^ /index.html [L]
-
-# Cache control
-<FilesMatch "\.(js|css|jpg|jpeg|png|gif|svg|woff|woff2|webp)$">
-    Header set Cache-Control "max-age=31536000, public, immutable"
-</FilesMatch>
-
-<FilesMatch "\.(json)$">
-    Header set Cache-Control "no-cache"
-</FilesMatch>
-
-# Security headers
-Header always set X-Content-Type-Options "nosniff"
-Header always set X-Frame-Options "SAMEORIGIN"
-Header always set X-XSS-Protection "1; mode=block"
-Header always set Referrer-Policy "strict-origin-when-cross-origin"
-```
-
-And set `AllowOverride All` in your Apache VirtualHost configuration.
+- The backend must be built on the server (not cross-compiled) due to libvips dependencies
+- Frontend uses environment variables: `.env` for dev, `.env.production` for production builds
+- Data files are automatically backed up to `.backups/` directory on each change
