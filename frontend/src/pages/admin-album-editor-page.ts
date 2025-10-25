@@ -127,6 +127,33 @@ export class AdminAlbumEditorPage extends LitElement {
       }
     }
 
+    /* Mobile and tablet portrait: stack vertically */
+    @media (max-width: 1023px) {
+      :host {
+        overflow: auto;
+        height: auto;
+      }
+
+      .layout-wrapper {
+        flex-direction: column;
+        overflow: visible;
+        min-height: auto;
+      }
+
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--color-border, #ddd);
+        max-height: none;
+        overflow: visible;
+      }
+
+      .main-content {
+        width: 100%;
+        overflow: visible;
+      }
+    }
+
     .loading,
     .error {
       text-align: center;
@@ -232,6 +259,13 @@ export class AdminAlbumEditorPage extends LitElement {
       gap: 1rem;
     }
 
+    /* Mobile: stack form rows vertically */
+    @media (max-width: 639px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .photo-upload {
       margin-top: 1rem;
     }
@@ -328,6 +362,19 @@ export class AdminAlbumEditorPage extends LitElement {
       grid-template-columns: repeat(4, 1fr);
       gap: 1rem;
       margin-top: 1rem;
+    }
+
+    /* Responsive photo grid */
+    @media (max-width: 1023px) {
+      .photos-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 639px) {
+      .photos-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     .photo-item {
