@@ -517,7 +517,7 @@
       "allow_downloads": false,
       "order": 0,
       "created_at": "2025-10-23T09:28:21.530126Z",
-      "updated_at": "2025-10-23T09:55:48.103091Z",
+      "updated_at": "2025-10-23T09:59:09.81242Z",
       "photos": [
         {
           "id": "40f2f24a-cb78-4135-9255-cd1077937d0d",
@@ -552,40 +552,6 @@
             "date_taken": "2024-12-09T18:55:42-08:00"
           },
           "uploaded_at": "2025-10-23T09:32:54.089466Z"
-        },
-        {
-          "id": "a22b7cbd-921e-4acb-90b4-0a562f0d610a",
-          "filename_original": "_D853516-positive-jpeg-5mpix.jpg",
-          "url_original": "/uploads/originals/0a1088c5-c651-4650-8cbc-1e449625618b.jpg",
-          "url_display": "/uploads/display/0a1088c5-c651-4650-8cbc-1e449625618b_display.webp",
-          "url_thumbnail": "/uploads/thumbnails/0a1088c5-c651-4650-8cbc-1e449625618b_thumbnail.webp",
-          "order": 4,
-          "width": 1500,
-          "height": 2249,
-          "file_size_original": 2641244,
-          "file_size_display": 952024,
-          "file_size_thumbnail": 55996,
-          "exif": {
-            "date_taken": "2024-11-07T22:44:57-08:00"
-          },
-          "uploaded_at": "2025-10-23T09:32:54.406613Z"
-        },
-        {
-          "id": "d8123c84-163b-433f-8088-2b3e34165354",
-          "filename_original": "_D853595-positive-02-jpeg-5mpix.jpg",
-          "url_original": "/uploads/originals/27c203da-d425-4977-b817-9fc1c2bd70fd.jpg",
-          "url_display": "/uploads/display/27c203da-d425-4977-b817-9fc1c2bd70fd_display.webp",
-          "url_thumbnail": "/uploads/thumbnails/27c203da-d425-4977-b817-9fc1c2bd70fd_thumbnail.webp",
-          "order": 5,
-          "width": 1500,
-          "height": 2216,
-          "file_size_original": 1450790,
-          "file_size_display": 373962,
-          "file_size_thumbnail": 32558,
-          "exif": {
-            "date_taken": "2024-11-07T23:21:13-08:00"
-          },
-          "uploaded_at": "2025-10-23T09:32:54.583375Z"
         },
         {
           "id": "dcc5f0b5-d1f7-481f-ba14-9403a20e1c56",
@@ -792,23 +758,6 @@
           "uploaded_at": "2025-10-23T09:32:55.920385Z"
         },
         {
-          "id": "e9166789-ceb5-41af-bf02-3d7a5409f05d",
-          "filename_original": "000011200037.jpg",
-          "url_original": "/uploads/originals/6c1a2d9d-7ff6-4458-929c-8851bab962bf.jpg",
-          "url_display": "/uploads/display/6c1a2d9d-7ff6-4458-929c-8851bab962bf_display.webp",
-          "url_thumbnail": "/uploads/thumbnails/6c1a2d9d-7ff6-4458-929c-8851bab962bf_thumbnail.webp",
-          "order": 18,
-          "width": 2500,
-          "height": 3771,
-          "file_size_original": 7055542,
-          "file_size_display": 1201720,
-          "file_size_thumbnail": 41724,
-          "exif": {
-            "date_taken": "2024-12-14T19:24:04-08:00"
-          },
-          "uploaded_at": "2025-10-23T09:32:56.040709Z"
-        },
-        {
           "id": "2cd619f3-7979-4f33-a381-a879aaa86e52",
           "filename_original": "000011210019-positive.jpg",
           "url_original": "/uploads/originals/07de463f-2efa-46b2-aab6-1bf1ab736f89.jpg",
@@ -841,23 +790,6 @@
             "date_taken": "2024-12-14T19:34:58-08:00"
           },
           "uploaded_at": "2025-10-23T09:32:56.25179Z"
-        },
-        {
-          "id": "ee1596a1-c837-4bdf-b4ad-964a72a93dde",
-          "filename_original": "000019710014-positive.jpg",
-          "url_original": "/uploads/originals/d75328d8-ff05-417f-ab94-9a775387d303.jpg",
-          "url_display": "/uploads/display/d75328d8-ff05-417f-ab94-9a775387d303_display.webp",
-          "url_thumbnail": "/uploads/thumbnails/d75328d8-ff05-417f-ab94-9a775387d303_thumbnail.webp",
-          "order": 21,
-          "width": 1500,
-          "height": 2263,
-          "file_size_original": 1601448,
-          "file_size_display": 799208,
-          "file_size_thumbnail": 72100,
-          "exif": {
-            "date_taken": "2024-12-14T19:38:04-08:00"
-          },
-          "uploaded_at": "2025-10-23T09:32:56.329104Z"
         },
         {
           "id": "f4ee0a73-1880-4ae3-a93e-fa4f8842f89b",
@@ -945,23 +877,6 @@
           "uploaded_at": "2025-10-23T09:32:56.870129Z"
         },
         {
-          "id": "32bed555-e73a-4d5d-a2af-dcdc45896346",
-          "filename_original": "000179450010.jpg",
-          "url_original": "/uploads/originals/f42ec926-6323-483d-b428-c7ffbeb34c57.jpg",
-          "url_display": "/uploads/display/f42ec926-6323-483d-b428-c7ffbeb34c57_display.webp",
-          "url_thumbnail": "/uploads/thumbnails/f42ec926-6323-483d-b428-c7ffbeb34c57_thumbnail.webp",
-          "order": 27,
-          "width": 2500,
-          "height": 3770,
-          "file_size_original": 6047134,
-          "file_size_display": 2359866,
-          "file_size_thumbnail": 31384,
-          "exif": {
-            "date_taken": "2024-12-14T19:55:12-08:00"
-          },
-          "uploaded_at": "2025-10-23T09:32:57.39419Z"
-        },
-        {
           "id": "cf786cb9-c8f4-4626-80e9-c176572352a3",
           "filename_original": "000179490028-jpeg-5mpix.jpg",
           "url_original": "/uploads/originals/d3d35568-07d2-451b-a8e7-615873b4cdf4.jpg",
@@ -996,40 +911,6 @@
             "date_taken": "2024-12-14T19:54:01-08:00"
           },
           "uploaded_at": "2025-10-23T09:32:57.640142Z"
-        },
-        {
-          "id": "374edc03-7577-42ee-b0ad-0dcb2920be24",
-          "filename_original": "000179490034-positive.jpg",
-          "url_original": "/uploads/originals/9a734721-d1e5-4db9-a8ba-8250e1d17de4.jpg",
-          "url_display": "/uploads/display/9a734721-d1e5-4db9-a8ba-8250e1d17de4_display.webp",
-          "url_thumbnail": "/uploads/thumbnails/9a734721-d1e5-4db9-a8ba-8250e1d17de4_thumbnail.webp",
-          "order": 30,
-          "width": 1500,
-          "height": 2262,
-          "file_size_original": 2275983,
-          "file_size_display": 588208,
-          "file_size_thumbnail": 25338,
-          "exif": {
-            "date_taken": "2024-12-14T19:57:59-08:00"
-          },
-          "uploaded_at": "2025-10-23T09:32:57.973823Z"
-        },
-        {
-          "id": "bc9c03da-0d00-4dd6-a98f-174730d777cc",
-          "filename_original": "000179490035-jpeg-5mpix.jpg",
-          "url_original": "/uploads/originals/e4b4d078-feb1-4e42-b645-475ccb6440c7.jpg",
-          "url_display": "/uploads/display/e4b4d078-feb1-4e42-b645-475ccb6440c7_display.webp",
-          "url_thumbnail": "/uploads/thumbnails/e4b4d078-feb1-4e42-b645-475ccb6440c7_thumbnail.webp",
-          "order": 31,
-          "width": 1500,
-          "height": 2262,
-          "file_size_original": 1923719,
-          "file_size_display": 427790,
-          "file_size_thumbnail": 22386,
-          "exif": {
-            "date_taken": "2024-12-14T20:03:21-08:00"
-          },
-          "uploaded_at": "2025-10-23T09:32:58.209535Z"
         },
         {
           "id": "408f6fb5-2622-44d3-827a-2e2985afb888",
@@ -1693,23 +1574,6 @@
             "date_taken": "2024-12-14T22:29:43-08:00"
           },
           "uploaded_at": "2025-10-23T09:33:02.675336Z"
-        },
-        {
-          "id": "54594283-86db-45bb-9f19-ec10eca332ea",
-          "filename_original": "R089-0016-jpeg-5mpix.jpg",
-          "url_original": "/uploads/originals/31bc9006-71bb-461a-97e3-086ae6e467ac.jpg",
-          "url_display": "/uploads/display/31bc9006-71bb-461a-97e3-086ae6e467ac_display.webp",
-          "url_thumbnail": "/uploads/thumbnails/31bc9006-71bb-461a-97e3-086ae6e467ac_thumbnail.webp",
-          "order": 71,
-          "width": 1500,
-          "height": 2250,
-          "file_size_original": 3001642,
-          "file_size_display": 809694,
-          "file_size_thumbnail": 62676,
-          "exif": {
-            "date_taken": "2024-12-14T22:30:55-08:00"
-          },
-          "uploaded_at": "2025-10-23T09:33:02.875785Z"
         },
         {
           "id": "e40931fb-c5d0-436e-a404-e014c3ccc326",
