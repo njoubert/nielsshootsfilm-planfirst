@@ -47,8 +47,8 @@ The generated configuration is designed to **merge** with your existing Apache c
 # Copy the generated configuration
 sudo cp deployment/apache-site-nielsshootsfilm.com.conf /etc/apache2/sites-available/nielsshootsfilm.com.conf
 
-# Enable required Apache modules
-sudo a2enmod rewrite headers expires deflate ssl
+# Enable required Apache modules (including proxy for Go backend)
+sudo a2enmod rewrite headers expires deflate ssl proxy proxy_http
 
 # Enable the site
 sudo a2ensite nielsshootsfilm.com
@@ -157,7 +157,93 @@ rsync -avz --delete build/ user@server:/var/www/nielsshootsfilm.com/
 
 ### Option 2: Deploy Admin Backend
 
-Deploy the Go admin backend separately to allow remote content updates through the admin interface. (See backend deployment documentation - future work)
+Deploy the Go admin backend to allow remote content updates through the admin interface.
+
+#### Build the Backend
+
+```bash
+# On your development machine
+cd backend
+./scripts/build.sh
+
+# This creates backend/bin/admin
+```
+
+#### Deploy to Server
+
+```bash
+# Copy the binary to your server
+scp backend/bin/admin user@server:/var/www/admin-backend/admin
+
+# Copy data files to server (if starting fresh)
+scp -r data/ user@server:/var/www/nielsshootsfilm.com/data/
+
+# Set up environment variables on the server
+# Create /var/www/admin-backend/.env with:
+# DATA_DIR=/var/www/nielsshootsfilm.com/data
+# STATIC_DIR=/var/www/nielsshootsfilm.com/uploads
+# PORT=8080
+# ADMIN_USERNAME=your_username
+# ADMIN_PASSWORD_HASH=your_bcrypt_hash
+```
+
+#### Create Systemd Service
+
+Create `/etc/systemd/system/photo-admin.service`:
+
+```ini
+[Unit]
+Description=Photography Portfolio Admin Backend
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/admin-backend
+EnvironmentFile=/var/www/admin-backend/.env
+ExecStart=/var/www/admin-backend/admin
+Restart=always
+RestartSec=10
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/nielsshootsfilm.com/data /var/www/nielsshootsfilm.com/uploads
+
+[Install]
+WantedBy=multi-user.target
+```
+
+#### Start the Service
+
+```bash
+# Reload systemd
+sudo systemctl daemon-reload
+
+# Enable service to start on boot
+sudo systemctl enable photo-admin
+
+# Start the service
+sudo systemctl start photo-admin
+
+# Check status
+sudo systemctl status photo-admin
+
+# View logs
+sudo journalctl -u photo-admin -f
+```
+
+#### Generate Password Hash
+
+Use the included script to generate a bcrypt password hash:
+
+```bash
+cd backend
+./scripts/hash-password.sh your_password
+# Copy the output hash to your .env file as ADMIN_PASSWORD_HASH
+```
 
 ## Troubleshooting
 

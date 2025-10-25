@@ -12,7 +12,7 @@ EXIT_CODE=0
 
 for file in "$@"; do
     case "$file" in
-        backend/scripts/*|frontend/scripts/*|scripts/*|dev.sh|format.sh|provision.sh|build.sh|bootstrap.sh|test.sh)
+        backend/scripts/*|frontend/scripts/*|scripts/*|deployment/*|dev.sh|format.sh|provision.sh|build.sh|bootstrap.sh|test.sh)
             # Allowed location
             ;;
         *)
@@ -21,6 +21,7 @@ for file in "$@"; do
             echo "     • backend/scripts/"
             echo "     • frontend/scripts/"
             echo "     • scripts/"
+            echo "     • deployment/"
             echo "     • Root convenience scripts: dev.sh, format.sh, provision.sh, build.sh, bootstrap.sh, test.sh"
             EXIT_CODE=1
             ;;
