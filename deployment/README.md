@@ -10,10 +10,9 @@ This guide covers deploying the nielsshootsfilm photography portfolio to product
 
    ```bash
    ./scripts/deploy-frontend.sh
-   ssh njoubert.com
-   cd ~/nielsshootsfilm-frontend-build
-   ./server-build-frontend.sh
    ```
+
+   This builds the frontend locally and copies the built files to the server.
 
 2. **Deploy Backend:**
 
@@ -23,6 +22,8 @@ This guide covers deploying the nielsshootsfilm photography portfolio to product
    cd ~/nielsshootsfilm-backend-build
    ./server-build-backend.sh
    ```
+
+   The backend must be built on the server due to libvips dependencies.
 
 ## Architecture
 
@@ -100,12 +101,11 @@ ADMIN_PASSWORD_HASH=<use ./scripts/hash-password.sh to generate>
 
 **Local scripts** (run from your machine):
 
-- `./scripts/deploy-frontend.sh` - Copy frontend source to server
+- `./scripts/deploy-frontend.sh` - Build frontend locally and deploy to server
 - `./scripts/deploy-backend.sh` - Copy backend source to server
 
 **Server scripts** (run on the server):
 
-- `./server-build-frontend.sh` - Build and install frontend
 - `./server-build-backend.sh` - Build and install backend
 
 ## Monitoring
