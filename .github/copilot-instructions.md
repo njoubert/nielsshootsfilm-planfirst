@@ -77,6 +77,22 @@
 - They're tested and maintained as part of the project
 - The test script intelligently detects test type from file path (no need to specify backend vs frontend)
 
+**Do NOT `| tail` when running scripts!**
+
+These scripts often require user input or present important intermediate steps that the user needs to verify. Piping output to `tail` or similar commands prevents this.
+
+Do NOT do this:
+
+```bash
+ ./dev.sh | tail -n 10   # ❌ Do NOT do this
+```
+
+DO this:
+
+```bash
+ ./dev.sh                # ✅ Correct usage
+```
+
 ## Coding Principles
 
 1. Keep static files pure (no server-side rendering for public pages)
