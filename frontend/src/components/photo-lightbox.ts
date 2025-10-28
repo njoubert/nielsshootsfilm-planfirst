@@ -49,10 +49,6 @@ export class PhotoLightbox extends LitElement {
     }
   }
 
-  @state() private touchStartX = 0;
-  @state() private touchEndX = 0;
-  @state() private touchStartTime = 0;
-
   static styles = css`
     :host {
       display: none;
@@ -306,15 +302,18 @@ export class PhotoLightbox extends LitElement {
         viewport.setAttribute('name', 'viewport');
         document.head.appendChild(viewport);
       }
-      // Disable user scaling
+      // Allow zoom but prevent double-tap zoom to avoid accidental navigation
       viewport.setAttribute(
         'content',
-        'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
+        'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes'
       );
     } else {
       if (viewport) {
-        // Re-enable user scaling
-        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
+        // Standard mobile viewport settings
+        viewport.setAttribute(
+          'content',
+          'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes'
+        );
       }
     }
   }
@@ -332,39 +331,6 @@ export class PhotoLightbox extends LitElement {
       case 'ArrowRight':
         this.next();
         break;
-    }
-  };
-
-  private handleTouchStart = (e: TouchEvent) => {
-    this.touchStartX = e.changedTouches[0].screenX;
-    this.touchStartTime = Date.now();
-  };
-
-  private handleTouchEnd = (e: TouchEvent) => {
-    this.touchEndX = e.changedTouches[0].screenX;
-    this.handleSwipe();
-  };
-
-  private handleSwipe() {
-    const swipeThreshold = 50;
-    const diff = this.touchStartX - this.touchEndX;
-
-    if (Math.abs(diff) > swipeThreshold) {
-      if (diff > 0) {
-        this.next();
-      } else {
-        this.prev();
-      }
-    }
-  }
-
-  private handleImageTap = (e: TouchEvent) => {
-    const touchDuration = Date.now() - this.touchStartTime;
-    const touchDistance = Math.abs(this.touchStartX - e.changedTouches[0].screenX);
-
-    // Only treat as tap if touch was quick and didn't move much (not a swipe)
-    if (touchDuration < 300 && touchDistance < 10) {
-      this.next();
     }
   };
 
@@ -518,11 +484,7 @@ export class PhotoLightbox extends LitElement {
           </button>
         </div>
 
-        <div
-          class="photo-container"
-          @touchstart=${(e: TouchEvent) => this.handleTouchStart(e)}
-          @touchend=${(e: TouchEvent) => this.handleTouchEnd(e)}
-        >
+        <div class="photo-container">
           <button class="nav-button prev" @click=${() => this.prev()} aria-label="Previous photo">
             ‹
           </button>
@@ -530,8 +492,6 @@ export class PhotoLightbox extends LitElement {
           <img
             src="${currentPhoto.url_display}"
             alt="${currentPhoto.alt_text || currentPhoto.caption || 'Photo'}"
-            @touchstart=${(e: TouchEvent) => this.handleTouchStart(e)}
-            @touchend=${(e: TouchEvent) => this.handleImageTap(e)}
           />
 
           <button class="nav-button next" @click=${() => this.next()} aria-label="Next photo">
@@ -545,10 +505,14 @@ export class PhotoLightbox extends LitElement {
   }
 
   private renderExif(photo: Photo) {
+    if (!this.showExif) {
+      return '';
+    }
+
     const exif = photo.exif;
     const items = [];
 
-    if (this.showExif && exif) {
+    if (exif) {
       if (exif.camera) items.push(`${exif.camera}`);
       if (exif.lens) items.push(`${exif.lens}`);
       if (exif.iso) items.push(`ISO ${exif.iso}`);
