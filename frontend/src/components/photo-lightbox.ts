@@ -20,6 +20,15 @@ export class PhotoLightbox extends LitElement {
 
   private _open = false;
   @state() private hasNavigated = false;
+  @state() private imageScale = 1;
+  @state() private imageTranslateX = 0;
+  @state() private imageTranslateY = 0;
+
+  // Touch state for pinch zoom
+  private lastTouchDistance = 0;
+  private initialScale = 1;
+  private lastTouchMidpoint = { x: 0, y: 0 };
+  private isPinching = false;
 
   @property({ type: Boolean })
   get open() {
@@ -65,6 +74,11 @@ export class PhotoLightbox extends LitElement {
       z-index: 9999;
       display: flex;
       flex-direction: column;
+      /* Prevent all touch gestures from affecting the page */
+      touch-action: none;
+      /* Prevent content from being selectable */
+      -webkit-user-select: none;
+      user-select: none;
     }
 
     .lightbox-toolbar {
@@ -161,8 +175,8 @@ export class PhotoLightbox extends LitElement {
       justify-content: center;
       overflow: hidden;
       position: relative;
-      /* Enable touch-based zooming via CSS */
-      touch-action: pinch-zoom;
+      /* Prevent all touch manipulation to avoid page crashes */
+      touch-action: none;
     }
 
     .nav-button {
@@ -215,8 +229,14 @@ export class PhotoLightbox extends LitElement {
       height: auto;
       object-fit: contain;
       display: block;
-      /* Allow pinch-to-zoom on the image */
-      touch-action: pinch-zoom;
+      /* Prevent touch manipulation on image to avoid crashes */
+      touch-action: none;
+      /* Prevent default touch behavior */
+      -webkit-user-select: none;
+      user-select: none;
+      /* Transform origin at center for zoom */
+      transform-origin: center center;
+      will-change: transform;
     }
 
     .exif-panel {
@@ -286,6 +306,81 @@ export class PhotoLightbox extends LitElement {
       this.disableMobileZoom(false);
     }
   }
+
+  private resetZoom() {
+    this.imageScale = 1;
+    this.imageTranslateX = 0;
+    this.imageTranslateY = 0;
+  }
+
+  private getTouchDistance(touches: TouchList): number {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  private getTouchMidpoint(touches: TouchList): { x: number; y: number } {
+    return {
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2,
+    };
+  }
+
+  private handleTouchStart = (e: TouchEvent) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      this.isPinching = true;
+      this.lastTouchDistance = this.getTouchDistance(e.touches);
+      this.initialScale = this.imageScale;
+      this.lastTouchMidpoint = this.getTouchMidpoint(e.touches);
+    }
+  };
+
+  private handleTouchMove = (e: TouchEvent) => {
+    if (e.touches.length === 2 && this.isPinching) {
+      e.preventDefault();
+
+      const currentDistance = this.getTouchDistance(e.touches);
+      const currentMidpoint = this.getTouchMidpoint(e.touches);
+
+      // Calculate new scale
+      const scaleDelta = currentDistance / this.lastTouchDistance;
+      let newScale = this.initialScale * scaleDelta;
+
+      // Constrain scale between 1 (fit to screen) and 4 (max zoom)
+      newScale = Math.max(1, Math.min(4, newScale));
+
+      // If trying to zoom below 1, snap to 1 with a little resistance
+      if (newScale <= 1.05) {
+        newScale = 1;
+        this.imageTranslateX = 0;
+        this.imageTranslateY = 0;
+      } else if (this.imageScale > 1) {
+        // Handle panning when zoomed in
+        const deltaX = currentMidpoint.x - this.lastTouchMidpoint.x;
+        const deltaY = currentMidpoint.y - this.lastTouchMidpoint.y;
+        this.imageTranslateX += deltaX;
+        this.imageTranslateY += deltaY;
+      }
+
+      this.imageScale = newScale;
+      this.lastTouchMidpoint = currentMidpoint;
+      this.requestUpdate();
+    }
+  };
+
+  private handleTouchEnd = (e: TouchEvent) => {
+    if (e.touches.length < 2) {
+      this.isPinching = false;
+      this.lastTouchDistance = 0;
+
+      // Snap to scale 1 if very close
+      if (this.imageScale < 1.05) {
+        this.resetZoom();
+        this.requestUpdate();
+      }
+    }
+  };
 
   private disableBodyScroll(disable: boolean) {
     if (disable) {
@@ -363,6 +458,7 @@ export class PhotoLightbox extends LitElement {
 
   next() {
     this.hasNavigated = true;
+    this.resetZoom();
     if (this.currentIndex < this.photos.length - 1) {
       this.currentIndex++;
     } else {
@@ -373,6 +469,7 @@ export class PhotoLightbox extends LitElement {
 
   prev() {
     this.hasNavigated = true;
+    this.resetZoom();
     if (this.currentIndex > 0) {
       this.currentIndex--;
     } else {
@@ -499,7 +596,12 @@ export class PhotoLightbox extends LitElement {
           </button>
         </div>
 
-        <div class="photo-container">
+        <div
+          class="photo-container"
+          @touchstart=${this.handleTouchStart}
+          @touchmove=${this.handleTouchMove}
+          @touchend=${this.handleTouchEnd}
+        >
           <button class="nav-button prev" @click=${() => this.prev()} aria-label="Previous photo">
             ‹
           </button>
@@ -507,6 +609,8 @@ export class PhotoLightbox extends LitElement {
           <img
             src="${currentPhoto.url_display}"
             alt="${currentPhoto.alt_text || currentPhoto.caption || 'Photo'}"
+            style="transform: translate(${this.imageTranslateX}px, ${this
+              .imageTranslateY}px) scale(${this.imageScale})"
           />
 
           <button class="nav-button next" @click=${() => this.next()} aria-label="Next photo">
