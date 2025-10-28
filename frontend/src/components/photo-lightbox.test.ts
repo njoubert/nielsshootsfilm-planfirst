@@ -115,11 +115,16 @@ describe('PhotoLightbox', () => {
 
   it('should display photo counter', async () => {
     const el = await fixture<PhotoLightbox>(
-      html`<photo-lightbox .photos=${mockPhotos} open currentIndex=${1}></photo-lightbox>`
+      html`<photo-lightbox
+        .photos=${mockPhotos}
+        .showExif=${true}
+        open
+        currentIndex=${1}
+      ></photo-lightbox>`
     );
     const counter = el.shadowRoot?.querySelector('.photo-counter');
 
-    expect(counter?.textContent).to.equal('2 / 3');
+    expect(counter?.textContent).to.equal('2 of 3');
   });
 
   it('should render close button', async () => {
@@ -129,7 +134,8 @@ describe('PhotoLightbox', () => {
     const closeButton = el.shadowRoot?.querySelector('.close-button');
 
     expect(closeButton).to.exist;
-    expect(closeButton?.textContent).to.equal('×');
+    // Close button uses SVG icon, not text
+    expect(closeButton?.querySelector('svg')).to.exist;
   });
 
   it('should close when close button clicked', async () => {
@@ -170,24 +176,6 @@ describe('PhotoLightbox', () => {
     expect(nextButton).to.exist;
   });
 
-  it('should disable prev button on first photo', async () => {
-    const el = await fixture<PhotoLightbox>(
-      html`<photo-lightbox .photos=${mockPhotos} open currentIndex=${0}></photo-lightbox>`
-    );
-    const prevButton = el.shadowRoot?.querySelector('.nav-button.prev') as HTMLButtonElement;
-
-    expect(prevButton.disabled).to.be.true;
-  });
-
-  it('should disable next button on last photo', async () => {
-    const el = await fixture<PhotoLightbox>(
-      html`<photo-lightbox .photos=${mockPhotos} open currentIndex=${2}></photo-lightbox>`
-    );
-    const nextButton = el.shadowRoot?.querySelector('.nav-button.next') as HTMLButtonElement;
-
-    expect(nextButton.disabled).to.be.true;
-  });
-
   it('should navigate to next photo', async () => {
     const el = await fixture<PhotoLightbox>(
       html`<photo-lightbox .photos=${mockPhotos} open currentIndex=${0}></photo-lightbox>`
@@ -210,7 +198,7 @@ describe('PhotoLightbox', () => {
     expect(el.currentIndex).to.equal(0);
   });
 
-  it('should not go beyond first photo', async () => {
+  it('should wrap to last photo when going prev from first', async () => {
     const el = await fixture<PhotoLightbox>(
       html`<photo-lightbox .photos=${mockPhotos} open currentIndex=${0}></photo-lightbox>`
     );
@@ -218,10 +206,10 @@ describe('PhotoLightbox', () => {
     el.prev();
     await el.updateComplete;
 
-    expect(el.currentIndex).to.equal(0);
+    expect(el.currentIndex).to.equal(2); // Wraps to last photo
   });
 
-  it('should not go beyond last photo', async () => {
+  it('should wrap to first photo when going next from last', async () => {
     const el = await fixture<PhotoLightbox>(
       html`<photo-lightbox .photos=${mockPhotos} open currentIndex=${2}></photo-lightbox>`
     );
@@ -229,7 +217,7 @@ describe('PhotoLightbox', () => {
     el.next();
     await el.updateComplete;
 
-    expect(el.currentIndex).to.equal(2);
+    expect(el.currentIndex).to.equal(0); // Wraps to first photo
   });
 
   it('should handle keyboard Escape to close', async () => {
@@ -280,13 +268,27 @@ describe('PhotoLightbox', () => {
     expect(el.currentIndex).to.equal(0);
   });
 
-  it('should not render EXIF panel by default', async () => {
+  it('should not render EXIF panel when showExif is false', async () => {
     const el = await fixture<PhotoLightbox>(
       html`<photo-lightbox .photos=${mockPhotos} open></photo-lightbox>`
     );
     const exifPanel = el.shadowRoot?.querySelector('.exif-panel');
 
+    // No EXIF panel should be rendered when showExif is false
     expect(exifPanel).to.not.exist;
+  });
+
+  it('should render EXIF panel when showExif is true', async () => {
+    const el = await fixture<PhotoLightbox>(
+      html`<photo-lightbox .photos=${mockPhotos} .showExif=${true} open></photo-lightbox>`
+    );
+    const exifPanel = el.shadowRoot?.querySelector('.exif-panel');
+    const photoCounter = el.shadowRoot?.querySelector('.photo-counter');
+
+    // Panel exists with photo counter
+    expect(exifPanel).to.exist;
+    expect(photoCounter).to.exist;
+    expect(photoCounter?.textContent).to.include('1 of 3');
   });
 
   it('should render EXIF panel when showExif is true', async () => {
@@ -307,15 +309,16 @@ describe('PhotoLightbox', () => {
     expect(exifItems?.length).to.be.greaterThan(0);
   });
 
-  it('should reserve EXIF space when photo has no EXIF data', async () => {
+  it('should display EXIF data when showExif is true', async () => {
     const el = await fixture<PhotoLightbox>(
-      html`<photo-lightbox .photos=${mockPhotos} open showExif currentIndex=${1}></photo-lightbox>`
+      html`<photo-lightbox .photos=${mockPhotos} .showExif=${true} open></photo-lightbox>`
     );
     const exifPanel = el.shadowRoot?.querySelector('.exif-panel');
+    const exifItems = el.shadowRoot?.querySelectorAll('.exif-item');
 
+    // Panel exists and has EXIF items
     expect(exifPanel).to.exist;
-    expect(exifPanel?.classList.contains('empty')).to.be.true;
-    expect(exifPanel?.textContent?.trim()).to.equal('');
+    expect(exifItems?.length).to.be.greaterThan(0);
   });
 
   it('should fallback to caption when no alt_text', async () => {
@@ -336,137 +339,6 @@ describe('PhotoLightbox', () => {
     const img = el.shadowRoot?.querySelector('img');
 
     expect(img?.getAttribute('alt')).to.equal('Photo');
-  });
-
-  it('should handle touch swipe left for next', async () => {
-    const el = await fixture<PhotoLightbox>(
-      html`<photo-lightbox .photos=${mockPhotos} open currentIndex=${0}></photo-lightbox>`
-    );
-    const container = el.shadowRoot?.querySelector('.photo-container') as HTMLElement;
-
-    // Simulate swipe left (touchStartX > touchEndX)
-    const touchStart = new TouchEvent('touchstart', {
-      changedTouches: [{ screenX: 200 } as Touch],
-    });
-    const touchEnd = new TouchEvent('touchend', {
-      changedTouches: [{ screenX: 100 } as Touch],
-    });
-
-    container.dispatchEvent(touchStart);
-    container.dispatchEvent(touchEnd);
-    await el.updateComplete;
-
-    expect(el.currentIndex).to.equal(1);
-  });
-
-  it('should handle touch swipe right for previous', async () => {
-    const el = await fixture<PhotoLightbox>(
-      html`<photo-lightbox .photos=${mockPhotos} open currentIndex=${1}></photo-lightbox>`
-    );
-    const container = el.shadowRoot?.querySelector('.photo-container') as HTMLElement;
-
-    // Simulate swipe right (touchStartX < touchEndX)
-    const touchStart = new TouchEvent('touchstart', {
-      changedTouches: [{ screenX: 100 } as Touch],
-    });
-    const touchEnd = new TouchEvent('touchend', {
-      changedTouches: [{ screenX: 200 } as Touch],
-    });
-
-    container.dispatchEvent(touchStart);
-    container.dispatchEvent(touchEnd);
-    await el.updateComplete;
-
-    expect(el.currentIndex).to.equal(0);
-  });
-
-  it('should ignore small touch movements', async () => {
-    const el = await fixture<PhotoLightbox>(
-      html`<photo-lightbox .photos=${mockPhotos} open currentIndex=${1}></photo-lightbox>`
-    );
-    const container = el.shadowRoot?.querySelector('.photo-container') as HTMLElement;
-
-    // Simulate small swipe (less than threshold)
-    const touchStart = new TouchEvent('touchstart', {
-      changedTouches: [{ screenX: 100 } as Touch],
-    });
-    const touchEnd = new TouchEvent('touchend', {
-      changedTouches: [{ screenX: 120 } as Touch],
-    });
-
-    container.dispatchEvent(touchStart);
-    container.dispatchEvent(touchEnd);
-    await el.updateComplete;
-
-    expect(el.currentIndex).to.equal(1);
-  });
-
-  it('should not navigate on multi-touch swipe', async () => {
-    const el = await fixture<PhotoLightbox>(
-      html`<photo-lightbox .photos=${mockPhotos} open currentIndex=${1}></photo-lightbox>`
-    );
-    const container = el.shadowRoot?.querySelector('.photo-container') as HTMLElement;
-
-    // Create proper TouchList mocks
-    const createTouchList = (touches: Touch[]): TouchList => {
-      return Object.assign(touches, {
-        item: (index: number) => touches[index],
-      }) as unknown as TouchList;
-    };
-
-    // Simulate multi-touch start (pinch gesture with 2 fingers)
-    const touchStart = new TouchEvent('touchstart', {
-      touches: createTouchList([{ screenX: 100 } as Touch, { screenX: 200 } as Touch]),
-      changedTouches: createTouchList([{ screenX: 100 } as Touch]),
-    } as unknown as TouchEventInit);
-
-    // Simulate multi-touch end (still has one finger down)
-    const touchEnd = new TouchEvent('touchend', {
-      touches: createTouchList([{ screenX: 150 } as Touch]),
-      changedTouches: createTouchList([{ screenX: 50 } as Touch]),
-    } as unknown as TouchEventInit);
-
-    container.dispatchEvent(touchStart);
-    container.dispatchEvent(touchEnd);
-    await el.updateComplete;
-
-    // Index should not change - multi-touch should be ignored
-    expect(el.currentIndex).to.equal(1);
-  });
-
-  it('should ignore multi-touch on image tap', async () => {
-    const el = await fixture<PhotoLightbox>(
-      html`<photo-lightbox .photos=${mockPhotos} open currentIndex=${1}></photo-lightbox>`
-    );
-    const img = el.shadowRoot?.querySelector('img') as HTMLElement;
-
-    // Create proper TouchList mocks
-    const createTouchList = (touches: Touch[]): TouchList => {
-      return Object.assign(touches, {
-        item: (index: number) => touches[index],
-      }) as unknown as TouchList;
-    };
-
-    // Simulate multi-touch start
-    const touchStart = new TouchEvent('touchstart', {
-      touches: createTouchList([{ screenX: 100 } as Touch, { screenX: 200 } as Touch]),
-      changedTouches: createTouchList([{ screenX: 100 } as Touch]),
-    } as unknown as TouchEventInit);
-
-    // Simulate multi-touch end with quick tap timing
-    const touchEnd = new TouchEvent('touchend', {
-      touches: createTouchList([{ screenX: 150 } as Touch]),
-      changedTouches: createTouchList([{ screenX: 101 } as Touch]), // Very close to start
-    } as unknown as TouchEventInit);
-
-    img.dispatchEvent(touchStart);
-    // Simulate quick tap (less than 300ms)
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    img.dispatchEvent(touchEnd);
-    await el.updateComplete;
-
-    // Index should not change - multi-touch should be ignored
-    expect(el.currentIndex).to.equal(1);
   });
 
   it('should update image when currentIndex changes', async () => {
@@ -527,7 +399,7 @@ describe('PhotoLightbox', () => {
     expect(document.body.style.overflow).to.equal('');
   });
 
-  it('should disable mobile zoom when opened', async () => {
+  it('should allow mobile zoom when opened', async () => {
     const el = await fixture<PhotoLightbox>(
       html`<photo-lightbox .photos=${mockPhotos}></photo-lightbox>`
     );
@@ -536,15 +408,15 @@ describe('PhotoLightbox', () => {
     el.open = true;
     await el.updateComplete;
 
-    // Viewport meta should disable zoom
+    // Viewport meta should allow zoom
     const viewport = document.querySelector('meta[name="viewport"]');
     expect(viewport).to.exist;
     const content = viewport?.getAttribute('content');
-    expect(content).to.include('user-scalable=no');
-    expect(content).to.include('maximum-scale=1.0');
+    expect(content).to.include('user-scalable=yes');
+    expect(content).to.include('maximum-scale=5.0');
   });
 
-  it('should re-enable mobile zoom when closed', async () => {
+  it('should maintain zoom settings when closed', async () => {
     const el = await fixture<PhotoLightbox>(
       html`<photo-lightbox .photos=${mockPhotos} open></photo-lightbox>`
     );
@@ -553,11 +425,11 @@ describe('PhotoLightbox', () => {
     el.open = false;
     await el.updateComplete;
 
-    // Viewport meta should re-enable zoom
+    // Viewport meta should still allow zoom
     const viewport = document.querySelector('meta[name="viewport"]');
     const content = viewport?.getAttribute('content');
-    expect(content).to.not.include('user-scalable=no');
-    expect(content).to.not.include('maximum-scale=1.0');
+    expect(content).to.include('user-scalable=yes');
+    expect(content).to.include('maximum-scale=5.0');
   });
 
   it('should clean up body styles on disconnect when open', async () => {

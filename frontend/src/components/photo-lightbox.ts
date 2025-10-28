@@ -505,10 +505,14 @@ export class PhotoLightbox extends LitElement {
   }
 
   private renderExif(photo: Photo) {
+    if (!this.showExif) {
+      return '';
+    }
+
     const exif = photo.exif;
     const items = [];
 
-    if (this.showExif && exif) {
+    if (exif) {
       if (exif.camera) items.push(`${exif.camera}`);
       if (exif.lens) items.push(`${exif.lens}`);
       if (exif.iso) items.push(`ISO ${exif.iso}`);
