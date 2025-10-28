@@ -401,23 +401,30 @@ describe('PhotoLightbox', () => {
     expect(el.currentIndex).to.equal(1);
   });
 
-  it('should ignore multi-touch gestures to prevent pinch-zoom crashes', async () => {
+  it('should not navigate on multi-touch swipe', async () => {
     const el = await fixture<PhotoLightbox>(
       html`<photo-lightbox .photos=${mockPhotos} open currentIndex=${1}></photo-lightbox>`
     );
     const container = el.shadowRoot?.querySelector('.photo-container') as HTMLElement;
 
+    // Create proper TouchList mocks
+    const createTouchList = (touches: Touch[]): TouchList => {
+      return Object.assign(touches, {
+        item: (index: number) => touches[index],
+      }) as unknown as TouchList;
+    };
+
     // Simulate multi-touch start (pinch gesture with 2 fingers)
     const touchStart = new TouchEvent('touchstart', {
-      touches: [{ screenX: 100 } as Touch, { screenX: 200 } as Touch] as unknown as TouchList,
-      changedTouches: [{ screenX: 100 } as Touch],
-    });
+      touches: createTouchList([{ screenX: 100 } as Touch, { screenX: 200 } as Touch]),
+      changedTouches: createTouchList([{ screenX: 100 } as Touch]),
+    } as unknown as TouchEventInit);
 
     // Simulate multi-touch end (still has one finger down)
     const touchEnd = new TouchEvent('touchend', {
-      touches: [{ screenX: 150 } as Touch] as unknown as TouchList,
-      changedTouches: [{ screenX: 50 } as Touch],
-    });
+      touches: createTouchList([{ screenX: 150 } as Touch]),
+      changedTouches: createTouchList([{ screenX: 50 } as Touch]),
+    } as unknown as TouchEventInit);
 
     container.dispatchEvent(touchStart);
     container.dispatchEvent(touchEnd);
@@ -433,17 +440,24 @@ describe('PhotoLightbox', () => {
     );
     const img = el.shadowRoot?.querySelector('img') as HTMLElement;
 
+    // Create proper TouchList mocks
+    const createTouchList = (touches: Touch[]): TouchList => {
+      return Object.assign(touches, {
+        item: (index: number) => touches[index],
+      }) as unknown as TouchList;
+    };
+
     // Simulate multi-touch start
     const touchStart = new TouchEvent('touchstart', {
-      touches: [{ screenX: 100 } as Touch, { screenX: 200 } as Touch] as unknown as TouchList,
-      changedTouches: [{ screenX: 100 } as Touch],
-    });
+      touches: createTouchList([{ screenX: 100 } as Touch, { screenX: 200 } as Touch]),
+      changedTouches: createTouchList([{ screenX: 100 } as Touch]),
+    } as unknown as TouchEventInit);
 
     // Simulate multi-touch end with quick tap timing
     const touchEnd = new TouchEvent('touchend', {
-      touches: [{ screenX: 150 } as Touch] as unknown as TouchList,
-      changedTouches: [{ screenX: 101 } as Touch], // Very close to start
-    });
+      touches: createTouchList([{ screenX: 150 } as Touch]),
+      changedTouches: createTouchList([{ screenX: 101 } as Touch]), // Very close to start
+    } as unknown as TouchEventInit);
 
     img.dispatchEvent(touchStart);
     // Simulate quick tap (less than 300ms)
