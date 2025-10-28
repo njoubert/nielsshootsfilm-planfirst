@@ -143,140 +143,51 @@ The application expects these paths from domain root:
 
 ```nginx
 server {
-    listen 80;
-    server_name yourdomain.com;
-    root /var/www/html;
-    index index.html;
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    # server_name: Use regex ~^.+\.nielsshootsfilm.com$ to match all subdomains with wildcard cert
+    server_name nielsshootsfilm.com www.nielsshootsfilm.com;
 
-    # Serve static assets with caching
-    location /assets/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
+    # SSL certificate
+    ssl_certificate /etc/letsencrypt/live/nielsshootsfilm.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/nielsshootsfilm.com/privkey.pem;
+
+    # SSL configuration
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # HSTS
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    # Health check endpoint - must come BEFORE SPA routing
+    location /.well-known/health {
+        access_log off;  # Don't clutter logs with monitoring pings
+        add_header Content-Type text/plain;
+        return 200 'OK';
     }
 
-    # Serve images with caching
-    location /uploads/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
+    # Site root
+    root /Users/njoubert/webserver/sites/nielsshootsfilm.com/public;
+    index index.html index.htm;
 
-    # Serve data files without caching (they may be updated by admin)
-    location /data/ {
-        expires -1;
-        add_header Cache-Control "no-cache";
-    }
-
-    # SPA fallback - serve index.html for all other routes
+    # SPA routing - serve index.html for all non-file requests
     location / {
         try_files $uri $uri/ /index.html;
     }
-}
-```
 
-#### Apache
-
-**Option 1: Use the provided configuration template**
-
-A complete Apache VirtualHost configuration template is available in `deployment/apache-site.conf`. To use it:
-
-```bash
-# Generate site-specific configuration
-./scripts/generate-apache-config.sh
-
-# The script will create deployment/apache-site-{yourdomain}.conf
-# Follow the instructions printed by the script to deploy
-```
-
-See `deployment/README.md` for complete Apache setup instructions including SSL/HTTPS configuration.
-
-**Option 2: Use .htaccess**
-
-If you prefer `.htaccess`:
-
-```apache
-# Enable rewrite engine
-RewriteEngine On
-
-# Explicitly exclude static file directories from SPA fallback
-# These should serve actual files, not index.html
-RewriteRule ^assets/ - [L]
-RewriteRule ^uploads/ - [L]
-RewriteRule ^data/ - [L]
-
-# Don't rewrite if the file or directory exists
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-
-# Serve index.html for all other routes (SPA fallback)
-# This handles routes like /albums, /album/some-slug, etc.
-RewriteRule ^ /index.html [L]
-
-# Cache control
-<FilesMatch "\.(js|css|jpg|jpeg|png|gif|svg|woff|woff2)$">
-    Header set Cache-Control "max-age=31536000, public, immutable"
-</FilesMatch>
-
-<FilesMatch "\.(json)$">
-    Header set Cache-Control "no-cache"
-</FilesMatch>
-```
-
-#### Netlify
-
-Create a `netlify.toml` in project root:
-
-```toml
-[build]
-  command = "cd frontend && npm run build"
-  publish = "frontend/build"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
-[[headers]]
-  for = "/assets/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/uploads/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/data/*"
-  [headers.values]
-    Cache-Control = "no-cache"
-```
-
-#### Vercel
-
-Create a `vercel.json` in project root:
-
-```json
-{
-  "buildCommand": "cd frontend && npm run build",
-  "outputDirectory": "frontend/build",
-  "routes": [
-    {
-      "src": "/assets/(.*)",
-      "headers": { "Cache-Control": "public, max-age=31536000, immutable" }
-    },
-    {
-      "src": "/uploads/(.*)",
-      "headers": { "Cache-Control": "public, max-age=31536000, immutable" }
-    },
-    {
-      "src": "/data/(.*)",
-      "headers": { "Cache-Control": "no-cache" }
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+    # Cache static assets
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
     }
-  ]
+
+    # Logging
+    access_log /usr/local/var/log/nginx/nielsshootsfilm.com.access.log;
+    error_log /usr/local/var/log/nginx/nielsshootsfilm.com.error.log;
 }
 ```
 
@@ -335,28 +246,6 @@ This deployment guide covers **ONLY the public-facing frontend**. The admin inte
 - [ ] Verify images load correctly
 - [ ] Test navigation between pages
 - [ ] Test on mobile devices
-
-## Continuous Deployment
-
-For automated deployments, add this to your CI/CD pipeline:
-
-```bash
-#!/bin/bash
-set -e
-
-# Install dependencies
-cd frontend
-npm ci
-
-# Run tests (optional)
-npm run test:ci
-
-# Build
-./scripts/build.sh
-
-# Deploy (adjust for your hosting provider)
-# Example: rsync, aws s3 sync, git push, etc.
-```
 
 ## Troubleshooting
 

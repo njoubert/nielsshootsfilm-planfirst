@@ -34,32 +34,12 @@ A modern photography portfolio with a unique hybrid static/dynamic architecture,
 ## Development Philosophy
 
 **Single Developer + Agentic AI:**
-This project is developed by a solo developer working with AI agents (GitHub Copilot). The approach prioritizes:
-
-- **Minimum necessary work** for each task
-- **Simple over complex** - ship working code fast, iterate later
-- **Concise documentation** - no verbose docs
-- **MVP first** - defer advanced features to post-launch
+This project is developed by a solo developer working with AI agents (GitHub Copilot).
 
 **Quality Standards:**
 
 - Automated code quality checks via pre-commit hooks
 - Type-safe TypeScript and Go
-- Conventional commit messages
-- No over-engineering
-
-## Project Status
-
-**MVP:**
-
-- **✅ Phase 1**: Project Setup & Infrastructure - Complete
-- **✅ Phase 1.5**: Developer Experience & Code Quality - Complete
-- **✅ Phase 2**: Data Model & JSON Schema - Complete
-- **✅ Phase 3**: Frontend - Public Site - Complete
-- **✅ Phase 4**: Backend - Admin Server - Complete
-- **✅ Phase 5.5**: Manual Browser Testing - Complete
-
-See [`docs/plan/PLAN_MVP.md`](docs/plan/PLAN_MVP.md) for the full roadmap.
 
 ## Quick Start
 
@@ -221,25 +201,6 @@ The test script automatically:
 │   - site_config.json                 │
 └─────────────────────────────────────┘
 ```
-
-## Key Features (Planned)
-
-**MVP (Must Have):**
-
-- Portfolio landing page with main album
-- Public album galleries
-- Password-protected client galleries
-- Photo upload and processing (originals + optimized versions)
-- Admin interface for album management
-- Responsive design
-
-**Post-MVP:**
-
-- Dark/light theme toggle
-- Blog functionality
-- Download albums as ZIP
-- Analytics dashboard
-- Multiple image sizes for different screens
 
 ## Documentation
 
