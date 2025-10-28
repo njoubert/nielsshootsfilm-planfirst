@@ -336,11 +336,19 @@ export class PhotoLightbox extends LitElement {
   };
 
   private handleTouchStart = (e: TouchEvent) => {
+    // Ignore multi-touch gestures (pinch-to-zoom)
+    if (e.touches.length > 1) {
+      return;
+    }
     this.touchStartX = e.changedTouches[0].screenX;
     this.touchStartTime = Date.now();
   };
 
   private handleTouchEnd = (e: TouchEvent) => {
+    // Ignore multi-touch gestures (pinch-to-zoom)
+    if (e.touches.length > 0) {
+      return;
+    }
     this.touchEndX = e.changedTouches[0].screenX;
     this.handleSwipe();
   };
@@ -359,6 +367,10 @@ export class PhotoLightbox extends LitElement {
   }
 
   private handleImageTap = (e: TouchEvent) => {
+    // Ignore multi-touch gestures (pinch-to-zoom)
+    if (e.touches.length > 0) {
+      return;
+    }
     const touchDuration = Date.now() - this.touchStartTime;
     const touchDistance = Math.abs(this.touchStartX - e.changedTouches[0].screenX);
 

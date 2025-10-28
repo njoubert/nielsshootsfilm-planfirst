@@ -401,6 +401,60 @@ describe('PhotoLightbox', () => {
     expect(el.currentIndex).to.equal(1);
   });
 
+  it('should ignore multi-touch gestures to prevent pinch-zoom crashes', async () => {
+    const el = await fixture<PhotoLightbox>(
+      html`<photo-lightbox .photos=${mockPhotos} open currentIndex=${1}></photo-lightbox>`
+    );
+    const container = el.shadowRoot?.querySelector('.photo-container') as HTMLElement;
+
+    // Simulate multi-touch start (pinch gesture with 2 fingers)
+    const touchStart = new TouchEvent('touchstart', {
+      touches: [{ screenX: 100 } as Touch, { screenX: 200 } as Touch] as unknown as TouchList,
+      changedTouches: [{ screenX: 100 } as Touch],
+    });
+
+    // Simulate multi-touch end (still has one finger down)
+    const touchEnd = new TouchEvent('touchend', {
+      touches: [{ screenX: 150 } as Touch] as unknown as TouchList,
+      changedTouches: [{ screenX: 50 } as Touch],
+    });
+
+    container.dispatchEvent(touchStart);
+    container.dispatchEvent(touchEnd);
+    await el.updateComplete;
+
+    // Index should not change - multi-touch should be ignored
+    expect(el.currentIndex).to.equal(1);
+  });
+
+  it('should ignore multi-touch on image tap', async () => {
+    const el = await fixture<PhotoLightbox>(
+      html`<photo-lightbox .photos=${mockPhotos} open currentIndex=${1}></photo-lightbox>`
+    );
+    const img = el.shadowRoot?.querySelector('img') as HTMLElement;
+
+    // Simulate multi-touch start
+    const touchStart = new TouchEvent('touchstart', {
+      touches: [{ screenX: 100 } as Touch, { screenX: 200 } as Touch] as unknown as TouchList,
+      changedTouches: [{ screenX: 100 } as Touch],
+    });
+
+    // Simulate multi-touch end with quick tap timing
+    const touchEnd = new TouchEvent('touchend', {
+      touches: [{ screenX: 150 } as Touch] as unknown as TouchList,
+      changedTouches: [{ screenX: 101 } as Touch], // Very close to start
+    });
+
+    img.dispatchEvent(touchStart);
+    // Simulate quick tap (less than 300ms)
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    img.dispatchEvent(touchEnd);
+    await el.updateComplete;
+
+    // Index should not change - multi-touch should be ignored
+    expect(el.currentIndex).to.equal(1);
+  });
+
   it('should update image when currentIndex changes', async () => {
     const el = await fixture<PhotoLightbox>(
       html`<photo-lightbox .photos=${mockPhotos} open currentIndex=${0}></photo-lightbox>`
