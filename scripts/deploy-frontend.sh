@@ -4,6 +4,9 @@ set -euo pipefail
 # Frontend deployment script
 # Runs tests, builds, and deploys to remote server
 
+# Change to repository root (parent of scripts/)
+cd "$(dirname "$0")/.."
+
 #echo "🧪 Running frontend tests..."
 #./test.sh frontend
 

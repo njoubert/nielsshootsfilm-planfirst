@@ -161,6 +161,8 @@ export class PhotoLightbox extends LitElement {
       justify-content: center;
       overflow: hidden;
       position: relative;
+      /* Enable touch-based zooming via CSS */
+      touch-action: pinch-zoom;
     }
 
     .nav-button {
@@ -213,6 +215,8 @@ export class PhotoLightbox extends LitElement {
       height: auto;
       object-fit: contain;
       display: block;
+      /* Allow pinch-to-zoom on the image */
+      touch-action: pinch-zoom;
     }
 
     .exif-panel {
@@ -302,18 +306,29 @@ export class PhotoLightbox extends LitElement {
         viewport.setAttribute('name', 'viewport');
         document.head.appendChild(viewport);
       }
-      // Allow zoom but prevent double-tap zoom to avoid accidental navigation
+      // Store original content to restore later
+      if (!viewport.hasAttribute('data-original-content')) {
+        viewport.setAttribute('data-original-content', viewport.getAttribute('content') || '');
+      }
+      // Prevent page zoom/reload by keeping viewport fixed, but allow pinch zoom on the image
       viewport.setAttribute(
         'content',
-        'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes'
+        'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no'
       );
     } else {
       if (viewport) {
-        // Standard mobile viewport settings
-        viewport.setAttribute(
-          'content',
-          'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes'
-        );
+        // Restore original viewport settings
+        const original = viewport.getAttribute('data-original-content');
+        if (original) {
+          viewport.setAttribute('content', original);
+          viewport.removeAttribute('data-original-content');
+        } else {
+          // Standard mobile viewport settings
+          viewport.setAttribute(
+            'content',
+            'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes'
+          );
+        }
       }
     }
   }

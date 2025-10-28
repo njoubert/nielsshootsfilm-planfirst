@@ -399,7 +399,7 @@ describe('PhotoLightbox', () => {
     expect(document.body.style.overflow).to.equal('');
   });
 
-  it('should allow mobile zoom when opened', async () => {
+  it('should disable page zoom to prevent crashes when opened', async () => {
     const el = await fixture<PhotoLightbox>(
       html`<photo-lightbox .photos=${mockPhotos}></photo-lightbox>`
     );
@@ -408,12 +408,13 @@ describe('PhotoLightbox', () => {
     el.open = true;
     await el.updateComplete;
 
-    // Viewport meta should allow zoom
+    // Viewport meta should disable page-level zoom to prevent crashes
+    // but image zoom is still enabled via CSS touch-action: pinch-zoom
     const viewport = document.querySelector('meta[name="viewport"]');
     expect(viewport).to.exist;
     const content = viewport?.getAttribute('content');
-    expect(content).to.include('user-scalable=yes');
-    expect(content).to.include('maximum-scale=5.0');
+    expect(content).to.include('user-scalable=no');
+    expect(content).to.include('maximum-scale=1.0');
   });
 
   it('should maintain zoom settings when closed', async () => {
