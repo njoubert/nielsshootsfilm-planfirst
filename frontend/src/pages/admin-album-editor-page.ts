@@ -22,6 +22,7 @@ import {
 } from '../utils/admin-api';
 import { fetchSiteConfig } from '../utils/api';
 import { onLogout } from '../utils/auth-state';
+import { navigateTo, navigateToAlbum, routes } from '../utils/navigation';
 
 @customElement('admin-album-editor-page')
 export class AdminAlbumEditorPage extends LitElement {
@@ -755,8 +756,8 @@ export class AdminAlbumEditorPage extends LitElement {
           await setAlbumPassword(newAlbum.id, this.albumPassword);
         }
 
-        // Redirect to edit page to upload photos
-        window.location.href = `/admin/albums/${newAlbum.id}/edit`;
+        // Navigate to edit page to upload photos
+        navigateTo(routes.admin.editAlbum(newAlbum.id));
       }
     } catch (err) {
       this.error = err instanceof Error ? err.message : 'Failed to save album';
@@ -810,7 +811,7 @@ export class AdminAlbumEditorPage extends LitElement {
 
     // Navigate to album view using slug
     if (this.album?.slug) {
-      window.location.href = `/albums/${this.album.slug}`;
+      navigateToAlbum(this.album.slug);
     }
   }
 
@@ -1014,8 +1015,8 @@ export class AdminAlbumEditorPage extends LitElement {
 
     try {
       await deleteAlbum(this.album.id);
-      // Redirect immediately to albums list
-      window.location.href = '/admin/albums';
+      // Navigate to albums list
+      navigateTo(routes.admin.albums());
     } catch (error) {
       this.error = `Failed to delete album: ${
         error instanceof Error ? error.message : 'Unknown error'

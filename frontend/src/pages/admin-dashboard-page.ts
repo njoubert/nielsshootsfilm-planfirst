@@ -12,6 +12,7 @@ import type { Album, SiteConfig } from '../types/data-models';
 import { fetchAllAlbums } from '../utils/admin-api';
 import { fetchSiteConfig } from '../utils/api';
 import { onLogout } from '../utils/auth-state';
+import { handleNavClick, routes } from '../utils/navigation';
 
 @customElement('admin-dashboard-page')
 export class AdminDashboardPage extends LitElement {
@@ -312,25 +313,25 @@ export class AdminDashboardPage extends LitElement {
       <div class="quick-actions">
         <h2 class="section-title">Quick Actions</h2>
         <div class="actions-grid">
-          <a href="/admin/albums/new" class="action-card">
+          <a href=${routes.admin.newAlbum()} class="action-card" @click=${handleNavClick}>
             <div class="action-icon">📸</div>
             <h3 class="action-title">Create Album</h3>
             <p class="action-description">Start a new photo album</p>
           </a>
 
-          <a href="/admin/albums" class="action-card">
+          <a href=${routes.admin.albums()} class="action-card" @click=${handleNavClick}>
             <div class="action-icon">📚</div>
             <h3 class="action-title">Manage Albums</h3>
             <p class="action-description">View and edit all albums</p>
           </a>
 
-          <a href="/admin/settings" class="action-card">
+          <a href=${routes.admin.settings()} class="action-card" @click=${handleNavClick}>
             <div class="action-icon">⚙️</div>
             <h3 class="action-title">Settings</h3>
             <p class="action-description">Configure your site</p>
           </a>
 
-          <a href="/" class="action-card" target="_blank">
+          <a href=${routes.home()} class="action-card" target="_blank">
             <div class="action-icon">🌐</div>
             <h3 class="action-title">View Site</h3>
             <p class="action-description">See your public portfolio</p>

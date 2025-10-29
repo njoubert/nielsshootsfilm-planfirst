@@ -3,8 +3,9 @@ import { customElement, property, state } from 'lit/decorators.js';
 import '../components/album-cover-hero';
 import '../components/loading-spinner';
 import '../components/photo-grid';
-import type { Album, Photo, SiteConfig } from '../types/data-models';
+import type { Album, SiteConfig } from '../types/data-models';
 import { fetchAlbumBySlug, fetchSiteConfig, hasAlbumAccess } from '../utils/api';
+import { createPhotoClickHandler, navigateToPhoto } from '../utils/navigation';
 import './password-form';
 
 /**
@@ -125,14 +126,11 @@ export class AlbumDetailPage extends LitElement {
 
     // Redirect old ?photo=id URLs to new route
     if (photoId && this.album) {
-      window.location.href = `/albums/${this.slug}/photo/${photoId}`;
+      navigateToPhoto(this.slug, photoId);
     }
   }
 
-  private handlePhotoClick = (e: CustomEvent<{ photo: Photo; index: number }>) => {
-    const { photo } = e.detail;
-    window.location.href = `/albums/${this.slug}/photo/${photo.id}`;
-  };
+  private handlePhotoClick = createPhotoClickHandler(() => this.slug);
 
   render() {
     if (this.loading) {

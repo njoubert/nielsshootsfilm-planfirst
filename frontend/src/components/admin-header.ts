@@ -6,6 +6,7 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { logout } from '../utils/admin-api';
+import { handleNavClick, navigateTo, routes } from '../utils/navigation';
 import { themeManager } from '../utils/theme-manager';
 
 @customElement('admin-header')
@@ -239,7 +240,7 @@ export class AdminHeader extends LitElement {
   private async handleLogout() {
     try {
       await logout();
-      window.location.href = '/admin/login';
+      navigateTo(routes.admin.login());
     } catch (err) {
       console.error('Logout failed:', err);
     }
@@ -250,7 +251,9 @@ export class AdminHeader extends LitElement {
       <div class="header">
         <div class="header-top">
           <div class="title-container">
-            <a href="/" class="site-title">${this.siteTitle}</a>
+            <a href=${routes.home()} class="site-title" @click=${handleNavClick}
+              >${this.siteTitle}</a
+            >
             <span class="admin-badge">Admin</span>
           </div>
           <div class="header-actions">
@@ -266,15 +269,24 @@ export class AdminHeader extends LitElement {
         </div>
 
         <nav class="nav-tabs">
-          <a href="/admin" class="nav-tab ${this.currentPage === 'dashboard' ? 'active' : ''}">
+          <a
+            href=${routes.admin.dashboard()}
+            class="nav-tab ${this.currentPage === 'dashboard' ? 'active' : ''}"
+            @click=${handleNavClick}
+          >
             Dashboard
           </a>
-          <a href="/admin/albums" class="nav-tab ${this.currentPage === 'albums' ? 'active' : ''}">
+          <a
+            href=${routes.admin.albums()}
+            class="nav-tab ${this.currentPage === 'albums' ? 'active' : ''}"
+            @click=${handleNavClick}
+          >
             Albums
           </a>
           <a
-            href="/admin/settings"
+            href=${routes.admin.settings()}
             class="nav-tab ${this.currentPage === 'settings' ? 'active' : ''}"
+            @click=${handleNavClick}
           >
             Settings
           </a>

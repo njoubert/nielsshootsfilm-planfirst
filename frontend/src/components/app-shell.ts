@@ -4,6 +4,7 @@ import type { SiteConfig } from '../types/data-models';
 import { checkAuth } from '../utils/admin-api';
 import { fetchSiteConfig } from '../utils/api';
 import { onLogout } from '../utils/auth-state';
+import { navigateTo, routes } from '../utils/navigation';
 import { Router, type Route } from '../utils/router';
 import { themeManager } from '../utils/theme-manager';
 
@@ -88,8 +89,8 @@ export class AppShell extends LitElement {
 
     // Subscribe to logout events to redirect to login
     this.unsubscribeLogout = onLogout(() => {
-      // Force redirect to login page on logout
-      window.location.href = '/admin/login';
+      // Navigate to login page on logout
+      navigateTo(routes.admin.login());
     });
 
     // Initialize async without making connectedCallback async
@@ -275,15 +276,15 @@ export class AppShell extends LitElement {
         this.authChecked = true;
 
         if (!isAuthenticated) {
-          // Not authenticated, redirect to login
-          window.location.href = '/admin/login';
+          // Not authenticated, navigate to login
+          navigateTo(routes.admin.login());
         }
       }
     } catch (error) {
       console.error('Auth check failed:', error);
       this.isAuthenticated = false;
       this.authChecked = true;
-      window.location.href = '/admin/login';
+      navigateTo(routes.admin.login());
     }
   }
 }

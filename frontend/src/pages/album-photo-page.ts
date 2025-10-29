@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { unsafeSVG } from 'lit/directives/unsafe-svg.js';
 import type { Album, Photo } from '../types/data-models';
 import { fetchAlbumBySlug } from '../utils/api';
+import { navigateTo, navigateToPhoto, routes } from '../utils/navigation';
 
 // Import icons
 import downloadIcon from '../assets/icons/download-simple.svg?raw';
@@ -624,8 +625,7 @@ export class AlbumPhotoPage extends LitElement {
     this.isPreloading = false;
 
     // Update URL without full page reload
-    const url = `/albums/${this.albumSlug}/photo/${photoId}`;
-    window.history.pushState({}, '', url);
+    navigateToPhoto(this.albumSlug, photoId);
 
     // Update displayed photo
     this.photoId = photoId;
@@ -653,15 +653,19 @@ export class AlbumPhotoPage extends LitElement {
   };
 
   private handleClose = () => {
-    window.location.href = `/albums/${this.albumSlug}`;
+    // Use client-side navigation for instant response
+    navigateTo(routes.album(this.albumSlug));
   };
 
   private handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
+      e.preventDefault(); // Prevent any default browser behavior
       this.handleClose();
     } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
       this.handlePrev();
     } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
       this.handleNext();
     }
   };

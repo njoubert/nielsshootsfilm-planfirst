@@ -1,6 +1,7 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { CustomLink, NavigationConfig } from '../types/data-models';
+import { handleNavClick, routes } from '../utils/navigation';
 
 /**
  * Navigation header component.
@@ -73,13 +74,20 @@ export class AppNav extends LitElement {
   render() {
     return html`
       <nav>
-        <a href="/" class="logo">${this.siteTitle}</a>
+        <a href=${routes.home()} class="logo" @click=${handleNavClick}>${this.siteTitle}</a>
         <ul class="nav-links">
-          ${this.config?.show_albums ? html`<li><a href="/albums">Galleries</a></li>` : ''}
-          ${this.config?.show_about ? html`<li><a href="/about">About</a></li>` : ''}
-          ${this.config?.show_contact ? html`<li><a href="/contact">Contact</a></li>` : ''}
+          ${this.config?.show_albums
+            ? html`<li><a href=${routes.albums()} @click=${handleNavClick}>Galleries</a></li>`
+            : ''}
+          ${this.config?.show_about
+            ? html`<li><a href="/about" @click=${handleNavClick}>About</a></li>`
+            : ''}
+          ${this.config?.show_contact
+            ? html`<li><a href="/contact" @click=${handleNavClick}>Contact</a></li>`
+            : ''}
           ${this.config?.custom_links?.map(
-            (link: CustomLink) => html`<li><a href="${link.url}">${link.label}</a></li>`
+            (link: CustomLink) =>
+              html`<li><a href="${link.url}" @click=${handleNavClick}>${link.label}</a></li>`
           )}
         </ul>
       </nav>

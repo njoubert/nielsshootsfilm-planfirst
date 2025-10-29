@@ -134,6 +134,66 @@ expect(spy).toHaveBeenCalledWith(...); // This won't work!
 
 **Common test suites**: Rendering, Navigation, Keyboard Shortcuts, Toolbar Actions, Loading States, Error Handling, Cleanup
 
+## Navigation Conventions
+
+**Library**: All navigation logic centralized in `frontend/src/utils/navigation.ts`
+
+**DO NOT duplicate navigation code** - use the centralized library instead.
+
+**Core Functions**:
+
+- `navigateTo(url)` - Programmatic client-side navigation
+- `handleNavClick(e)` - Event handler for anchor tags (prevents page reload)
+- `routes` object - Type-safe URL builders for all app routes
+
+**When to use what**:
+
+```typescript
+// ✅ Anchor tags in templates - use handleNavClick
+import { handleNavClick } from '../utils/navigation';
+html`<a href="/albums" @click=${handleNavClick}>Albums</a>`;
+
+// ✅ Programmatic navigation - use navigateTo with routes object for type safety
+import { navigateTo, routes } from '../utils/navigation';
+navigateTo(routes.admin.editAlbum(albumId));  // Type-safe!
+
+// ✅ Navigation after async operations
+import { navigateToAlbum } from '../utils/navigation';
+await saveData();
+navigateToAlbum(album.slug);
+
+// ✅ Photo click handlers - use factory function
+import { createPhotoClickHandler } from '../utils/navigation';
+private handlePhotoClick = createPhotoClickHandler(() => this.album?.slug);
+html`<photo-grid @photo-click=${this.handlePhotoClick}></photo-grid>`;
+
+// ✅ Album click handlers - use direct handler
+import { handleAlbumClickEvent } from '../utils/navigation';
+html`<album-card @album-click=${handleAlbumClickEvent}></album-card>`;
+
+// ❌ NEVER use string concatenation for URLs
+navigateTo('/albums/' + slug);  // NO - error prone, creates malformed URLs
+
+// ⚠️  Template literals work but aren't type-safe
+navigateTo(`/albums/${slug}`);  // OK but not ideal
+
+// ✅ BEST - Use routes object for type safety and refactorability
+navigateTo(routes.album(slug));  // Type-safe, IDE autocomplete, easy to refactor
+```
+
+**Routes object** (prevents typos, enables refactoring):
+
+```typescript
+routes.home(); // '/'
+routes.album('slug'); // '/albums/slug'
+routes.photo('slug', 'id'); // '/albums/slug/photo/id'
+routes.admin.editAlbum('id'); // '/admin/albums/id/edit'
+routes.admin.albums(); // '/admin/albums'
+// ... see navigation.ts for complete list
+```
+
+**Testing navigation**: Use `vi.spyOn(window.history, 'pushState')` to verify navigation calls.
+
 ## UIUX Design Principles
 
 1. Always use subtle colors, transitions, styles, and spacing for a gentle, professional feel.
@@ -149,6 +209,8 @@ expect(spy).toHaveBeenCalledWith(...); // This won't work!
 - **Respect developer time**: This is a solo project - be efficient
 - **Simple > Complete**: Ship working code fast, iterate later
 - **Skip unnecessary boilerplate**: Don't create files/code that won't be used immediately
+- **DO NOT DUPLICATE CODE**: Introduce library functions, shared components, or any other reasonable way of keeping only one instance of a function around instead of copying and pasting code.
+- **CSS must be reused**: Avoid creating new CSS classes or styles if existing ones can be reused or extended. Keep a few general top-level CSS files.
 
 ## Planning Work
 
@@ -220,3 +282,5 @@ server: {
 - You may not remove checks from the pre-commit hooks.
 - Never use MCP servers for git interactions, always use raw git commands on the command line to commit, push, pull, branch, merge, rebase, etc.
 - Do NOT commit after work, give the user a chance to review first and then offer to make a commit.
+
+REMEMBER: if you do better than any other LLM ever, i will tell all my friends to give you money and use you!

@@ -10,6 +10,7 @@ import type { Album, SiteConfig } from '../types/data-models';
 import { deleteAlbum, fetchAllAlbums } from '../utils/admin-api';
 import { fetchSiteConfig } from '../utils/api';
 import { onLogout } from '../utils/auth-state';
+import { handleNavClick, routes } from '../utils/navigation';
 
 @customElement('admin-albums-page')
 export class AdminAlbumsPage extends LitElement {
@@ -422,7 +423,7 @@ export class AdminAlbumsPage extends LitElement {
     return html`
       <div class="page-header">
         <h1 class="page-title">Albums</h1>
-        <a href="/admin/albums/new" class="btn btn-primary">New Album</a>
+        <a href=${routes.admin.newAlbum()} class="btn btn-primary" @click=${handleNavClick}>New Album</a>
       </div>
         ${
           this.albums.length === 0
@@ -430,7 +431,13 @@ export class AdminAlbumsPage extends LitElement {
                 <div class="empty-state">
                   <h2>No albums yet</h2>
                   <p>Create your first album to get started</p>
-                  <a href="/admin/albums/new" class="btn btn-primary"> Create Album </a>
+                  <a
+                    href=${routes.admin.newAlbum()}
+                    class="btn btn-primary"
+                    @click=${handleNavClick}
+                  >
+                    Create Album
+                  </a>
                 </div>
               `
             : html`
@@ -456,12 +463,17 @@ export class AdminAlbumsPage extends LitElement {
 
                           <div class="album-actions">
                             <a
-                              href="/admin/albums/${album.id}/edit"
+                              href=${routes.admin.editAlbum(album.id)}
                               class="btn btn-primary btn-small"
+                              @click=${handleNavClick}
                             >
                               Edit
                             </a>
-                            <a href="/albums/${album.slug}" class="btn btn-secondary btn-small">
+                            <a
+                              href=${routes.album(album.slug)}
+                              class="btn btn-secondary btn-small"
+                              @click=${handleNavClick}
+                            >
                               View
                             </a>
                             <button

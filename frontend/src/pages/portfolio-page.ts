@@ -3,8 +3,9 @@ import { customElement, state } from 'lit/decorators.js';
 import '../components/album-cover-hero';
 import '../components/loading-spinner';
 import '../components/photo-grid';
-import type { Album, Photo, SiteConfig } from '../types/data-models';
+import type { Album, SiteConfig } from '../types/data-models';
 import { fetchMainPortfolioAlbum, fetchSiteConfig } from '../utils/api';
+import { createPhotoClickHandler } from '../utils/navigation';
 
 /**
  * Landing/Portfolio page showing the main portfolio album.
@@ -122,12 +123,7 @@ export class PortfolioPage extends LitElement {
       <div class="photos-section">
         <photo-grid
           .photos=${this.album.photos}
-          .layout=${(this.siteConfig?.portfolio.default_photo_layout || 'masonry') as
-            | 'masonry'
-            | 'grid'
-            | 'justified'
-            | 'square'}
-          @photo-click=${(e: CustomEvent) => this.handlePhotoClick(e)}
+          @photo-click=${createPhotoClickHandler(() => this.album?.slug)}
         ></photo-grid>
       </div>
     `;
@@ -145,15 +141,6 @@ export class PortfolioPage extends LitElement {
         ${location ? html`<p class="about-location">${location}</p>` : ''}
       </div>
     `;
-  }
-
-  private handlePhotoClick(e: CustomEvent) {
-    if (!this.album) return;
-    const { photo } = e.detail as { photo: Photo; index: number };
-    if (!photo) return;
-
-    // Navigate to photo page
-    window.location.href = `/albums/${this.album.slug}/photo/${photo.id}`;
   }
 }
 

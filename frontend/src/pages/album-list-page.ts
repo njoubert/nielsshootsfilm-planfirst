@@ -4,6 +4,7 @@ import '../components/album-card';
 import '../components/loading-spinner';
 import type { Album } from '../types/data-models';
 import { fetchPublicAlbums } from '../utils/api';
+import { handleAlbumClickEvent } from '../utils/navigation';
 
 /**
  * Album listing page showing all public albums.
@@ -156,7 +157,7 @@ export class AlbumListPage extends LitElement {
                     <div class="album-wrapper">
                       <album-card
                         .album=${album}
-                        @album-click=${() => this.handleAlbumClick(album)}
+                        @album-click=${handleAlbumClickEvent}
                       ></album-card>
                     </div>
                   `
@@ -170,10 +171,6 @@ export class AlbumListPage extends LitElement {
             `}
       </div>
     `;
-  }
-
-  private handleAlbumClick(album: Album) {
-    window.location.href = `/albums/${album.slug}`;
   }
 }
 

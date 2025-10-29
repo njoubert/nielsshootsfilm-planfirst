@@ -6,6 +6,7 @@ import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '../components/toast-notification';
 import { login } from '../utils/admin-api';
+import { navigateTo, routes } from '../utils/navigation';
 
 @customElement('admin-login-page')
 export class AdminLoginPage extends LitElement {
@@ -143,10 +144,8 @@ export class AdminLoginPage extends LitElement {
 
       // Redirect to admin dashboard after short delay to show success message
       setTimeout(() => {
-        // Use history API to navigate without full page reload
-        // This allows the auth state to be properly set
-        window.history.pushState({}, '', '/admin');
-        window.dispatchEvent(new PopStateEvent('popstate'));
+        // Use client-side navigation to avoid full page reload
+        navigateTo(routes.admin.dashboard());
       }, 500);
     } catch (err) {
       this.error = err instanceof Error ? err.message : 'Login failed';
