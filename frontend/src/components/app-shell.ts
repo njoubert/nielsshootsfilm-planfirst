@@ -10,6 +10,7 @@ import { themeManager } from '../utils/theme-manager';
 // Import all public components
 import '../pages/album-detail-page';
 import '../pages/album-list-page';
+import '../pages/album-photo-page';
 import '../pages/portfolio-page';
 
 // Import admin components
@@ -121,6 +122,7 @@ export class AppShell extends LitElement {
       { path: '/', component: 'portfolio-page' },
       { path: '/albums', component: 'album-list-page' },
       { path: '/albums/:slug', component: 'album-detail-page' },
+      { path: '/albums/:slug/photo/:id', component: 'album-photo-page' },
 
       // Admin routes (with auth guard)
       { path: '/admin/login', component: 'admin-login-page' },
@@ -240,6 +242,11 @@ export class AppShell extends LitElement {
         return html`<album-list-page></album-list-page>`;
       case 'album-detail-page':
         return html`<album-detail-page .slug=${params.slug || ''}></album-detail-page>`;
+      case 'album-photo-page':
+        return html`<album-photo-page
+          .albumSlug=${params.slug || ''}
+          .photoId=${params.id || ''}
+        ></album-photo-page>`;
 
       // Admin pages
       case 'admin-login-page':

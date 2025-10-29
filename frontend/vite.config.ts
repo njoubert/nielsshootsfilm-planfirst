@@ -45,7 +45,9 @@ export default defineConfig({
           }
 
           if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+            const stat = fs.statSync(filePath);
             res.setHeader('Content-Type', 'image/jpeg');
+            res.setHeader('Content-Length', stat.size.toString());
             fs.createReadStream(filePath).pipe(res);
           } else {
             next();

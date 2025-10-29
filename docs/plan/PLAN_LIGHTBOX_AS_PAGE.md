@@ -42,7 +42,6 @@ This will be a standalone full-page photo viewer with all functionality built in
 - **Navigation**: Keyboard arrows, prev/next buttons, photo counter
 - **Toolbar**: Download, share, copy link buttons
 - **EXIF Display**: Camera settings, date, location
-- **Preloading**: Adjacent photos preloaded for instant navigation
 - **Clean Architecture**: No overlay complexity, dedicated route
 
 #### Modify: `album-detail-page.ts`
@@ -137,7 +136,8 @@ Update `main.ts` router configuration:
    - Next/previous buttons with SVG icons
    - Photo counter display (X of Y)
    - URL updates using History API (no page reload)
-   - **Intelligent photo preloading**: current photo, then expanding outward (±1, ±2, ±3, etc.)
+   - Load the thumbnail first and show that quickly, then load the full photo
+   - Show a "Loading photo x of y" screen when the photo is not yet loaded
 3. Add toolbar features:
    - Download button
    - Share button (native Web Share API)
@@ -216,108 +216,10 @@ Update `main.ts` router configuration:
 /albums/portraits/photo/portrait_05
 ```
 
-### Photo Page State
-
-**Album Photo Page State:**
-
-```typescript
-@property({ type: String }) albumSlug = '';
-@property({ type: String }) photoId = '';
-@state() private album?: Album;
-@state() private currentPhoto?: Photo;
-@state() private currentIndex = 0;
-@state() private loading = true;
-@state() private error = '';
-@state() private preloadedImages = new Set<string>(); // Track which photos are preloaded
-@state() private preloadQueue: string[] = []; // Queue of photos to preload
-```
-
-### Navigation Logic
-
-```typescript
-private navigateToPhoto(photoId: string) {
-  // Update URL without full page reload
-  const url = `/albums/${this.albumSlug}/photo/${photoId}`;
-  window.history.pushState({}, '', url);
-
-  // Update displayed photo
-  this.photoId = photoId;
-  this.updateCurrentPhoto();
-
-  // Start intelligent preloading from current photo outward
-  this.startPreloading();
-}
-
-private startPreloading() {
-  if (!this.album) return;
-
-  const photos = this.album.photos;
-  const totalPhotos = photos.length;
-
-  // Build preload queue: current, then expanding outward (±1, ±2, ±3, etc.)
-  this.preloadQueue = [];
-
-  for (let offset = 0; offset < totalPhotos; offset++) {
-    if (offset === 0) {
-      // Current photo (highest priority)
-      this.preloadQueue.push(photos[this.currentIndex].id);
-    } else {
-      // Add right side (+offset)
-      const rightIndex = (this.currentIndex + offset) % totalPhotos;
-      this.preloadQueue.push(photos[rightIndex].id);
-
-      // Add left side (-offset) if different from right
-      const leftIndex = (this.currentIndex - offset + totalPhotos) % totalPhotos;
-      if (leftIndex !== rightIndex) {
-        this.preloadQueue.push(photos[leftIndex].id);
-      }
-    }
-  }
-
-  // Start preloading from the queue
-  this.preloadNextImage();
-}
-
-private preloadNextImage() {
-  if (!this.album || this.preloadQueue.length === 0) return;
-
-  // Get next photo to preload
-  const photoId = this.preloadQueue.shift();
-  if (!photoId || this.preloadedImages.has(photoId)) {
-    // Already preloaded, move to next
-    this.preloadNextImage();
-    return;
-  }
-
-  // Find photo in album
-  const photo = this.album.photos.find(p => p.id === photoId);
-  if (!photo) {
-    this.preloadNextImage();
-    return;
-  }
-
-  // Preload the image
-  const img = new Image();
-  img.onload = () => {
-    this.preloadedImages.add(photoId);
-    // Continue with next image after short delay to avoid overwhelming network
-    setTimeout(() => this.preloadNextImage(), 100);
-  };
-  img.onerror = () => {
-    // Skip failed image and continue
-    this.preloadNextImage();
-  };
-  img.src = `/static/photos/${this.albumSlug}/${photo.filename}`;
-}private close() {
-  // Navigate back to album
-  window.location.href = `/albums/${this.albumSlug}`;
-}
-```
-
 ## Risks & Mitigation
 
 **Risk**: Performance impact from full page navigation
-**Mitigation**: Use history API to update URL without reload when navigating between photos. Only initial open is full navigation. Intelligent preloading ensures all album photos are loaded in priority order (current photo first, then expanding outward).
+**Mitigation**: Use history API to update URL without reload when navigating between photos. Only initial open is full navigation.
 
 **Risk**: Breaking existing shared photo links with `?photo=` format
 **Mitigation**: Add redirect in router to handle old format and redirect to new format.
@@ -326,7 +228,7 @@ private preloadNextImage() {
 **Mitigation**: Well-documented, clear URL patterns. Standard REST conventions.
 
 **Risk**: Accidental data reloading
-**Mitigation**: Cache album data in memory when navigating between photos of same album. Intelligent preloading system loads all photos in background, starting from current and expanding outward (±1, ±2, ±3, etc.) with 100ms delay between loads to avoid network congestion.
+**Mitigation**: Cache album data in memory when navigating between photos of same album.
 
 ## Dependencies
 

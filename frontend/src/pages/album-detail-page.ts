@@ -3,8 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import '../components/album-cover-hero';
 import '../components/loading-spinner';
 import '../components/photo-grid';
-import '../components/photo-lightbox';
-import type { Album, SiteConfig } from '../types/data-models';
+import type { Album, Photo, SiteConfig } from '../types/data-models';
 import { fetchAlbumBySlug, fetchSiteConfig, hasAlbumAccess } from '../utils/api';
 import './password-form';
 
@@ -20,8 +19,6 @@ export class AlbumDetailPage extends LitElement {
   @state() private loading = true;
   @state() private error = '';
   @state() private needsPassword = false;
-  @state() private lightboxOpen = false;
-  @state() private lightboxIndex = 0;
 
   static styles = css`
     :host {
@@ -65,22 +62,11 @@ export class AlbumDetailPage extends LitElement {
     }
   `;
 
-  connectedCallback() {
-    super.connectedCallback();
-    void this.loadData();
-    window.addEventListener('popstate', this.handlePopState);
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    window.removeEventListener('popstate', this.handlePopState);
-  }
-
   updated(changedProperties: Map<string | number | symbol, unknown>) {
     if (changedProperties.has('slug')) {
       void this.loadData();
     }
-    // Check for photo parameter after album loads
+    // Check for photo parameter after album loads - redirect to new photo page
     if (changedProperties.has('album') && this.album) {
       this.checkPhotoParameter();
     }
@@ -117,8 +103,19 @@ export class AlbumDetailPage extends LitElement {
     }
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    void this.loadData();
+    window.addEventListener('popstate', this.handlePopState);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('popstate', this.handlePopState);
+  }
+
   private handlePopState = () => {
-    // Handle browser back/forward
+    // Handle browser back/forward - check for photo parameter and redirect
     this.checkPhotoParameter();
   };
 
@@ -126,39 +123,16 @@ export class AlbumDetailPage extends LitElement {
     const params = new URLSearchParams(window.location.search);
     const photoId = params.get('photo');
 
+    // Redirect old ?photo=id URLs to new route
     if (photoId && this.album) {
-      const index = this.album.photos.findIndex((p) => p.id === photoId);
-      if (index !== -1) {
-        this.lightboxIndex = index;
-        this.lightboxOpen = true;
-      }
-    } else if (this.lightboxOpen) {
-      // No photo param, close lightbox
-      this.lightboxOpen = false;
+      window.location.href = `/albums/${this.slug}/photo/${photoId}`;
     }
   }
 
-  private updateURLWithPhoto(photoId: string) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('photo', photoId);
-    window.history.pushState({}, '', url.toString());
-  }
-
-  private clearPhotoFromURL() {
-    const url = new URL(window.location.href);
-    url.searchParams.delete('photo');
-    window.history.pushState({}, '', url.toString());
-  }
-
-  private handlePhotoChange(e: CustomEvent<{ photoId: string; index: number }>) {
-    const { photoId } = e.detail;
-    this.updateURLWithPhoto(photoId);
-  }
-
-  private handleLightboxClose() {
-    this.lightboxOpen = false;
-    this.clearPhotoFromURL();
-  }
+  private handlePhotoClick = (e: CustomEvent<{ photo: Photo; index: number }>) => {
+    const { photo } = e.detail;
+    window.location.href = `/albums/${this.slug}/photo/${photo.id}`;
+  };
 
   render() {
     if (this.loading) {
@@ -210,20 +184,9 @@ export class AlbumDetailPage extends LitElement {
             | 'grid'
             | 'justified'
             | 'square'}
-          @photo-click=${(e: CustomEvent) => this.handlePhotoClick(e)}
+          @photo-click=${this.handlePhotoClick}
         ></photo-grid>
       </div>
-
-      <photo-lightbox
-        .photos=${this.album.photos}
-        .currentIndex=${this.lightboxIndex}
-        .showExif=${this.siteConfig?.portfolio.show_exif_data || false}
-        ?open=${this.lightboxOpen}
-        @photo-change=${(e: CustomEvent<{ photoId: string; index: number }>) =>
-          this.handlePhotoChange(e)}
-        @lightbox-close=${() => this.handleLightboxClose()}
-        @close=${() => this.handleLightboxClose()}
-      ></photo-lightbox>
     `;
   }
 
@@ -233,17 +196,6 @@ export class AlbumDetailPage extends LitElement {
         <p class="description">${this.album?.description}</p>
       </div>
     `;
-  }
-
-  private handlePhotoClick(e: CustomEvent) {
-    const { index } = e.detail as { index: number };
-    this.lightboxIndex = index;
-    this.lightboxOpen = true;
-    // Update URL with photo ID
-    if (this.album) {
-      const photoId = this.album.photos[index].id;
-      this.updateURLWithPhoto(photoId);
-    }
   }
 
   private handlePasswordSuccess() {
