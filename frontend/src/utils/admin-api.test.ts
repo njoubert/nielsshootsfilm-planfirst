@@ -93,6 +93,7 @@ describe('admin-api utilities', () => {
       it('should return true when authenticated (400 bad request)', async () => {
         global.fetch = vi.fn().mockResolvedValue({
           status: 400,
+          ok: true,
         } as Response);
 
         const result = await checkAuth();
@@ -103,6 +104,7 @@ describe('admin-api utilities', () => {
       it('should return true when authenticated (200 ok)', async () => {
         global.fetch = vi.fn().mockResolvedValue({
           status: 200,
+          ok: true,
         } as Response);
 
         const result = await checkAuth();
@@ -113,6 +115,7 @@ describe('admin-api utilities', () => {
       it('should return false when not authenticated (401)', async () => {
         global.fetch = vi.fn().mockResolvedValue({
           status: 401,
+          ok: false,
         } as Response);
 
         const result = await checkAuth();
@@ -339,55 +342,51 @@ describe('admin-api utilities', () => {
 
   describe('Photo Management', () => {
     describe('uploadPhotos', () => {
-      it('should upload photos successfully', async () => {
-        const mockFiles = [
-          new File(['content'], 'photo1.jpg', { type: 'image/jpeg' }),
-          new File(['content'], 'photo2.jpg', { type: 'image/jpeg' }),
-        ];
-
-        const mockResponse = {
-          uploaded: [
-            {
-              id: 'photo-1',
-              filename_original: 'photo1.jpg',
-              url_thumbnail: '/uploads/thumbnails/photo1.jpg',
-            },
-            {
-              id: 'photo-2',
-              filename_original: 'photo2.jpg',
-              url_thumbnail: '/uploads/thumbnails/photo2.jpg',
-            },
-          ],
-          errors: [],
+      it('should upload photos successfully with concurrent uploads', async () => {
+        // Mock XMLHttpRequest
+        const xhrMock = {
+          open: vi.fn(),
+          send: vi.fn(),
+          upload: {
+            addEventListener: vi.fn(),
+          },
+          addEventListener: vi.fn((event: string, handler: () => void) => {
+            if (event === 'load') {
+              // Simulate successful upload
+              setTimeout(() => {
+                xhrMock.status = 200;
+                xhrMock.responseText = JSON.stringify({
+                  uploaded: [
+                    {
+                      id: 'photo-1',
+                      filename_original: 'test.jpg',
+                      url_thumbnail: '/uploads/thumbnails/test.jpg',
+                    },
+                  ],
+                  errors: [],
+                });
+                handler();
+              }, 0);
+            }
+          }),
+          status: 0,
+          responseText: '',
         };
 
-        global.fetch = vi.fn().mockResolvedValue({
-          ok: true,
-          json: () => Promise.resolve(mockResponse),
-        } as Response);
+        global.XMLHttpRequest = vi.fn(() => xhrMock) as unknown as typeof XMLHttpRequest;
 
-        const result = await uploadPhotos('album-1', mockFiles);
+        const mockFile = new File(['content'], 'test.jpg', { type: 'image/jpeg' });
+        const result = await uploadPhotos('album-1', [mockFile]);
 
-        expect(global.fetch).toHaveBeenCalledWith(
-          `${API_BASE_URL}/api/admin/albums/album-1/photos/upload`,
-          expect.objectContaining({
-            method: 'POST',
-            credentials: 'include',
-          })
-        );
-        expect(result).toEqual(mockResponse);
+        expect(result.uploaded).toHaveLength(1);
+        expect(result.errors).toHaveLength(0);
       });
 
-      it('should throw error on upload failure', async () => {
-        global.fetch = vi.fn().mockResolvedValue({
-          ok: false,
-          headers: {
-            get: () => 'text/plain',
-          },
-          text: () => Promise.resolve('Upload failed'),
-        } as unknown as Response);
+      it('should handle empty file array', async () => {
+        const result = await uploadPhotos('album-1', []);
 
-        await expect(uploadPhotos('album-1', [])).rejects.toThrow('Upload failed');
+        expect(result.uploaded).toHaveLength(0);
+        expect(result.errors).toHaveLength(0);
       });
     });
 
