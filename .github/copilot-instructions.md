@@ -99,6 +99,41 @@ DO this:
 2. Admin backend modifies JSON files atomically
 3. Use conventional commits (feat:, fix:, docs:, refactor:, test:)
 
+## Frontend Testing Conventions
+
+**Test Framework**: Vitest + @open-wc/testing (Lit components) + sinon + chai
+
+**Key patterns**:
+
+- Use `@open-wc/testing` for `fixture()` and `html` template tag
+- Use `chai` assertions: `expect(foo).to.exist`, `expect(bar).to.equal('value')`
+- Use `sinon` for spies/stubs: `sinon.spy()`, `sinon.stub()`, always `.restore()` after
+- Mock API calls with `vi.spyOn(api, 'functionName').mockResolvedValue(data)`
+- Test files: `component-name.test.ts` in same directory as component
+- Wait for async: `await new Promise(resolve => setTimeout(resolve, 100))` then `await el.updateComplete`
+
+**Sinon assertions** (NOT vitest's expect):
+
+```typescript
+// ✅ Correct - use sinon with chai
+const spy = sinon.spy(window.history, 'pushState');
+button.click();
+expect(spy).to.have.been.calledOnce;
+expect(spy.firstCall.args[2]).to.include('/expected-url');
+spy.restore();
+
+// ❌ Wrong - don't use vitest expect with sinon
+expect(spy).toHaveBeenCalledWith(...); // This won't work!
+```
+
+**Component lifecycle testing**:
+
+- Test `connectedCallback()` side effects (body scroll, event listeners)
+- Test `disconnectedCallback()` cleanup (restore body styles, remove listeners)
+- Use `el.disconnectedCallback()` explicitly to test cleanup
+
+**Common test suites**: Rendering, Navigation, Keyboard Shortcuts, Toolbar Actions, Loading States, Error Handling, Cleanup
+
 ## UIUX Design Principles
 
 1. Always use subtle colors, transitions, styles, and spacing for a gentle, professional feel.
