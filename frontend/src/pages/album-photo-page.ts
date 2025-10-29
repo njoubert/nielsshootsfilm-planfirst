@@ -46,6 +46,12 @@ export class AlbumPhotoPage extends LitElement {
   private isPinching = false;
   private lastTapTime = 0;
 
+  // Touch state for swipe navigation
+  private touchStartX = 0;
+  private touchStartY = 0;
+  private touchStartTime = 0;
+  private isSwiping = false;
+
   static styles = css`
     :host {
       display: block;
@@ -553,56 +559,116 @@ export class AlbumPhotoPage extends LitElement {
     }
   }
 
-  // Touch handlers for pinch zoom
+  // Touch handlers for pinch zoom and swipe navigation
   private handleTouchStart = (e: TouchEvent) => {
     if (e.touches.length === 2) {
+      // Two-finger touch - pinch zoom
       e.preventDefault();
       this.isPinching = true;
+      this.isSwiping = false;
       this.lastTouchDistance = this.getTouchDistance(e.touches);
       this.initialScale = this.imageScale;
       this.lastTouchMidpoint = this.getTouchMidpoint(e.touches);
     } else if (e.touches.length === 1) {
-      // Check for double-tap
+      // Single finger touch - could be tap, double-tap, or swipe
       const now = Date.now();
+
+      // Check for double-tap
       if (now - this.lastTapTime < 300) {
         // Double-tap detected - reset zoom
         this.resetZoom();
+        this.isSwiping = false;
+      } else {
+        // Start tracking for potential swipe (only if not zoomed)
+        if (this.imageScale === 1) {
+          this.touchStartX = e.touches[0].clientX;
+          this.touchStartY = e.touches[0].clientY;
+          this.touchStartTime = now;
+          this.isSwiping = true;
+        }
       }
+
       this.lastTapTime = now;
     }
   };
 
   private handleTouchMove = (e: TouchEvent) => {
-    if (!this.isPinching || e.touches.length !== 2) return;
+    if (e.touches.length === 2 && this.isPinching) {
+      // Two-finger pinch zoom
+      e.preventDefault();
 
-    e.preventDefault();
+      const currentDistance = this.getTouchDistance(e.touches);
+      const currentMidpoint = this.getTouchMidpoint(e.touches);
 
-    const currentDistance = this.getTouchDistance(e.touches);
-    const currentMidpoint = this.getTouchMidpoint(e.touches);
+      // Calculate scale change
+      const scaleChange = currentDistance / this.lastTouchDistance;
+      let newScale = this.initialScale * scaleChange;
 
-    // Calculate scale change
-    const scaleChange = currentDistance / this.lastTouchDistance;
-    let newScale = this.initialScale * scaleChange;
+      // Clamp scale between 1x and 4x
+      newScale = Math.max(1, Math.min(4, newScale));
 
-    // Clamp scale between 1x and 4x
-    newScale = Math.max(1, Math.min(4, newScale));
+      // Update scale
+      this.imageScale = newScale;
+      this.initialScale = newScale;
+      this.lastTouchDistance = currentDistance;
 
-    // Update scale
-    this.imageScale = newScale;
-    this.initialScale = newScale;
-    this.lastTouchDistance = currentDistance;
+      // Calculate pan if zoomed
+      if (newScale > 1) {
+        const deltaX = currentMidpoint.x - this.lastTouchMidpoint.x;
+        const deltaY = currentMidpoint.y - this.lastTouchMidpoint.y;
+        this.imageTranslateX += deltaX;
+        this.imageTranslateY += deltaY;
+        this.lastTouchMidpoint = currentMidpoint;
+      }
+    } else if (e.touches.length === 1 && this.isSwiping && this.imageScale === 1) {
+      // Single finger swipe for navigation (only when not zoomed)
+      const deltaX = Math.abs(e.touches[0].clientX - this.touchStartX);
+      const deltaY = Math.abs(e.touches[0].clientY - this.touchStartY);
 
-    // Calculate pan if zoomed
-    if (newScale > 1) {
-      const deltaX = currentMidpoint.x - this.lastTouchMidpoint.x;
-      const deltaY = currentMidpoint.y - this.lastTouchMidpoint.y;
-      this.imageTranslateX += deltaX;
-      this.imageTranslateY += deltaY;
-      this.lastTouchMidpoint = currentMidpoint;
+      // If moving more vertically than horizontally, cancel swipe (allow scrolling)
+      if (deltaY > deltaX) {
+        this.isSwiping = false;
+      }
+
+      // Prevent default if swiping horizontally
+      if (this.isSwiping && deltaX > 10) {
+        e.preventDefault();
+      }
     }
   };
 
   private handleTouchEnd = (e: TouchEvent) => {
+    // Handle swipe navigation (only when not zoomed)
+    if (this.isSwiping && this.imageScale === 1 && e.changedTouches.length > 0) {
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - this.touchStartX;
+      const deltaY = touch.clientY - this.touchStartY;
+      const deltaTime = Date.now() - this.touchStartTime;
+
+      // Calculate swipe distance and velocity
+      const absDeltaX = Math.abs(deltaX);
+      const absDeltaY = Math.abs(deltaY);
+      const velocity = absDeltaX / deltaTime; // pixels per millisecond
+
+      // Swipe threshold: 50px distance or fast swipe (>0.5 px/ms)
+      const isHorizontalSwipe = absDeltaX > absDeltaY;
+      const isSwipeGesture = (absDeltaX > 50 || velocity > 0.5) && deltaTime < 300;
+
+      if (isHorizontalSwipe && isSwipeGesture) {
+        if (deltaX > 0) {
+          // Swipe right - go to previous photo
+          this.handlePrev();
+        } else {
+          // Swipe left - go to next photo
+          this.handleNext();
+        }
+      }
+    }
+
+    // Reset swipe state
+    this.isSwiping = false;
+
+    // Handle pinch zoom end
     if (e.touches.length < 2) {
       this.isPinching = false;
 
@@ -661,7 +727,12 @@ export class AlbumPhotoPage extends LitElement {
           </button>
         </div>
 
-        <div class="photo-container">
+        <div
+          class="photo-container"
+          @touchstart=${this.handleTouchStart}
+          @touchmove=${this.handleTouchMove}
+          @touchend=${this.handleTouchEnd}
+        >
           <button class="nav-button prev" @click=${this.handlePrev}>‹</button>
 
           ${!this.currentPhotoLoaded
@@ -683,9 +754,6 @@ export class AlbumPhotoPage extends LitElement {
                   src=${photoUrl}
                   alt=${this.currentPhoto.alt_text || this.currentPhoto.caption || 'Photo'}
                   style="transform: ${imageTransform}"
-                  @touchstart=${this.handleTouchStart}
-                  @touchmove=${this.handleTouchMove}
-                  @touchend=${this.handleTouchEnd}
                 />
               `}
 

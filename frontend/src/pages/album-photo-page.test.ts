@@ -1,6 +1,6 @@
 import { expect, fixture, html } from '@open-wc/testing';
 import sinon from 'sinon';
-import { beforeEach, describe, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, it, vi } from 'vitest';
 import type { Album } from '../types/data-models';
 import * as api from '../utils/api';
 import './album-photo-page';
@@ -298,6 +298,134 @@ describe('AlbumPhotoPage', () => {
       expect(pushStateSpy.firstCall.args[2]).to.include('/albums/test-album/photo/photo-1');
 
       pushStateSpy.restore();
+    });
+  });
+
+  describe('Touch Swipe Navigation', () => {
+    let pushStateSpy: sinon.SinonSpy;
+
+    beforeEach(() => {
+      pushStateSpy = sinon.spy(window.history, 'pushState');
+    });
+
+    afterEach(() => {
+      pushStateSpy.restore();
+    });
+
+    it('should navigate to next photo on swipe left', async () => {
+      const el = await fixture<AlbumPhotoPage>(
+        html`<album-photo-page albumSlug="test-album" photoId="photo-1"></album-photo-page>`
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await el.updateComplete;
+
+      const container = el.shadowRoot?.querySelector('.photo-container');
+      expect(container).to.exist;
+
+      // Simulate swipe left (touch start on right, move left, release)
+      const touchStart = new TouchEvent('touchstart', {
+        touches: [{ clientX: 300, clientY: 200 } as Touch],
+        bubbles: true,
+        cancelable: true,
+      });
+      container?.dispatchEvent(touchStart);
+
+      const touchMove = new TouchEvent('touchmove', {
+        touches: [{ clientX: 200, clientY: 200 } as Touch],
+        bubbles: true,
+        cancelable: true,
+      });
+      container?.dispatchEvent(touchMove);
+
+      const touchEnd = new TouchEvent('touchend', {
+        changedTouches: [{ clientX: 100, clientY: 200 } as Touch],
+        bubbles: true,
+        cancelable: true,
+      });
+      container?.dispatchEvent(touchEnd);
+
+      await el.updateComplete;
+
+      expect(pushStateSpy).to.have.been.calledOnce;
+      expect(pushStateSpy.firstCall.args[2]).to.include('/albums/test-album/photo/photo-2');
+    });
+
+    it('should navigate to previous photo on swipe right', async () => {
+      const el = await fixture<AlbumPhotoPage>(
+        html`<album-photo-page albumSlug="test-album" photoId="photo-2"></album-photo-page>`
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await el.updateComplete;
+
+      const container = el.shadowRoot?.querySelector('.photo-container');
+      expect(container).to.exist;
+
+      // Simulate swipe right (touch start on left, move right, release)
+      const touchStart = new TouchEvent('touchstart', {
+        touches: [{ clientX: 100, clientY: 200 } as Touch],
+        bubbles: true,
+        cancelable: true,
+      });
+      container?.dispatchEvent(touchStart);
+
+      const touchMove = new TouchEvent('touchmove', {
+        touches: [{ clientX: 200, clientY: 200 } as Touch],
+        bubbles: true,
+        cancelable: true,
+      });
+      container?.dispatchEvent(touchMove);
+
+      const touchEnd = new TouchEvent('touchend', {
+        changedTouches: [{ clientX: 300, clientY: 200 } as Touch],
+        bubbles: true,
+        cancelable: true,
+      });
+      container?.dispatchEvent(touchEnd);
+
+      await el.updateComplete;
+
+      expect(pushStateSpy).to.have.been.calledOnce;
+      expect(pushStateSpy.firstCall.args[2]).to.include('/albums/test-album/photo/photo-1');
+    });
+
+    it('should not navigate on vertical swipe', async () => {
+      const el = await fixture<AlbumPhotoPage>(
+        html`<album-photo-page albumSlug="test-album" photoId="photo-1"></album-photo-page>`
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await el.updateComplete;
+
+      const container = el.shadowRoot?.querySelector('.photo-container');
+      expect(container).to.exist;
+
+      // Simulate vertical swipe (more Y movement than X)
+      const touchStart = new TouchEvent('touchstart', {
+        touches: [{ clientX: 200, clientY: 100 } as Touch],
+        bubbles: true,
+        cancelable: true,
+      });
+      container?.dispatchEvent(touchStart);
+
+      const touchMove = new TouchEvent('touchmove', {
+        touches: [{ clientX: 190, clientY: 200 } as Touch],
+        bubbles: true,
+        cancelable: true,
+      });
+      container?.dispatchEvent(touchMove);
+
+      const touchEnd = new TouchEvent('touchend', {
+        changedTouches: [{ clientX: 190, clientY: 300 } as Touch],
+        bubbles: true,
+        cancelable: true,
+      });
+      container?.dispatchEvent(touchEnd);
+
+      await el.updateComplete;
+
+      expect(pushStateSpy).to.not.have.been.called;
     });
   });
 
