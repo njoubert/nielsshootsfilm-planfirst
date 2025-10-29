@@ -1,6 +1,6 @@
-# Plan: Convert Lightbox Overlay to Dedicated Page
+# [DONE] Plan: Convert Lightbox Overlay to Dedicated Page
 
-**Status**: Planning
+**Status**: Done
 **Date**: 2025-10-28
 **Size**: Medium
 **Priority**: High (fixes iOS zoom crash issues)
