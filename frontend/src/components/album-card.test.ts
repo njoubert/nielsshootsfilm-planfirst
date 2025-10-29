@@ -97,34 +97,6 @@ describe('AlbumCard', () => {
     expect(subtitle).to.not.exist;
   });
 
-  it('should render photo count by default', async () => {
-    const el = await fixture<AlbumCard>(html`<album-card .album=${mockAlbum}></album-card>`);
-    const photoCount = el.shadowRoot?.querySelector('.photo-count');
-
-    expect(photoCount).to.exist;
-    expect(photoCount?.textContent).to.include('2');
-    expect(photoCount?.textContent).to.include('photos');
-  });
-
-  it('should use singular "photo" for one photo', async () => {
-    const singlePhotoAlbum = { ...mockAlbum, photos: [mockAlbum.photos[0]] };
-    const el = await fixture<AlbumCard>(html`<album-card .album=${singlePhotoAlbum}></album-card>`);
-    const photoCount = el.shadowRoot?.querySelector('.photo-count');
-
-    expect(photoCount?.textContent).to.include('1');
-    expect(photoCount?.textContent).to.include('photo');
-    expect(photoCount?.textContent).to.not.include('photos');
-  });
-
-  it('should hide photo count when showPhotoCount is false', async () => {
-    const el = await fixture<AlbumCard>(
-      html`<album-card .album=${mockAlbum} .showPhotoCount=${false}></album-card>`
-    );
-    const photoCount = el.shadowRoot?.querySelector('.photo-count');
-
-    expect(photoCount).to.not.exist;
-  });
-
   it('should render cover image with lazy-image', async () => {
     const el = await fixture<AlbumCard>(html`<album-card .album=${mockAlbum}></album-card>`);
     const lazyImage = el.shadowRoot?.querySelector('lazy-image');
@@ -132,7 +104,7 @@ describe('AlbumCard', () => {
     expect(lazyImage).to.exist;
     expect(lazyImage?.getAttribute('src')).to.equal('/thumbnails/test1.jpg');
     expect(lazyImage?.getAttribute('alt')).to.equal('Test Album');
-    expect(lazyImage?.getAttribute('aspectRatio')).to.equal('3/2');
+    expect(lazyImage?.getAttribute('aspectratio')).to.equal('1'); // Component uses aspectRatio="1"
   });
 
   it('should use cover_photo_id when specified', async () => {

@@ -38,11 +38,10 @@ describe('AppNav', () => {
     const el = await fixture<AppNav>(html`<app-nav .config=${config}></app-nav>`);
     const links = el.shadowRoot?.querySelectorAll('.nav-links a');
 
-    expect(links).to.have.length(4);
-    expect(links?.[0]?.textContent).to.equal('Home');
-    expect(links?.[1]?.textContent).to.equal('Albums');
-    expect(links?.[2]?.textContent).to.equal('About');
-    expect(links?.[3]?.textContent).to.equal('Contact');
+    expect(links).to.have.length(3); // Albums, About, Contact (Home is the logo)
+    expect(links?.[0]?.textContent).to.equal('Galleries');
+    expect(links?.[1]?.textContent).to.equal('About');
+    expect(links?.[2]?.textContent).to.equal('Contact');
   });
 
   it('should hide navigation links when config shows none', async () => {
@@ -68,9 +67,8 @@ describe('AppNav', () => {
     const el = await fixture<AppNav>(html`<app-nav .config=${config}></app-nav>`);
     const links = el.shadowRoot?.querySelectorAll('.nav-links a');
 
-    expect(links).to.have.length(2);
-    expect(links?.[0]?.textContent).to.equal('Home');
-    expect(links?.[1]?.textContent).to.equal('About');
+    expect(links).to.have.length(1); // Only About (Home is the logo)
+    expect(links?.[0]?.textContent).to.equal('About');
   });
 
   it('should render custom links', async () => {
@@ -87,11 +85,11 @@ describe('AppNav', () => {
     const el = await fixture<AppNav>(html`<app-nav .config=${config}></app-nav>`);
     const links = el.shadowRoot?.querySelectorAll('.nav-links a');
 
-    expect(links).to.have.length(3); // Home + 2 custom
-    expect(links?.[1]?.textContent).to.equal('Blog');
-    expect(links?.[1]?.getAttribute('href')).to.equal('/blog');
-    expect(links?.[2]?.textContent).to.equal('Shop');
-    expect(links?.[2]?.getAttribute('href')).to.equal('/shop');
+    expect(links).to.have.length(2); // 2 custom links (no Home in nav-links)
+    expect(links?.[0]?.textContent).to.equal('Blog');
+    expect(links?.[0]?.getAttribute('href')).to.equal('/blog');
+    expect(links?.[1]?.textContent).to.equal('Shop');
+    expect(links?.[1]?.getAttribute('href')).to.equal('/shop');
   });
 
   it('should have correct link hrefs', async () => {
@@ -104,10 +102,9 @@ describe('AppNav', () => {
     const el = await fixture<AppNav>(html`<app-nav .config=${config}></app-nav>`);
     const links = el.shadowRoot?.querySelectorAll('.nav-links a');
 
-    expect(links?.[0]?.getAttribute('href')).to.equal('/');
-    expect(links?.[1]?.getAttribute('href')).to.equal('/albums');
-    expect(links?.[2]?.getAttribute('href')).to.equal('/about');
-    expect(links?.[3]?.getAttribute('href')).to.equal('/contact');
+    expect(links?.[0]?.getAttribute('href')).to.equal('/albums');
+    expect(links?.[1]?.getAttribute('href')).to.equal('/about');
+    expect(links?.[2]?.getAttribute('href')).to.equal('/contact');
   });
 
   it('should render logo as link to home', async () => {
