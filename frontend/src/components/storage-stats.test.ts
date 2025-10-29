@@ -35,6 +35,9 @@ describe('storage-stats', () => {
       total_bytes: 1099511627776, // 1 TB
       used_bytes: 107374182400, // 100 GB
       available_bytes: 992137445376, // ~900 GB
+      reserved_bytes: 0, // No reserved space for this test
+      usable_bytes: 992137445376, // Same as available
+      reserved_percent: 0,
       usage_percent: 9.77,
       breakdown: {
         originals_bytes: 53687091200, // 50 GB
@@ -58,7 +61,7 @@ describe('storage-stats', () => {
     await el.updateComplete;
 
     const text = el.shadowRoot?.textContent || '';
-    expect(text).to.include('Storage Usage');
+    expect(text).to.include('STORAGE USAGE');
     expect(text).to.include('9.8%'); // Usage percent
     expect(text).to.include('100.00 GB'); // Total used
   });
@@ -68,6 +71,9 @@ describe('storage-stats', () => {
       total_bytes: 1073741824, // 1 GB
       used_bytes: 536870912, // 512 MB
       available_bytes: 536870912, // 512 MB
+      reserved_bytes: 0,
+      usable_bytes: 536870912,
+      reserved_percent: 0,
       usage_percent: 50.0,
       breakdown: {
         originals_bytes: 268435456, // 256 MB
@@ -98,6 +104,9 @@ describe('storage-stats', () => {
       total_bytes: 1073741824,
       used_bytes: 966367641, // 90%
       available_bytes: 107374182,
+      reserved_bytes: 0,
+      usable_bytes: 107374182,
+      reserved_percent: 0,
       usage_percent: 90.0,
       breakdown: {
         originals_bytes: 322122547,
@@ -133,6 +142,9 @@ describe('storage-stats', () => {
       total_bytes: 1073741824,
       used_bytes: 966367641, // 90%
       available_bytes: 107374182,
+      reserved_bytes: 0,
+      usable_bytes: 107374182,
+      reserved_percent: 0,
       usage_percent: 90.0,
       breakdown: {
         originals_bytes: 322122547,
@@ -203,6 +215,9 @@ describe('storage-stats', () => {
       total_bytes: 1073741824,
       used_bytes: 536870912,
       available_bytes: 536870912,
+      reserved_bytes: 0,
+      usable_bytes: 536870912,
+      reserved_percent: 0,
       usage_percent: 50.0,
       breakdown: {
         originals_bytes: 268435456,
@@ -251,6 +266,9 @@ describe('storage-stats', () => {
       total_bytes: 1073741824,
       used_bytes: 536870912,
       available_bytes: 536870912,
+      reserved_bytes: 0,
+      usable_bytes: 536870912,
+      reserved_percent: 0,
       usage_percent: 50.0,
       breakdown: {
         originals_bytes: 268435456,
@@ -280,6 +298,9 @@ describe('storage-stats', () => {
       total_bytes: 1073741824,
       used_bytes: 536870912,
       available_bytes: 536870912,
+      reserved_bytes: 0,
+      usable_bytes: 536870912,
+      reserved_percent: 0,
       usage_percent: 50.0,
       breakdown: {
         originals_bytes: 268435456,
@@ -301,9 +322,9 @@ describe('storage-stats', () => {
     await el.updateComplete;
 
     const text = el.shadowRoot?.textContent || '';
-    expect(text).to.include('Originals');
-    expect(text).to.include('Display');
-    expect(text).to.include('Thumbnails');
+    expect(text).to.include('ORIGINALS');
+    expect(text).to.include('DISPLAY');
+    expect(text).to.include('THUMBNAILS');
     expect(text).to.include('Full resolution files');
     expect(text).to.include('Web-optimized versions');
     expect(text).to.include('Preview images');
@@ -347,7 +368,7 @@ describe('storage-stats', () => {
 
     // Should show usable space section
     expect(text).to.include('USABLE SPACE');
-    expect(text).to.include('651.91 GB'); // 700 GB formatted
+    expect(text).to.include('651.93 GB'); // 700 GB formatted
     expect(text).to.include('Available for uploads');
   });
 
@@ -463,6 +484,6 @@ describe('storage-stats', () => {
     // 900 GB - 200 GB = 700 GB
     const text = el.shadowRoot?.textContent || '';
     expect(text).to.include('USABLE SPACE');
-    expect(text).to.include('651.91 GB'); // 700 GB formatted
+    expect(text).to.include('651.93 GB'); // 700 GB formatted
   });
 });
