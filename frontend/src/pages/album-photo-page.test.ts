@@ -467,27 +467,65 @@ describe('AlbumPhotoPage', () => {
   });
 
   describe('Loading State', () => {
-    it('should show loading screen when photo is not loaded', async () => {
+    it('should show loading screen after grace period when photo is slow to load', async () => {
+      // Mock slow XHR that doesn't complete
+      const originalXHR = global.XMLHttpRequest;
+      const slowXHR = vi.fn(() => ({
+        open: vi.fn(),
+        send: vi.fn(),
+        addEventListener: vi.fn(),
+        responseType: '',
+        abort: vi.fn(),
+      }));
+      // @ts-expect-error - Mocking XMLHttpRequest for tests
+      global.XMLHttpRequest = slowXHR;
+
       const el = await fixture<AlbumPhotoPage>(
         html`<album-photo-page albumSlug="test-album" photoId="photo-1"></album-photo-page>`
       );
 
+      // Wait for initial load
       await new Promise((resolve) => setTimeout(resolve, 100));
       await el.updateComplete;
 
-      const photoLoading = el.shadowRoot?.querySelector('.photo-loading');
+      // Loading screen should NOT be visible yet (grace period)
+      let photoLoading = el.shadowRoot?.querySelector('.photo-loading');
+      expect(photoLoading).to.not.exist;
+
+      // Wait for grace period (200ms) to pass
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      await el.updateComplete;
+
+      // Now loading screen SHOULD be visible
+      photoLoading = el.shadowRoot?.querySelector('.photo-loading');
       expect(photoLoading).to.exist;
 
       const loadingText = el.shadowRoot?.querySelector('.photo-loading-text');
       expect(loadingText?.textContent).to.include('Loading photo');
+
+      // Restore original XHR
+      global.XMLHttpRequest = originalXHR;
     });
 
-    it('should show progress bar with percentage', async () => {
+    it('should show progress bar with percentage during slow load', async () => {
+      // Mock slow XHR that doesn't complete
+      const originalXHR = global.XMLHttpRequest;
+      const slowXHR = vi.fn(() => ({
+        open: vi.fn(),
+        send: vi.fn(),
+        addEventListener: vi.fn(),
+        responseType: '',
+        abort: vi.fn(),
+      }));
+      // @ts-expect-error - Mocking XMLHttpRequest for tests
+      global.XMLHttpRequest = slowXHR;
+
       const el = await fixture<AlbumPhotoPage>(
         html`<album-photo-page albumSlug="test-album" photoId="photo-1"></album-photo-page>`
       );
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Wait for initial load + grace period
+      await new Promise((resolve) => setTimeout(resolve, 350));
       await el.updateComplete;
 
       const progressBar = el.shadowRoot?.querySelector('.progress-bar');
@@ -496,6 +534,9 @@ describe('AlbumPhotoPage', () => {
       expect(progressBar).to.exist;
       expect(progressPercentage).to.exist;
       expect(progressPercentage?.textContent).to.include('%');
+
+      // Restore original XHR
+      global.XMLHttpRequest = originalXHR;
     });
   });
 

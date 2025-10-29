@@ -15,6 +15,9 @@ import closeIcon from '../assets/icons/x-circle.svg?raw';
  */
 @customElement('album-photo-page')
 export class AlbumPhotoPage extends LitElement {
+  // Grace period before showing loading screen (prevents flash on fast connections)
+  private static readonly LOADING_GRACE_PERIOD_MS = 200;
+
   @property({ type: String }) albumSlug = '';
   @property({ type: String }) photoId = '';
 
@@ -26,6 +29,7 @@ export class AlbumPhotoPage extends LitElement {
   @state() private showExif = false;
   @state() private currentPhotoLoaded = false;
   @state() private loadingProgress = 0; // 0-100 percentage
+  @state() private showLoadingScreen = false; // Only show after grace period
 
   // Cache blob URLs to prevent redundant network requests
   private imageBlobCache = new Map<string, string>();
@@ -33,6 +37,8 @@ export class AlbumPhotoPage extends LitElement {
   private currentXHR: XMLHttpRequest | null = null;
   // Track bytes loaded for progress estimation
   private bytesLoaded = 0;
+  // Delay showing loading screen to avoid flash on fast connections
+  private loadingGracePeriodTimeout: number | null = null;
 
   // Zoom state
   @state() private imageScale = 1;
@@ -346,6 +352,12 @@ export class AlbumPhotoPage extends LitElement {
     document.removeEventListener('keydown', this.handleKeyDown);
     this.disableBodyScroll(false);
     this.disableMobileZoom(false);
+
+    // Clean up any pending timeouts
+    if (this.loadingGracePeriodTimeout !== null) {
+      clearTimeout(this.loadingGracePeriodTimeout);
+      this.loadingGracePeriodTimeout = null;
+    }
   }
 
   private async loadAlbumData() {
@@ -394,17 +406,34 @@ export class AlbumPhotoPage extends LitElement {
       this.currentXHR = null;
     }
 
+    // Cancel any pending loading screen grace period
+    if (this.loadingGracePeriodTimeout !== null) {
+      clearTimeout(this.loadingGracePeriodTimeout);
+      this.loadingGracePeriodTimeout = null;
+    }
+
     // Check if already in cache
     if (this.imageBlobCache.has(photoId)) {
       this.currentPhotoLoaded = true;
+      this.showLoadingScreen = false;
       this.loadingProgress = 0;
       return;
     }
 
-    // Mark as loading
+    // Mark as loading, but don't show loading screen immediately
     this.currentPhotoLoaded = false;
-    this.loadingProgress = 0; // Will be set by onprogress when Content-Length is available
+    this.showLoadingScreen = false;
+    this.loadingProgress = 0;
     this.bytesLoaded = 0;
+
+    // Show loading screen after grace period if photo hasn't loaded yet
+    // This prevents flash on fast connections
+    this.loadingGracePeriodTimeout = window.setTimeout(() => {
+      if (!this.currentPhotoLoaded) {
+        this.showLoadingScreen = true;
+      }
+      this.loadingGracePeriodTimeout = null;
+    }, AlbumPhotoPage.LOADING_GRACE_PERIOD_MS);
 
     // Use XMLHttpRequest to track progress
     const xhr = new XMLHttpRequest();
@@ -432,8 +461,15 @@ export class AlbumPhotoPage extends LitElement {
         // Cache the blob URL for this photo
         this.imageBlobCache.set(photoId, objectUrl);
 
+        // Cancel grace period if still pending
+        if (this.loadingGracePeriodTimeout !== null) {
+          clearTimeout(this.loadingGracePeriodTimeout);
+          this.loadingGracePeriodTimeout = null;
+        }
+
         // Show the image immediately
         this.currentPhotoLoaded = true;
+        this.showLoadingScreen = false;
         this.loadingProgress = 0;
         this.currentXHR = null;
       }
@@ -441,7 +477,14 @@ export class AlbumPhotoPage extends LitElement {
 
     xhr.onerror = () => {
       if (this.currentXHR === xhr) {
+        // Cancel grace period if still pending
+        if (this.loadingGracePeriodTimeout !== null) {
+          clearTimeout(this.loadingGracePeriodTimeout);
+          this.loadingGracePeriodTimeout = null;
+        }
+
         this.currentPhotoLoaded = false;
+        this.showLoadingScreen = false;
         this.loadingProgress = 0;
         this.currentXHR = null;
       }
@@ -735,9 +778,9 @@ export class AlbumPhotoPage extends LitElement {
         >
           <button class="nav-button prev" @click=${this.handlePrev}>‹</button>
 
-          ${!this.currentPhotoLoaded
+          ${this.showLoadingScreen && !this.currentPhotoLoaded
             ? html`
-                <!-- Show loading indicator -->
+                <!-- Show loading indicator (after grace period) -->
                 <div class="photo-loading">
                   <div class="photo-loading-text">
                     Loading photo ${this.currentIndex + 1} of ${this.album.photos.length}...
@@ -748,14 +791,17 @@ export class AlbumPhotoPage extends LitElement {
                   <div class="progress-percentage">${this.loadingProgress}%</div>
                 </div>
               `
-            : html`
+            : ''}
+          ${this.currentPhotoLoaded
+            ? html`
                 <!-- Show full image -->
                 <img
                   src=${photoUrl}
                   alt=${this.currentPhoto.alt_text || this.currentPhoto.caption || 'Photo'}
                   style="transform: ${imageTransform}"
                 />
-              `}
+              `
+            : ''}
 
           <button class="nav-button next" @click=${this.handleNext}>›</button>
         </div>
