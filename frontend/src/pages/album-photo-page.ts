@@ -40,6 +40,11 @@ export class AlbumPhotoPage extends LitElement {
   // Delay showing loading screen to avoid flash on fast connections
   private loadingGracePeriodTimeout: number | null = null;
 
+  // Background preloading state
+  private backgroundXHR: XMLHttpRequest | null = null;
+  private preloadIndex = 0;
+  private isPreloading = false;
+
   // Zoom state
   @state() private imageScale = 1;
   @state() private imageTranslateX = 0;
@@ -358,6 +363,13 @@ export class AlbumPhotoPage extends LitElement {
       clearTimeout(this.loadingGracePeriodTimeout);
       this.loadingGracePeriodTimeout = null;
     }
+
+    // Cancel any background preloading
+    if (this.backgroundXHR) {
+      this.backgroundXHR.abort();
+      this.backgroundXHR = null;
+    }
+    this.isPreloading = false;
   }
 
   private async loadAlbumData() {
@@ -417,6 +429,9 @@ export class AlbumPhotoPage extends LitElement {
       this.currentPhotoLoaded = true;
       this.showLoadingScreen = false;
       this.loadingProgress = 0;
+
+      // Start background preloading since photo is already loaded
+      this.startBackgroundPreloading();
       return;
     }
 
@@ -472,6 +487,9 @@ export class AlbumPhotoPage extends LitElement {
         this.showLoadingScreen = false;
         this.loadingProgress = 0;
         this.currentXHR = null;
+
+        // Start background preloading after current photo loads
+        this.startBackgroundPreloading();
       }
     };
 
@@ -493,8 +511,117 @@ export class AlbumPhotoPage extends LitElement {
     xhr.send();
   }
 
+  /**
+   * Start background preloading of remaining photos in the album.
+   * Loads photos sequentially starting from the current photo forward.
+   * If user navigates to an unloaded photo, preloading is interrupted and resumed after.
+   */
+  private startBackgroundPreloading() {
+    if (!this.album || this.isPreloading) return;
+
+    // Cancel any existing background preload
+    if (this.backgroundXHR) {
+      this.backgroundXHR.abort();
+      this.backgroundXHR = null;
+    }
+
+    // Start preloading from the next photo after current
+    this.preloadIndex = this.currentIndex + 1;
+    this.isPreloading = true;
+    this.preloadNextPhoto();
+  }
+
+  /**
+   * Preload the next photo in sequence.
+   * Automatically continues to the next photo after completion.
+   */
+  private preloadNextPhoto() {
+    if (!this.album || !this.isPreloading) return;
+
+    // Find the next unloaded photo
+    let attempts = 0;
+    while (attempts < this.album.photos.length) {
+      // Wrap around to start of album if we reach the end
+      if (this.preloadIndex >= this.album.photos.length) {
+        this.preloadIndex = 0;
+      }
+
+      const photo = this.album.photos[this.preloadIndex];
+
+      // Skip if already cached
+      if (!this.imageBlobCache.has(photo.id)) {
+        // Found an unloaded photo, preload it
+        this.preloadPhotoInBackground(photo);
+        return;
+      }
+
+      // This photo is already cached, move to next
+      this.preloadIndex++;
+      attempts++;
+    }
+
+    // All photos are cached, stop preloading
+    this.isPreloading = false;
+  }
+
+  /**
+   * Preload a single photo in the background without updating UI.
+   */
+  private preloadPhotoInBackground(photo: Photo) {
+    const photoId = photo.id;
+    const photoUrl = photo.url_display;
+
+    // Cancel any existing background preload
+    if (this.backgroundXHR) {
+      this.backgroundXHR.abort();
+    }
+
+    const xhr = new XMLHttpRequest();
+    this.backgroundXHR = xhr;
+
+    xhr.open('GET', photoUrl, true);
+    xhr.responseType = 'blob';
+
+    xhr.onload = () => {
+      if (this.backgroundXHR === xhr && xhr.status === 200) {
+        const blob = xhr.response as Blob;
+        const objectUrl = URL.createObjectURL(blob);
+
+        // Cache the blob URL for this photo
+        this.imageBlobCache.set(photoId, objectUrl);
+
+        // Clear reference
+        if (this.backgroundXHR === xhr) {
+          this.backgroundXHR = null;
+        }
+
+        // Move to next photo
+        this.preloadIndex++;
+        this.preloadNextPhoto();
+      }
+    };
+
+    xhr.onerror = () => {
+      // Failed to load, skip to next photo
+      if (this.backgroundXHR === xhr) {
+        this.backgroundXHR = null;
+        this.preloadIndex++;
+        this.preloadNextPhoto();
+      }
+    };
+
+    xhr.send();
+  }
+
   private navigateToPhoto(photoId: string) {
     if (!this.album) return;
+
+    // Pause background preloading - will resume after current photo loads
+    if (this.backgroundXHR) {
+      this.backgroundXHR.abort();
+      this.backgroundXHR = null;
+    }
+    this.isPreloading = false;
 
     // Update URL without full page reload
     const url = `/albums/${this.albumSlug}/photo/${photoId}`;
@@ -508,7 +635,7 @@ export class AlbumPhotoPage extends LitElement {
       this.currentPhoto = this.album.photos[index];
       this.resetZoom();
 
-      // Load the current photo
+      // Load the current photo (will restart background preloading after)
       this.loadCurrentPhoto();
     }
   }
