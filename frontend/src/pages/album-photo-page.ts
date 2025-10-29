@@ -830,11 +830,11 @@ export class AlbumPhotoPage extends LitElement {
 
       if (isHorizontalSwipe && isSwipeGesture) {
         if (deltaX > 0) {
-          // Swipe right - go to previous photo
-          this.handlePrev();
-        } else {
-          // Swipe left - go to next photo
+          // Swipe right - go to next photo
           this.handleNext();
+        } else {
+          // Swipe left - go to previous photo
+          this.handlePrev();
         }
       }
     }
