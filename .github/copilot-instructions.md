@@ -53,7 +53,7 @@
   - Exits automatically after tests complete (no manual intervention needed)
   - Provides colored output for easy scanning
 
-- **`./format.sh`** - Format all code (runs prettier, gofmt, etc.)
+- **`./fmt.sh`** - Format all code (runs prettier, gofmt, etc.)
 
   - Use this instead of `npm run format` or `go fmt`
 
@@ -184,3 +184,4 @@ server: {
 - You may not turn off tests without explicit permission
 - You may not remove checks from the pre-commit hooks.
 - Never use MCP servers for git interactions, always use raw git commands on the command line to commit, push, pull, branch, merge, rebase, etc.
+- Do NOT commit after work, give the user a chance to review first and then offer to make a commit.
