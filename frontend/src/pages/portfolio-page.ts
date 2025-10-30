@@ -124,6 +124,11 @@ export class PortfolioPage extends LitElement {
       <div class="photos-section">
         <photo-grid
           .photos=${this.album.photos}
+          .layout=${(this.siteConfig?.portfolio.default_photo_layout || 'masonry') as
+            | 'masonry'
+            | 'grid'
+            | 'justified'
+            | 'square'}
           @photo-click=${createPhotoClickHandler(() => this.album?.slug)}
         ></photo-grid>
       </div>
