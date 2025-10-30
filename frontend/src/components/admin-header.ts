@@ -43,7 +43,6 @@ export class AdminHeader extends LitElement {
       font-weight: 300;
       color: var(--color-text-primary, #333);
       text-decoration: none;
-      transition: color 0.2s;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       font-family: 'Raleway', sans-serif;
@@ -80,7 +79,6 @@ export class AdminHeader extends LitElement {
       border-radius: 0;
       font-size: 0.875rem;
       cursor: pointer;
-      transition: all 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -108,7 +106,6 @@ export class AdminHeader extends LitElement {
       font-size: 0.875rem;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s;
       height: 2rem;
       display: flex;
       align-items: center;
@@ -140,7 +137,6 @@ export class AdminHeader extends LitElement {
       font-weight: 500;
       border-bottom: 2px solid transparent;
       margin-bottom: -1px;
-      transition: all 0.2s;
     }
 
     .nav-tab:hover {

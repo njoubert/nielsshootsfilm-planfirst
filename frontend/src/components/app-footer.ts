@@ -35,7 +35,6 @@ export class AppFooter extends LitElement {
       color: var(--color-text-primary);
       text-decoration: none;
       font-size: 1.5rem;
-      transition: all 0.2s;
       display: inline-flex;
       align-items: center;
       justify-content: center;

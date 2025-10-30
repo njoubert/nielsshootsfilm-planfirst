@@ -66,7 +66,6 @@ export class UploadPlaceholder extends LitElement {
       stroke: var(--color-primary);
       stroke-width: 4;
       stroke-linecap: round;
-      transition: stroke-dashoffset 0.3s ease;
     }
 
     /* Status text */
@@ -74,10 +73,6 @@ export class UploadPlaceholder extends LitElement {
       font-size: 0.875rem;
       color: var(--color-text-secondary);
       text-align: center;
-    }
-
-    :host([status='processing']) .status-text {
-      animation: pulse 2s ease-in-out infinite;
     }
 
     :host([status='error']) .status-text {
@@ -88,16 +83,6 @@ export class UploadPlaceholder extends LitElement {
     :host([status='complete']) .status-text {
       color: var(--color-success);
       font-weight: 500;
-    }
-
-    @keyframes pulse {
-      0%,
-      100% {
-        opacity: 1;
-      }
-      50% {
-        opacity: 0.5;
-      }
     }
 
     /* Filename */

@@ -49,31 +49,13 @@ export class AlbumPhotoPage extends LitElement {
   private preloadIndex = 0;
   private isPreloading = false;
 
-  // Zoom state
-  @state() private imageScale = 1;
-  @state() private imageTranslateX = 0;
-  @state() private imageTranslateY = 0;
-
-  // Touch state for pinch zoom
-  private lastTouchDistance = 0;
-  private initialScale = 1;
-  private lastTouchMidpoint = { x: 0, y: 0 };
-  private isPinching = false;
-  private lastTapTime = 0;
-
-  // Touch state for swipe navigation
-  private touchStartX = 0;
-  private touchStartY = 0;
-  private touchStartTime = 0;
-  private isSwiping = false;
-
   static styles = css`
     :host {
       display: block;
       position: fixed;
       inset: 0;
       background-color: var(--color-background);
-      z-index: 9999;
+      z-index: 100;
     }
 
     .page-container {
@@ -81,9 +63,6 @@ export class AlbumPhotoPage extends LitElement {
       height: 100%;
       display: flex;
       flex-direction: column;
-      touch-action: none;
-      -webkit-user-select: none;
-      user-select: none;
     }
 
     .toolbar {
@@ -119,9 +98,6 @@ export class AlbumPhotoPage extends LitElement {
       align-items: center;
       justify-content: center;
       opacity: 0.6;
-      transition:
-        opacity 0.2s,
-        transform 0.2s;
     }
 
     .toolbar-button:hover {
@@ -152,9 +128,6 @@ export class AlbumPhotoPage extends LitElement {
       align-items: center;
       justify-content: center;
       opacity: 0.6;
-      transition:
-        opacity 0.2s,
-        transform 0.2s;
     }
 
     .close-button svg {
@@ -180,7 +153,6 @@ export class AlbumPhotoPage extends LitElement {
       justify-content: center;
       overflow: hidden;
       position: relative;
-      touch-action: none;
     }
 
     .nav-button {
@@ -192,9 +164,6 @@ export class AlbumPhotoPage extends LitElement {
       color: var(--color-text-primary);
       font-size: 3rem;
       cursor: pointer;
-      transition:
-        color 0.2s,
-        transform 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -233,11 +202,6 @@ export class AlbumPhotoPage extends LitElement {
       height: auto;
       object-fit: contain;
       display: block;
-      touch-action: none;
-      -webkit-user-select: none;
-      user-select: none;
-      transform-origin: center center;
-      will-change: transform;
     }
 
     .exif-panel {
@@ -300,13 +264,16 @@ export class AlbumPhotoPage extends LitElement {
     .photo-loading {
       position: absolute;
       inset: 0;
-      display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       color: var(--color-text-secondary);
       gap: 1rem;
       z-index: 1;
+    }
+
+    .photo-loading[hidden] {
+      display: none;
     }
 
     .photo-loading-text {
@@ -325,7 +292,6 @@ export class AlbumPhotoPage extends LitElement {
     .progress-bar {
       height: 100%;
       background-color: var(--color-accent, #007aff);
-      transition: width 0.2s ease-out;
       border-radius: 2px;
     }
 
@@ -336,8 +302,7 @@ export class AlbumPhotoPage extends LitElement {
     }
 
     .photo-thumbnail {
-      filter: blur(10px);
-      opacity: 0.5;
+      opacity: 0.3;
     }
 
     @media (max-width: 768px) {
@@ -352,7 +317,6 @@ export class AlbumPhotoPage extends LitElement {
     super.connectedCallback();
     document.addEventListener('keydown', this.handleKeyDown);
     this.disableBodyScroll(true);
-    this.disableMobileZoom(true);
     void this.loadAlbumData();
   }
 
@@ -360,7 +324,6 @@ export class AlbumPhotoPage extends LitElement {
     super.disconnectedCallback();
     document.removeEventListener('keydown', this.handleKeyDown);
     this.disableBodyScroll(false);
-    this.disableMobileZoom(false);
 
     // Clean up any pending timeouts
     if (this.loadingGracePeriodTimeout !== null) {
@@ -637,7 +600,6 @@ export class AlbumPhotoPage extends LitElement {
     if (index !== -1) {
       this.currentIndex = index;
       this.currentPhoto = this.album.photos[index];
-      this.resetZoom();
 
       // Load the current photo (will restart background preloading after)
       this.loadCurrentPhoto();
@@ -712,165 +674,12 @@ export class AlbumPhotoPage extends LitElement {
     }
   };
 
-  private resetZoom() {
-    this.imageScale = 1;
-    this.imageTranslateX = 0;
-    this.imageTranslateY = 0;
-  }
-
   private disableBodyScroll(disable: boolean) {
     if (disable) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
-  }
-
-  private disableMobileZoom(disable: boolean) {
-    const viewport = document.querySelector('meta[name="viewport"]');
-    if (!viewport) return;
-
-    if (disable) {
-      viewport.setAttribute(
-        'content',
-        'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
-      );
-    } else {
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
-    }
-  }
-
-  // Touch handlers for pinch zoom and swipe navigation
-  private handleTouchStart = (e: TouchEvent) => {
-    if (e.touches.length === 2) {
-      // Two-finger touch - pinch zoom
-      e.preventDefault();
-      this.isPinching = true;
-      this.isSwiping = false;
-      this.lastTouchDistance = this.getTouchDistance(e.touches);
-      this.initialScale = this.imageScale;
-      this.lastTouchMidpoint = this.getTouchMidpoint(e.touches);
-    } else if (e.touches.length === 1) {
-      // Single finger touch - could be tap, double-tap, or swipe
-      const now = Date.now();
-
-      // Check for double-tap
-      if (now - this.lastTapTime < 300) {
-        // Double-tap detected - reset zoom
-        this.resetZoom();
-        this.isSwiping = false;
-      } else {
-        // Start tracking for potential swipe (only if not zoomed)
-        if (this.imageScale === 1) {
-          this.touchStartX = e.touches[0].clientX;
-          this.touchStartY = e.touches[0].clientY;
-          this.touchStartTime = now;
-          this.isSwiping = true;
-        }
-      }
-
-      this.lastTapTime = now;
-    }
-  };
-
-  private handleTouchMove = (e: TouchEvent) => {
-    if (e.touches.length === 2 && this.isPinching) {
-      // Two-finger pinch zoom
-      e.preventDefault();
-
-      const currentDistance = this.getTouchDistance(e.touches);
-      const currentMidpoint = this.getTouchMidpoint(e.touches);
-
-      // Calculate scale change
-      const scaleChange = currentDistance / this.lastTouchDistance;
-      let newScale = this.initialScale * scaleChange;
-
-      // Clamp scale between 1x and 4x
-      newScale = Math.max(1, Math.min(4, newScale));
-
-      // Update scale
-      this.imageScale = newScale;
-      this.initialScale = newScale;
-      this.lastTouchDistance = currentDistance;
-
-      // Calculate pan if zoomed
-      if (newScale > 1) {
-        const deltaX = currentMidpoint.x - this.lastTouchMidpoint.x;
-        const deltaY = currentMidpoint.y - this.lastTouchMidpoint.y;
-        this.imageTranslateX += deltaX;
-        this.imageTranslateY += deltaY;
-        this.lastTouchMidpoint = currentMidpoint;
-      }
-    } else if (e.touches.length === 1 && this.isSwiping && this.imageScale === 1) {
-      // Single finger swipe for navigation (only when not zoomed)
-      const deltaX = Math.abs(e.touches[0].clientX - this.touchStartX);
-      const deltaY = Math.abs(e.touches[0].clientY - this.touchStartY);
-
-      // If moving more vertically than horizontally, cancel swipe (allow scrolling)
-      if (deltaY > deltaX) {
-        this.isSwiping = false;
-      }
-
-      // Prevent default if swiping horizontally
-      if (this.isSwiping && deltaX > 10) {
-        e.preventDefault();
-      }
-    }
-  };
-
-  private handleTouchEnd = (e: TouchEvent) => {
-    // Handle swipe navigation (only when not zoomed)
-    if (this.isSwiping && this.imageScale === 1 && e.changedTouches.length > 0) {
-      const touch = e.changedTouches[0];
-      const deltaX = touch.clientX - this.touchStartX;
-      const deltaY = touch.clientY - this.touchStartY;
-      const deltaTime = Date.now() - this.touchStartTime;
-
-      // Calculate swipe distance and velocity
-      const absDeltaX = Math.abs(deltaX);
-      const absDeltaY = Math.abs(deltaY);
-      const velocity = absDeltaX / deltaTime; // pixels per millisecond
-
-      // Swipe threshold: 50px distance or fast swipe (>0.5 px/ms)
-      const isHorizontalSwipe = absDeltaX > absDeltaY;
-      const isSwipeGesture = (absDeltaX > 50 || velocity > 0.5) && deltaTime < 300;
-
-      if (isHorizontalSwipe && isSwipeGesture) {
-        if (deltaX > 0) {
-          // Swipe right - go to next photo
-          this.handleNext();
-        } else {
-          // Swipe left - go to previous photo
-          this.handlePrev();
-        }
-      }
-    }
-
-    // Reset swipe state
-    this.isSwiping = false;
-
-    // Handle pinch zoom end
-    if (e.touches.length < 2) {
-      this.isPinching = false;
-
-      // Snap back to fit if zoomed out below threshold
-      if (this.imageScale < 1.05) {
-        this.resetZoom();
-      }
-    }
-  };
-
-  private getTouchDistance(touches: TouchList): number {
-    const dx = touches[0].clientX - touches[1].clientX;
-    const dy = touches[0].clientY - touches[1].clientY;
-    return Math.sqrt(dx * dx + dy * dy);
-  }
-
-  private getTouchMidpoint(touches: TouchList): { x: number; y: number } {
-    return {
-      x: (touches[0].clientX + touches[1].clientX) / 2,
-      y: (touches[0].clientY + touches[1].clientY) / 2,
-    };
   }
 
   render() {
@@ -888,7 +697,6 @@ export class AlbumPhotoPage extends LitElement {
 
     // Use cached blob URL if available, otherwise use original URL
     const photoUrl = this.imageBlobCache.get(this.currentPhoto.id) || this.currentPhoto.url_display;
-    const imageTransform = `scale(${this.imageScale}) translate(${this.imageTranslateX}px, ${this.imageTranslateY}px)`;
 
     return html`
       <div class="page-container">
@@ -908,18 +716,13 @@ export class AlbumPhotoPage extends LitElement {
           </button>
         </div>
 
-        <div
-          class="photo-container"
-          @touchstart=${this.handleTouchStart}
-          @touchmove=${this.handleTouchMove}
-          @touchend=${this.handleTouchEnd}
-        >
+        <div class="photo-container">
           <button class="nav-button prev" @click=${this.handlePrev}>‹</button>
 
           ${this.showLoadingScreen && !this.currentPhotoLoaded
             ? html`
                 <!-- Show loading indicator (after grace period) -->
-                <div class="photo-loading">
+                <div class="photo-loading" style="display: flex;">
                   <div class="photo-loading-text">
                     Loading photo ${this.currentIndex + 1} of ${this.album.photos.length}...
                   </div>
@@ -929,14 +732,13 @@ export class AlbumPhotoPage extends LitElement {
                   <div class="progress-percentage">${this.loadingProgress}%</div>
                 </div>
               `
-            : ''}
+            : html`<div class="photo-loading" hidden></div>`}
           ${this.currentPhotoLoaded
             ? html`
                 <!-- Show full image -->
                 <img
                   src=${photoUrl}
                   alt=${this.currentPhoto.alt_text || this.currentPhoto.caption || 'Photo'}
-                  style="transform: ${imageTransform}"
                 />
               `
             : ''}

@@ -20,7 +20,7 @@ export class ToastNotification extends LitElement {
       position: fixed;
       bottom: 2rem;
       right: 2rem;
-      z-index: 9999;
+      z-index: 200;
       max-width: 400px;
       min-width: 300px;
     }
@@ -32,34 +32,12 @@ export class ToastNotification extends LitElement {
       display: flex;
       align-items: flex-start;
       gap: 1rem;
-      animation: slideIn 0.3s ease-out;
       position: relative;
+      opacity: 1;
     }
 
     .toast.hiding {
-      animation: slideOut 0.3s ease-out forwards;
-    }
-
-    @keyframes slideIn {
-      from {
-        transform: translateX(120%);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-
-    @keyframes slideOut {
-      from {
-        transform: translateX(0);
-        opacity: 1;
-      }
-      to {
-        transform: translateX(120%);
-        opacity: 0;
-      }
+      opacity: 0;
     }
 
     .toast.success {
@@ -101,7 +79,6 @@ export class ToastNotification extends LitElement {
       font-size: 1.25rem;
       line-height: 1;
       opacity: 0.5;
-      transition: opacity 0.2s;
       flex-shrink: 0;
       color: inherit;
     }

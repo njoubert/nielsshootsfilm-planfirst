@@ -21,9 +21,6 @@ export class AlbumCard extends LitElement {
       cursor: pointer;
       border-radius: 0;
       overflow: hidden;
-      transition:
-        transform 0.2s,
-        box-shadow 0.2s;
       background-color: var(--color-surface);
       height: 100%;
       display: flex;

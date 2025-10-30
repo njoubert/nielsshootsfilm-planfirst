@@ -115,7 +115,6 @@ export class AdminDashboardPage extends LitElement {
       border-radius: 0;
       text-decoration: none;
       color: var(--color-text-primary, #333);
-      transition: all 0.2s;
       text-align: center;
       box-shadow: var(--shadow-sm);
     }

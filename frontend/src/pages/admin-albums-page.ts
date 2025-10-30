@@ -51,7 +51,6 @@ export class AdminAlbumsPage extends LitElement {
       font-size: 0.875rem;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s;
       text-decoration: none;
       display: inline-block;
       text-transform: uppercase;
@@ -104,7 +103,6 @@ export class AdminAlbumsPage extends LitElement {
       border-radius: 0;
       overflow: hidden;
       box-shadow: var(--shadow-sm);
-      transition: box-shadow 0.2s;
     }
 
     .album-card:hover {
