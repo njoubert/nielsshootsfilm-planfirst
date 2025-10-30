@@ -23,7 +23,6 @@ export class AppNav extends LitElement {
       padding: 1rem 2rem;
       background: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
       border-bottom: none;
-      transition: background 0.3s ease;
     }
 
     :host(.opaque) nav {
@@ -52,7 +51,6 @@ export class AppNav extends LitElement {
     .nav-links a {
       color: #ffffff;
       text-decoration: none;
-      transition: color 0.2s;
     }
 
     .nav-links a:hover {

@@ -52,17 +52,6 @@ export class LazyImage extends LitElement {
         var(--color-surface, #f0f0f0) 0%,
         var(--color-background, #fff) 100%
       );
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%,
-      100% {
-        opacity: 1;
-      }
-      50% {
-        opacity: 0.5;
-      }
     }
 
     .error {

@@ -96,7 +96,6 @@ export class PasswordForm extends LitElement {
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      transition: opacity 0.2s;
     }
 
     button:hover:not(:disabled) {

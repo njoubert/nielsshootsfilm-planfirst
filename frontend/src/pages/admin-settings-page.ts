@@ -94,7 +94,6 @@ export class AdminSettingsPage extends LitElement {
       font-size: 0.875rem;
       font-family: inherit;
       box-sizing: border-box;
-      transition: border-color 0.2s;
     }
 
     input:focus,
@@ -122,7 +121,6 @@ export class AdminSettingsPage extends LitElement {
       font-size: 0.875rem;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }

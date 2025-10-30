@@ -73,7 +73,6 @@ export class AdminLoginPage extends LitElement {
       font-size: 1rem;
       font-family: inherit;
       box-sizing: border-box;
-      transition: border-color 0.2s;
     }
 
     input:focus {
@@ -91,7 +90,6 @@ export class AdminLoginPage extends LitElement {
       font-size: 1rem;
       font-weight: 500;
       cursor: pointer;
-      transition: background-color 0.2s;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }

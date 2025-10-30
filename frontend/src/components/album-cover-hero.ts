@@ -23,7 +23,6 @@ export class AlbumCoverHero extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      animation: fadeIn 0.3s ease-in;
     }
 
     .background {
@@ -36,15 +35,6 @@ export class AlbumCoverHero extends LitElement {
       width: 100%;
       height: 100%;
       object-fit: cover;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
     }
 
     .overlay {
@@ -103,29 +93,11 @@ export class AlbumCoverHero extends LitElement {
       z-index: 2;
       color: white;
       font-size: 2rem;
-      animation: bounce 2s infinite;
       cursor: pointer;
-      transition: opacity 0.2s;
     }
 
     .scroll-indicator:hover {
       opacity: 0.7;
-    }
-
-    @keyframes bounce {
-      0%,
-      20%,
-      50%,
-      80%,
-      100% {
-        transform: translateX(-50%) translateY(0);
-      }
-      40% {
-        transform: translateX(-50%) translateY(-10px);
-      }
-      60% {
-        transform: translateX(-50%) translateY(-5px);
-      }
     }
 
     @media (max-width: 768px) {
@@ -151,44 +123,13 @@ export class AlbumCoverHero extends LitElement {
             `
           : ''}
         <div class="content">
-          <h1 class="title" @click=${this.handleScrollClick}>${this.title}</h1>
-          ${this.subtitle
-            ? html`<p class="subtitle" @click=${this.handleScrollClick}>${this.subtitle}</p>`
-            : ''}
+          <h1 class="title">${this.title}</h1>
+          ${this.subtitle ? html`<p class="subtitle">${this.subtitle}</p>` : ''}
         </div>
-        <div class="scroll-indicator" @click=${this.handleScrollClick}>↓</div>
+        <div class="scroll-indicator">↓</div>
       </div>
     `;
   }
-
-  private handleScrollClick = () => {
-    // Smooth scroll with gentle ease-in-out to the bottom of the hero
-    const targetY = window.innerHeight;
-    const startY = window.scrollY;
-    const distance = targetY - startY;
-    const duration = 700; // ms
-    let startTime: number | null = null;
-
-    // Ease-in-out quadratic - gentler than cubic but smoother than smoothstep at the ends
-    const easeInOutQuad = (t: number): number => {
-      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-    };
-
-    const animation = (currentTime: number) => {
-      if (startTime === null) startTime = currentTime;
-      const timeElapsed = currentTime - startTime;
-      const progress = Math.min(timeElapsed / duration, 1);
-      const easedProgress = easeInOutQuad(progress);
-
-      window.scrollTo(0, startY + distance * easedProgress);
-
-      if (progress < 1) {
-        requestAnimationFrame(animation);
-      }
-    };
-
-    requestAnimationFrame(animation);
-  };
 }
 
 declare global {

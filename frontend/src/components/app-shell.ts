@@ -36,6 +36,7 @@ export class AppShell extends LitElement {
   @state() private loading = true;
   @state() private isAuthenticated = false;
   @state() private authChecked = false;
+  @state() private initError = '';
 
   private router?: Router;
 
@@ -115,45 +116,52 @@ export class AppShell extends LitElement {
       }
     } catch (error) {
       console.error('Failed to load site config:', error);
+      // Continue initialization even if config fails - use defaults
+      this.config = undefined;
     }
 
-    // Initialize router with admin routes
-    this.router = new Router([
-      // Public routes
-      { path: '/', component: 'portfolio-page' },
-      { path: '/albums', component: 'album-list-page' },
-      { path: '/albums/:slug', component: 'album-detail-page' },
-      { path: '/albums/:slug/photo/:id', component: 'album-photo-page' },
+    try {
+      // Initialize router with admin routes
+      this.router = new Router([
+        // Public routes
+        { path: '/', component: 'portfolio-page' },
+        { path: '/albums', component: 'album-list-page' },
+        { path: '/albums/:slug', component: 'album-detail-page' },
+        { path: '/albums/:slug/photo/:id', component: 'album-photo-page' },
 
-      // Admin routes (with auth guard)
-      { path: '/admin/login', component: 'admin-login-page' },
-      { path: '/admin', component: 'admin-dashboard-page', guard: checkAuth },
-      { path: '/admin/albums', component: 'admin-albums-page', guard: checkAuth },
-      { path: '/admin/albums/new', component: 'admin-album-editor-page', guard: checkAuth },
-      { path: '/admin/albums/:id/edit', component: 'admin-album-editor-page', guard: checkAuth },
-      { path: '/admin/settings', component: 'admin-settings-page', guard: checkAuth },
+        // Admin routes (with auth guard)
+        { path: '/admin/login', component: 'admin-login-page' },
+        { path: '/admin', component: 'admin-dashboard-page', guard: checkAuth },
+        { path: '/admin/albums', component: 'admin-albums-page', guard: checkAuth },
+        { path: '/admin/albums/new', component: 'admin-album-editor-page', guard: checkAuth },
+        { path: '/admin/albums/:id/edit', component: 'admin-album-editor-page', guard: checkAuth },
+        { path: '/admin/settings', component: 'admin-settings-page', guard: checkAuth },
 
-      // Fallback
-      { path: '*', component: 'portfolio-page' },
-    ]);
+        // Fallback
+        { path: '*', component: 'portfolio-page' },
+      ]);
 
-    // Set initial path from browser location
-    // The router navigate() is async and voided in constructor, so we use window.location directly
-    this.currentPath = window.location.pathname;
+      // Set initial path from browser location
+      // The router navigate() is async and voided in constructor, so we use window.location directly
+      this.currentPath = window.location.pathname;
 
-    // Subscribe to route changes
-    this.router.subscribe((path) => {
-      this.currentPath = path;
-      // Reset auth state when route changes to force a new auth check
-      this.authChecked = false;
-      this.isAuthenticated = false;
-      this.requestUpdate();
-    });
+      // Subscribe to route changes
+      this.router.subscribe((path) => {
+        this.currentPath = path;
+        // Reset auth state when route changes to force a new auth check
+        this.authChecked = false;
+        this.isAuthenticated = false;
+        this.requestUpdate();
+      });
 
-    // Initialize theme
-    themeManager.subscribe(() => {
-      this.requestUpdate();
-    });
+      // Initialize theme
+      themeManager.subscribe(() => {
+        this.requestUpdate();
+      });
+    } catch (error) {
+      console.error('Failed to initialize router:', error);
+      this.initError = 'Failed to initialize application';
+    }
 
     this.loading = false;
   }
@@ -167,6 +175,16 @@ export class AppShell extends LitElement {
       `;
     }
 
+    // Show initialization error if router failed to load
+    if (this.initError) {
+      return html`
+        <div class="error">
+          <p>${this.initError}</p>
+          <button @click=${() => window.location.reload()}>Reload Page</button>
+        </div>
+      `;
+    }
+
     // Admin pages don't need header/footer
     if (this.currentPath.startsWith('/admin')) {
       return html`<main>${this.renderPage()}</main>`;
@@ -176,6 +194,7 @@ export class AppShell extends LitElement {
       return html`
         <div class="error">
           <p>Failed to load site configuration.</p>
+          <button @click=${() => window.location.reload()}>Reload Page</button>
         </div>
       `;
     }

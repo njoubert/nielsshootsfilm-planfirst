@@ -4,7 +4,7 @@
 set -e
 
 echo "Formatting frontend code..."
-./frontend/scripts/format.sh
+./frontend/scripts/fmt.sh
 
 echo ""
 echo "Formatting backend code..."

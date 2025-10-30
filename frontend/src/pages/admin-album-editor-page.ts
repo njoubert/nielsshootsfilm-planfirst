@@ -60,7 +60,6 @@ export class AdminAlbumEditorPage extends LitElement {
       font-size: 0.875rem;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s;
       text-decoration: none;
       display: inline-block;
       text-transform: uppercase;
@@ -277,7 +276,6 @@ export class AdminAlbumEditorPage extends LitElement {
       padding: 2rem;
       text-align: center;
       cursor: pointer;
-      transition: all 0.2s;
       background: rgba(255, 255, 255, 0.03);
       color: rgba(255, 255, 255, 0.8);
     }
@@ -389,9 +387,6 @@ export class AdminAlbumEditorPage extends LitElement {
       justify-content: center;
       padding: 0.45rem;
       cursor: move;
-      transition:
-        transform 0.2s,
-        box-shadow 0.2s;
     }
 
     @media (prefers-color-scheme: light) {
@@ -430,7 +425,6 @@ export class AdminAlbumEditorPage extends LitElement {
       right: 0;
       bottom: 0;
       opacity: 0;
-      transition: opacity 0.2s;
       display: flex;
       align-items: flex-end;
       justify-content: center;

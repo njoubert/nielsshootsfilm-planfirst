@@ -63,7 +63,6 @@ export class StorageStatsComponent extends LitElement {
       border-radius: 0;
       font-size: 0.875rem;
       cursor: pointer;
-      transition: all 0.2s;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
@@ -121,9 +120,6 @@ export class StorageStatsComponent extends LitElement {
 
     .usage-bar-fill {
       height: 100%;
-      transition:
-        width 0.3s ease,
-        background-color 0.3s ease;
     }
 
     .usage-bar-reserved {

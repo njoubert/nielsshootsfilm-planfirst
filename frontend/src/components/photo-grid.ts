@@ -70,9 +70,6 @@ export class PhotoGrid extends LitElement {
       cursor: pointer;
       overflow: hidden;
       border-radius: 0px;
-      transition:
-        transform 0.2s,
-        box-shadow 0.2s;
     }
 
     .photo-item:hover {
