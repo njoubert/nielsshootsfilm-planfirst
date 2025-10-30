@@ -18,31 +18,45 @@ export class PhotoGrid extends LitElement {
     }
 
     .grid {
-      display: grid;
-      gap: 1rem;
       padding: 1rem;
     }
 
-    /* Masonry layout using CSS Grid */
+    /* Masonry layout using CSS multi-column layout */
     .grid.masonry {
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      grid-auto-rows: 10px;
-      max-width: 100%;
+      column-count: 1;
+      column-gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .grid.masonry {
+        column-count: 2;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .grid.masonry {
+        column-count: 3;
+      }
     }
 
     @media (min-width: 1400px) {
       .grid.masonry {
-        grid-template-columns: repeat(4, 1fr);
+        column-count: 4;
       }
     }
 
     .grid.masonry .photo-item {
-      grid-row-end: span var(--row-span);
+      display: inline-block;
+      width: 100%;
+      margin-bottom: 1rem;
+      break-inside: avoid;
     }
 
     /* Standard grid layout */
     .grid.standard {
+      display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
     }
 
     @media (min-width: 1400px) {
@@ -53,7 +67,9 @@ export class PhotoGrid extends LitElement {
 
     /* Square grid layout */
     .grid.square {
+      display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
     }
 
     @media (min-width: 1400px) {
@@ -87,9 +103,17 @@ export class PhotoGrid extends LitElement {
 
     @media (max-width: 768px) {
       .grid {
+        padding: 0.5rem;
+      }
+
+      .grid.standard,
+      .grid.square {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 0.5rem;
-        padding: 0.5rem;
+      }
+
+      .grid.masonry {
+        column-gap: 0.5rem;
       }
     }
   `;
@@ -120,18 +144,9 @@ export class PhotoGrid extends LitElement {
     const aspectRatio =
       this.layout === 'square' ? '1/1' : hasDimensions ? `${photo.width}/${photo.height}` : '3/2';
 
-    // Calculate row span for masonry layout
-    let styleAttr = '';
-    if (this.layout === 'masonry' && hasDimensions) {
-      const ratio = photo.height / photo.width;
-      const rowSpan = Math.ceil(ratio * 30);
-      styleAttr = `--row-span: ${rowSpan}`;
-    }
-
     return html`
       <div
         class="photo-item"
-        style="${styleAttr}"
         @click=${() => this.handlePhotoClick(photo, index)}
       >
         <lazy-image
