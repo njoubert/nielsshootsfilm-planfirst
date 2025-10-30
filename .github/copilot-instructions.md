@@ -99,7 +99,13 @@ DO this:
 2. Admin backend modifies JSON files atomically
 3. Use conventional commits (feat:, fix:, docs:, refactor:, test:)
 
-## Frontend Testing Conventions
+## Frontend
+
+### Frontend Edicts
+
+- NEVER write `transition: all` or any variant of that in CSS. Always specify exact properties to transition.
+
+### Frontend Testing Conventions
 
 **Test Framework**: Vitest + @open-wc/testing (Lit components) + sinon + chai
 
