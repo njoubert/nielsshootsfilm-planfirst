@@ -170,6 +170,7 @@ export class AlbumPhotoPage extends LitElement {
       width: 60px;
       z-index: 5;
       opacity: 0.6;
+      touch-action: manipulation;
     }
 
     .nav-button:hover {
