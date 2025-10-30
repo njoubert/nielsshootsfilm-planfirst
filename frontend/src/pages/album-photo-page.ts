@@ -1,6 +1,7 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { unsafeSVG } from 'lit/directives/unsafe-svg.js';
+import '../components/toast-notification';
 import type { Album, Photo } from '../types/data-models';
 import { fetchAlbumBySlug } from '../utils/api';
 import { navigateTo, navigateToPhoto, routes } from '../utils/navigation';
@@ -31,6 +32,8 @@ export class AlbumPhotoPage extends LitElement {
   @state() private currentPhotoLoaded = false;
   @state() private loadingProgress = 0; // 0-100 percentage
   @state() private showLoadingScreen = false; // Only show after grace period
+  @state() private toastMessage = '';
+  @state() private toastVisible = false;
 
   // Cache blob URLs to prevent redundant network requests
   private imageBlobCache = new Map<string, string>();
@@ -700,9 +703,12 @@ export class AlbumPhotoPage extends LitElement {
   private handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      // TODO: Show toast notification
+      this.toastMessage = 'Link copied to clipboard!';
+      this.toastVisible = true;
     } catch (err) {
       console.error('Failed to copy link:', err);
+      this.toastMessage = 'Failed to copy link';
+      this.toastVisible = true;
     }
   };
 
@@ -968,6 +974,15 @@ export class AlbumPhotoPage extends LitElement {
             `
           : ''}
       </div>
+
+      <toast-notification
+        .message=${this.toastMessage}
+        .type=${'success'}
+        .visible=${this.toastVisible}
+        @toast-close=${() => {
+          this.toastVisible = false;
+        }}
+      ></toast-notification>
     `;
   }
 }
