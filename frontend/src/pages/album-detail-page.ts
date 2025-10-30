@@ -78,7 +78,7 @@ export class AlbumDetailPage extends LitElement {
     if (!this.slug) {
       return;
     }
-    console.log('Loading portfolio album and site config');
+    console.debug(`Loading album and site config for ${this.slug}`);
 
     try {
       this.loading = true;

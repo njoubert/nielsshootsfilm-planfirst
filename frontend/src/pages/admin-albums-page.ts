@@ -318,10 +318,12 @@ export class AdminAlbumsPage extends LitElement {
   }
 
   private async loadData() {
+    console.debug('Loading admin albums and site config');
     await Promise.all([this.loadAlbums(), this.loadSiteConfig()]);
   }
 
   private async loadSiteConfig() {
+    console.debug('Loading site config for admin albums page');
     try {
       this.siteConfig = await fetchSiteConfig();
     } catch (err) {
@@ -330,6 +332,7 @@ export class AdminAlbumsPage extends LitElement {
   }
 
   private async loadAlbums() {
+    console.debug('Loading admin albums list');
     this.loading = true;
     this.error = '';
 

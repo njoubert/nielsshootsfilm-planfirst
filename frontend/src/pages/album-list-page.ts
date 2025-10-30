@@ -114,6 +114,7 @@ export class AlbumListPage extends LitElement {
   }
 
   private async loadAlbums() {
+    console.debug('Loading public albums for album list page');
     try {
       this.loading = true;
       this.albums = await fetchPublicAlbums();

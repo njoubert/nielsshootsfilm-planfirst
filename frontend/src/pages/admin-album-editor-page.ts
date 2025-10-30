@@ -646,10 +646,12 @@ export class AdminAlbumEditorPage extends LitElement {
   }
 
   private async loadData() {
+    console.debug('Loading admin album editor data');
     await Promise.all([this.loadSiteConfig(), this.loadAlbumIfNeeded(), this.loadStorageStats()]);
   }
 
   private async loadSiteConfig() {
+    console.debug('Loading site config for admin album editor');
     try {
       this.siteConfig = await fetchSiteConfig();
     } catch (err) {
@@ -658,6 +660,7 @@ export class AdminAlbumEditorPage extends LitElement {
   }
 
   private async loadStorageStats() {
+    console.debug('Loading storage stats for admin album editor');
     try {
       const response = await fetch('/api/admin/storage/stats', {
         credentials: 'include',
@@ -687,6 +690,7 @@ export class AdminAlbumEditorPage extends LitElement {
   }
 
   private async loadAlbumIfNeeded() {
+    console.debug('Checking if album needs to be loaded');
     if (this.albumId && this.albumId !== 'new') {
       await this.loadAlbum();
     } else {
@@ -695,6 +699,7 @@ export class AdminAlbumEditorPage extends LitElement {
   }
 
   private async loadAlbum() {
+    console.debug('Loading album data for admin album editor:', this.albumId);
     if (!this.albumId || this.albumId === 'new') return;
 
     this.loading = true;

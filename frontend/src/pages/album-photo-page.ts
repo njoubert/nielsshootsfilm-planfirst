@@ -374,6 +374,7 @@ export class AlbumPhotoPage extends LitElement {
   }
 
   private async loadAlbumData() {
+    console.debug(`Loading album data for photo page ${this.albumSlug}`);
     this.loading = true;
     this.error = '';
 

@@ -210,6 +210,7 @@ export class StorageStatsComponent extends LitElement {
   }
 
   private async fetchStats() {
+    console.debug('Fetching storage stats from /api/admin/storage/stats');
     this.loading = true;
     this.error = null;
 
