@@ -64,6 +64,7 @@ export class AlbumDetailPage extends LitElement {
   `;
 
   updated(changedProperties: Map<string | number | symbol, unknown>) {
+    // Reload data when slug property changes to a non-empty value
     if (changedProperties.has('slug')) {
       void this.loadData();
     }
@@ -74,6 +75,9 @@ export class AlbumDetailPage extends LitElement {
   }
 
   private async loadData() {
+    if (!this.slug) {
+      return;
+    }
     console.log('Loading portfolio album and site config');
 
     try {
@@ -108,7 +112,7 @@ export class AlbumDetailPage extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    void this.loadData();
+    // Don't load here - wait for slug to be set in updated()
     window.addEventListener('popstate', this.handlePopState);
   }
 
