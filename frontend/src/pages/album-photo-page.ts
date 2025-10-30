@@ -319,12 +319,18 @@ export class AlbumPhotoPage extends LitElement {
     document.addEventListener('keydown', this.handleKeyDown);
     this.disableBodyScroll(true);
     void this.loadAlbumData();
+
+    // Request fullscreen on mobile devices
+    void this.requestFullscreenIfMobile();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     document.removeEventListener('keydown', this.handleKeyDown);
     this.disableBodyScroll(false);
+
+    // Exit fullscreen when leaving the page
+    void this.exitFullscreen();
 
     // Clean up any pending timeouts
     if (this.loadingGracePeriodTimeout !== null) {
@@ -680,6 +686,32 @@ export class AlbumPhotoPage extends LitElement {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+    }
+  }
+
+  private async requestFullscreenIfMobile() {
+    // Only request fullscreen on mobile devices
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (!isMobile) return;
+
+    try {
+      // Request fullscreen on the host element
+      if (this.requestFullscreen) {
+        await this.requestFullscreen();
+      }
+    } catch (err) {
+      // Fullscreen request failed - this is normal if user hasn't interacted yet
+      console.debug('Fullscreen request failed:', err);
+    }
+  }
+
+  private async exitFullscreen() {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+    } catch (err) {
+      console.debug('Exit fullscreen failed:', err);
     }
   }
 
