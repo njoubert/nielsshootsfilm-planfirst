@@ -74,6 +74,8 @@ export class AlbumDetailPage extends LitElement {
   }
 
   private async loadData() {
+    console.log('Loading portfolio album and site config');
+
     try {
       this.loading = true;
       this.needsPassword = false;

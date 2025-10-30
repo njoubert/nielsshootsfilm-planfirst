@@ -241,6 +241,7 @@ export class AdminSettingsPage extends LitElement {
   }
 
   private async loadData() {
+    console.log('Loading admin settings data');
     this.loading = true;
     this.error = '';
 

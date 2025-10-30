@@ -209,6 +209,7 @@ export class AdminDashboardPage extends LitElement {
   }
 
   private async loadData() {
+    console.log('Loading admin dashboard data');
     this.loading = true;
     this.error = '';
 

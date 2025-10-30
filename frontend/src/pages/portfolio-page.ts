@@ -74,6 +74,7 @@ export class PortfolioPage extends LitElement {
 
   private async loadData() {
     try {
+      console.log('Loading portfolio album and site config');
       this.loading = true;
       const [album, siteConfig] = await Promise.all([fetchMainPortfolioAlbum(), fetchSiteConfig()]);
 
