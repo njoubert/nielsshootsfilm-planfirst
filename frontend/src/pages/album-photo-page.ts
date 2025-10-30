@@ -352,7 +352,6 @@ export class AlbumPhotoPage extends LitElement {
     super.connectedCallback();
     document.addEventListener('keydown', this.handleKeyDown);
     this.disableBodyScroll(true);
-    this.disableMobileZoom(true);
     void this.loadAlbumData();
   }
 
@@ -360,7 +359,6 @@ export class AlbumPhotoPage extends LitElement {
     super.disconnectedCallback();
     document.removeEventListener('keydown', this.handleKeyDown);
     this.disableBodyScroll(false);
-    this.disableMobileZoom(false);
 
     // Clean up any pending timeouts
     if (this.loadingGracePeriodTimeout !== null) {
@@ -723,20 +721,6 @@ export class AlbumPhotoPage extends LitElement {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
-    }
-  }
-
-  private disableMobileZoom(disable: boolean) {
-    const viewport = document.querySelector('meta[name="viewport"]');
-    if (!viewport) return;
-
-    if (disable) {
-      viewport.setAttribute(
-        'content',
-        'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
-      );
-    } else {
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
     }
   }
 
