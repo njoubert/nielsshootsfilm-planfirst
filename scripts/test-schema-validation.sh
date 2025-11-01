@@ -8,7 +8,7 @@ echo ""
 
 # Test 1: Valid album with all fields
 echo "Test 1: Creating album with valid visibility 'public'"
-response=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8080/api/admin/albums \
+response=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:6180/api/admin/albums \
   -H "Content-Type: application/json" \
   -b "photoadmin_session=test" \
   -d '{
@@ -23,7 +23,7 @@ echo ""
 
 # Test 2: Invalid visibility
 echo "Test 2: Creating album with invalid visibility 'invalid'"
-response=$(curl -s -X POST http://localhost:8080/api/admin/albums \
+response=$(curl -s -X POST http://localhost:6180/api/admin/albums \
   -H "Content-Type: application/json" \
   -b "photoadmin_session=test" \
   -d '{
@@ -38,7 +38,7 @@ echo ""
 
 # Test 3: Empty visibility
 echo "Test 3: Creating album with empty visibility"
-response=$(curl -s -X POST http://localhost:8080/api/admin/albums \
+response=$(curl -s -X POST http://localhost:6180/api/admin/albums \
   -H "Content-Type: application/json" \
   -b "photoadmin_session=test" \
   -d '{
@@ -53,7 +53,7 @@ echo ""
 
 # Test 4: Missing visibility (should get empty string from JSON unmarshal)
 echo "Test 4: Creating album with missing visibility field"
-response=$(curl -s -X POST http://localhost:8080/api/admin/albums \
+response=$(curl -s -X POST http://localhost:6180/api/admin/albums \
   -H "Content-Type: application/json" \
   -b "photoadmin_session=test" \
   -d '{

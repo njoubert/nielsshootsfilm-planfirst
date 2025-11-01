@@ -25,7 +25,7 @@ func main() {
 	// Get configuration from environment
 	dataDir := getEnv("DATA_DIR", "../data")
 	uploadDir := getEnv("UPLOAD_DIR", "../static/uploads")
-	port := getEnv("PORT", "8080")
+	port := getEnv("PORT", "6180")
 
 	// Initialize services
 	fileService, err := services.NewFileService(dataDir)

@@ -24,7 +24,7 @@ Package the Go admin API (`/api`) in a Docker container. Frontend remains static
 
 nginx (native)
   ├─ / → ~/webserver/sites/nielsshootsfilm.com/public/
-  └─ /api/* → proxy_pass http://localhost:8080
+  └─ /api/* → proxy_pass http://localhost:6180
                ↓
          Docker container (in api/ dir)
            - mounts ../public/data:/app/data
@@ -38,7 +38,7 @@ nginx (native)
    - Multi-stage build (golang:alpine → alpine runtime)
    - Include libvips runtime dependencies
    - Copy compiled binary
-   - Expose port 8080
+   - Expose port 6180
    - CMD to run admin server
 
 2. **Create api/ directory on server**
@@ -56,7 +56,7 @@ nginx (native)
 4. **Test locally**
    - Set up same directory structure locally
    - `cd api && docker compose up --build`
-   - Verify API responds at `http://localhost:8080/api/albums`
+   - Verify API responds at `http://localhost:6180/api/albums`
    - Verify uploads/data persist across restarts
 
 ## Dockerfile Strategy
@@ -79,7 +79,7 @@ FROM alpine:3.19
 RUN apk add --no-cache vips ca-certificates
 COPY --from=build /app/admin /app/admin
 WORKDIR /app
-EXPOSE 8080
+EXPOSE 6180
 CMD ["/app/admin"]
 ```
 
@@ -94,17 +94,17 @@ services:
   admin-api:
     build: .
     ports:
-      - '8080:8080'
+      - '6180:6180'
     volumes:
       - ../public/data:/app/data
       - ../public/uploads:/app/uploads
     environment:
       - DATA_DIR=/app/data
       - UPLOAD_DIR=/app/uploads
-      - PORT=8080
+      - PORT=6180
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'wget', '-q', '-O-', 'http://localhost:8080/api/health']
+      test: ['CMD', 'wget', '-q', '-O-', 'http://localhost:6180/api/health']
       interval: 30s
       timeout: 3s
       retries: 3
@@ -149,7 +149,7 @@ docker save admin-api | ssh server docker load
 
 - libvips build in Alpine might need extra packages
 - Volume mount permissions (container user vs host user)
-- Port conflict if 8080 already in use
+- Port conflict if 6180 already in use
 - **Platform mismatch**: Building on Apple Silicon for Intel Mac requires cross-compilation (simpler to build on server)
 
 ## Platform Considerations (Intel Mac Mini)

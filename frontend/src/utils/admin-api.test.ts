@@ -20,7 +20,7 @@ import {
 } from './admin-api';
 
 describe('admin-api utilities', () => {
-  const API_BASE_URL = 'http://localhost:8080';
+  const API_BASE_URL = 'http://localhost:6180';
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -43,7 +43,7 @@ describe('admin-api utilities', () => {
         const result = await login({ username: 'admin', password: 'testpass123' }); // pragma: allowlist secret
 
         expect(global.fetch).toHaveBeenCalledWith(
-          'http://localhost:8080/api/admin/login',
+          'http://localhost:6180/api/admin/login',
           expect.objectContaining({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

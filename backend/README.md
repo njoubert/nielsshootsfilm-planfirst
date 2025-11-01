@@ -30,7 +30,7 @@ ADMIN_USERNAME=admin
 ADMIN_PASSWORD_HASH=<paste-hash-here>
 DATA_DIR=../data
 UPLOAD_DIR=../static/uploads
-PORT=8080
+PORT=6180
 ```
 
 ### 3. Run the Server
@@ -50,7 +50,7 @@ go build -o bin/admin ./cmd/admin
 ./bin/admin
 ```
 
-The server will start on `http://localhost:8080`.
+The server will start on `http://localhost:6180`.
 
 ## API Endpoints
 
@@ -147,7 +147,7 @@ go mod tidy
 | `ADMIN_PASSWORD_HASH` | Bcrypt hash of admin password | (required)          |
 | `DATA_DIR`            | Directory for JSON data files | `../data`           |
 | `UPLOAD_DIR`          | Directory for uploaded images | `../static/uploads` |
-| `PORT`                | Server port                   | `8080`              |
+| `PORT`                | Server port                   | `6180`              |
 
 ## File Structure
 

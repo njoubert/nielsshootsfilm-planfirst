@@ -52,7 +52,7 @@ stop_servers() {
 check_backend_status() {
     if pgrep -f "go run.*cmd/admin" > /dev/null; then
         # Process is running, check if responding
-        if curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/health 2>/dev/null | grep -q "200\|404"; then
+        if curl -s -o /dev/null -w "%{http_code}" http://localhost:6180/api/health 2>/dev/null | grep -q "200\|404"; then
             return 0  # Running and responding
         else
             return 1  # Running but not responding
@@ -90,13 +90,13 @@ status_backend() {
         0)
             echo "✓ Backend server is RUNNING"
             echo "  Process: $(pgrep -f 'go run.*cmd/admin')"
-            echo "  URL: http://localhost:8080"
+            echo "  URL: http://localhost:6180"
             echo "  Status: Responding to requests"
             ;;
         1)
             echo "⚠ Backend server is RUNNING"
             echo "  Process: $(pgrep -f 'go run.*cmd/admin')"
-            echo "  URL: http://localhost:8080"
+            echo "  URL: http://localhost:6180"
             echo "  Warning: Process running but not responding"
             ;;
         2)
@@ -147,11 +147,11 @@ status_servers() {
 
     case $backend_status in
         0)
-            echo "✓ Backend:  RUNNING (http://localhost:8080)"
+            echo "✓ Backend:  RUNNING (http://localhost:6180)"
             echo "            Responding to requests"
             ;;
         1)
-            echo "⚠ Backend:  RUNNING (http://localhost:8080)"
+            echo "⚠ Backend:  RUNNING (http://localhost:6180)"
             echo "            Warning: Not responding"
             ;;
         2)
@@ -205,7 +205,7 @@ start_backend() {
     echo "=================================================="
     echo "Backend Server Running"
     echo "=================================================="
-    echo "Backend: http://localhost:8080"
+    echo "Backend: http://localhost:6180"
     echo "Admin:   http://localhost:5173/admin/login"
     echo ""
     echo "Press Ctrl+C to stop the server"
@@ -278,7 +278,7 @@ start_servers() {
     echo "Development Servers Running"
     echo "=================================================="
     echo "Frontend: http://localhost:5173"
-    echo "Backend:  http://localhost:8080"
+    echo "Backend:  http://localhost:6180"
     echo "Admin:    http://localhost:5173/admin/login"
     echo ""
     echo "Press Ctrl+C to stop both servers"

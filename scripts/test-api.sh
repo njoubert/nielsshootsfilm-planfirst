@@ -4,7 +4,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC2034  # PROJECT_ROOT may be used in future
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-BASE_URL="${BASE_URL:-http://localhost:8080}"
+BASE_URL="${BASE_URL:-http://localhost:6180}"
 COOKIE_FILE="/tmp/photoadmin_test_cookies.txt"
 
 # Colors for output

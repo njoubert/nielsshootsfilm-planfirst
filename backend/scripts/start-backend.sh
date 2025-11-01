@@ -34,7 +34,7 @@ fi
 # Set defaults if not provided
 export DATA_DIR="${DATA_DIR:-$PROJECT_ROOT/data}"
 export UPLOAD_DIR="${UPLOAD_DIR:-$PROJECT_ROOT/static/uploads}"
-export PORT="${PORT:-8080}"
+export PORT="${PORT:-6180}"
 
 echo "Starting backend server..."
 echo "  Port: $PORT"

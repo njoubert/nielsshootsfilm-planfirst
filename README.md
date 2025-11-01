@@ -139,7 +139,7 @@ Run the development servers in two separate terminals:
 **Access:**
 
 - Frontend: <http://localhost:5173>
-- Backend API: <http://localhost:8080>
+- Backend API: <http://localhost:6180>
 - Admin Interface: <http://localhost:5173/admin>
 
 ### Testing

@@ -266,7 +266,7 @@ This repository requires writing reports if you make major changes to the codeba
 server: {
   proxy: {
     '/api': {
-      target: 'http://localhost:8080',
+      target: 'http://localhost:6180',
       changeOrigin: true,
     },
   },

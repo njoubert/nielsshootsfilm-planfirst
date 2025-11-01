@@ -20,7 +20,7 @@
       "env": {
         "DATA_DIR": "${workspaceFolder}/data",
         "STATIC_DIR": "${workspaceFolder}/static",
-        "PORT": "8080",
+        "PORT": "6180",
         "DEV_MODE": "true"
       }
     },

@@ -25,7 +25,7 @@ Deploy the Go admin backend as a Docker container that can be easily deployed to
 - **Image**: Frozen snapshot of your app (like a ZIP file)
 - **Container**: Running instance of an image (like an unzipped, running program)
 - **Volume**: Way to connect host directories to container directories
-- **Port mapping**: Connect container's port 8080 to host's port 8080
+- **Port mapping**: Connect container's port 6180 to host's port 6180
 
 ## Architecture
 
@@ -43,10 +43,10 @@ Deploy the Go admin backend as a Docker container that can be easily deployed to
 │  │  /data → host volume     │  │
 │  │  /uploads → host volume  │  │
 │  │                          │  │
-│  │  Port 8080               │  │
+│  │  Port 6180               │  │
 │  └──────────────────────────┘  │
 │            ↓                    │
-│    Port 8080 (exposed)          │
+│    Port 6180 (exposed)          │
 └─────────────────────────────────┘
 ```
 

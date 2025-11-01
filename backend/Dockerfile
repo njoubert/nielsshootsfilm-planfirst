@@ -43,12 +43,12 @@ RUN mkdir -p /data /uploads && \
 USER appuser
 
 # Expose admin server port
-EXPOSE 8080
+EXPOSE 6180
 
 # Default environment variables (can be overridden)
 ENV DATA_DIR=/data
 ENV UPLOAD_DIR=/uploads
-ENV PORT=8080
+ENV PORT=6180
 
 # Run the admin server
 CMD ["./admin"]

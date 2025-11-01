@@ -3,7 +3,7 @@
 ## Test Environment
 
 - Frontend: <http://localhost:5173> (Vite dev server)
-- Backend: <http://localhost:8080> (Go admin server)
+- Backend: <http://localhost:6180> (Go admin server)
 - Admin credentials: admin/admin (from admin_config.json)
 
 ## Test Execution Summary

@@ -6,7 +6,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 PID_FILE="$BACKEND_DIR/.server.pid"
-PORT=8080
+PORT=6180
 
 echo "Stopping backend server..."
 

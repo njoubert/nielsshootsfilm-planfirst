@@ -65,7 +65,7 @@
    ADMIN_PASSWORD_HASH='$2a$10$VPqUwu5tQ8xAsqdRFgzibeVQVewjXsBkKuhJClOVqpeGflWYwLZKm'
    DATA_DIR=../data
    UPLOAD_DIR=../static/uploads
-   PORT=8080
+   PORT=6180
    ```
 
    **Note**: The password hash must be single-quoted to prevent shell variable expansion.

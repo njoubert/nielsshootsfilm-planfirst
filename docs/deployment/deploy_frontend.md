@@ -197,14 +197,14 @@ Test the production build locally before deploying:
 
 ```bash
 cd frontend/build
-python3 -m http.server 8080
+python3 -m http.server 6180
 ```
 
-Then open `http://localhost:8080` in your browser.
+Then open `http://localhost:6180` in your browser.
 
 **Important**: Simple Python HTTP server does NOT support SPA fallback. While client-side navigation works fine, you'll see 404 errors when:
 
-- Directly visiting routes like `http://localhost:8080/albums`
+- Directly visiting routes like `http://localhost:6180/albums`
 - Refreshing the page on any route other than the homepage
 
 This happens because the server tries to find a physical file at `/albums` instead of serving `index.html`. Your SPA routing works correctly - it just needs the server to return `index.html` for all routes so the JavaScript can initialize and handle the routing.
