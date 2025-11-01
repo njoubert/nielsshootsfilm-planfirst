@@ -128,13 +128,15 @@ func main() {
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	// Public API endpoints (for frontend)
+	// Data endpoints for Admin Frontend
 	r.Route("/api", func(r chi.Router) {
-		// Public album endpoints
+		r.Use(middleware.Auth(authService, logger))
+
+		// Album endpoints
 		r.Get("/albums", albumHandler.GetAll)
 		r.Get("/albums/{id}", albumHandler.GetByID)
 
-		// Public site config
+		// Site config
 		r.Get("/config", configHandler.Get)
 	})
 
