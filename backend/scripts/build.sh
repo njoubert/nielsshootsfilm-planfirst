@@ -43,6 +43,9 @@ mkdir -p "$FINAL_BUILD_DIR"
 echo "📄 Moving binary to final location..."
 mv admin "$FINAL_BUILD_DIR/admin"
 
+echo "📄 Moving .env to final location..."
+cp .env "$FINAL_BUILD_DIR/.env"
+
 echo ""
 echo "✅ Build complete!"
 echo "Binary location: $FINAL_BUILD_DIR/admin"
