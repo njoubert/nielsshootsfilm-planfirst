@@ -1,9 +1,17 @@
 # Backend Docker Deployment Plan
 
-**Date**: October 31, 2025
-**Status**: Planning
-**Complexity**: Medium
-**T-Shirt Size**: Medium
+## Verdict
+
+This is an experiment I performed to deploy the backend as a docker container.
+My main interest is having all the dependencies nicely isolated from my host system.
+It worked decently well on my mac mini, with a few caveats:
+
+- Docker containers run inside a virtualized linux kernel.
+- The virtual containers have fairly poor and slow access to the root machine's file system on Mac.
+- Poor host file system access is a problem for my setup with the static page served from nginx and the admin dynamic site running in a docker container.
+- Image processing was als quite slow (may be a mac mini hardware issue).
+
+Therefore I am abandoning this approach for now.
 
 ## Overview
 
