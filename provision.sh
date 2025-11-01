@@ -79,23 +79,26 @@ install_node() {
         NODE_VERSION=$(node --version)
         print_success "Node.js already installed: $NODE_VERSION"
 
-        # Check version requirement (>= 20.x)
-        REQUIRED_MAJOR=20
-        CURRENT_MAJOR=$(node --version | cut -d. -f1 | sed 's/v//')
+        # Check version requirement (>= 24.11.0)
+        REQUIRED_VERSION="24.11.0"
+        CURRENT_VERSION=$(node --version | sed 's/v//')
 
-        if [ "$CURRENT_MAJOR" -lt "$REQUIRED_MAJOR" ]; then
-            print_warning "Node.js version is $NODE_VERSION, but v20.x or higher is recommended"
+        # Compare versions using sort -V
+        if ! printf '%s\n' "$REQUIRED_VERSION" "$CURRENT_VERSION" | sort -V -C 2>/dev/null; then
+            print_warning "Node.js version is $NODE_VERSION, but v24.11.0 or higher is recommended"
+            print_info "v24.11.0 is the LTS (Long Term Support) version as of October 2024"
             print_info "Consider upgrading with: brew upgrade node"
         fi
     else
         if [[ "$OS" == "macos" ]]; then
-            print_info "Installing Node.js via Homebrew..."
-            brew install node@20
+            print_info "Installing Node.js v24 LTS via Homebrew..."
+            brew install node@24
             print_success "Node.js installed"
         elif [[ "$OS" == "linux" ]]; then
             print_info "Installing Node.js via nvm recommended"
             print_info "Visit: https://github.com/nvm-sh/nvm"
-            print_warning "Please install Node.js 20.x manually"
+            print_info "Recommended: nvm install 24.11.0"
+            print_warning "Please install Node.js 24.11.0 or higher manually"
         fi
     fi
 
@@ -124,22 +127,22 @@ install_go() {
         GO_VERSION=$(go version | awk '{print $3}')
         print_success "Go already installed: $GO_VERSION"
 
-        # Check version requirement (>= 1.22)
-        REQUIRED_VERSION="1.22"
+        # Check version requirement (>= 1.25)
+        REQUIRED_VERSION="1.25"
         CURRENT_VERSION=$(go version | awk '{print $3}' | sed 's/go//')
 
         if ! printf '%s\n' "$REQUIRED_VERSION" "$CURRENT_VERSION" | sort -V -C 2>/dev/null; then
-            print_warning "Go version is $GO_VERSION, but 1.22 or higher is recommended"
+            print_warning "Go version is $GO_VERSION, but 1.25 or higher is recommended"
         fi
     else
         if [[ "$OS" == "macos" ]]; then
             print_info "Installing Go via Homebrew..."
-            brew install go@1.22
+            brew install go
             print_success "Go installed"
         elif [[ "$OS" == "linux" ]]; then
             print_info "Installing Go..."
             print_info "Visit: https://go.dev/doc/install"
-            print_warning "Please install Go 1.22 or higher manually"
+            print_warning "Please install Go 1.25 or higher manually"
         fi
     fi
 
@@ -569,8 +572,8 @@ main() {
     print_header "Provisioning nielsshootsfilm-planfirst Development Environment"
 
     echo "This script will install all required dependencies:"
-    echo "  • Node.js 20.x (frontend)"
-    echo "  • Go 1.22+ (backend)"
+    echo "  • Node.js 24.11.0+ (frontend) - LTS version"
+    echo "  • Go 1.25+ (backend)"
     echo "  • libvips 8.x+ (image processing)"
     echo "  • Frontend npm packages"
     echo "  • Backend Go modules"
