@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/models"
+	"github.com/njoubert/nielsshootsfilm/backend/internal/models"
 )
 
 const siteConfigFile = "site_config.json"

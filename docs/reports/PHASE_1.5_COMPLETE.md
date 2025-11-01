@@ -102,7 +102,7 @@ Phase 1.5: Developer Experience & Code Quality has been successfully implemented
 2. **Install hooks**:
 
    ```bash
-   cd /Users/njoubert/Code/nielsshootsfilm-planfirst
+   cd /Users/njoubert/Code/nielsshootsfilm
    pre-commit install
    ```
 

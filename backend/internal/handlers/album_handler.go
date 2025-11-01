@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/models"
-	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/services"
+	"github.com/njoubert/nielsshootsfilm/backend/internal/models"
+	"github.com/njoubert/nielsshootsfilm/backend/internal/services"
 	"golang.org/x/crypto/bcrypt"
 )
 

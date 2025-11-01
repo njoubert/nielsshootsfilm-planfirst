@@ -10,10 +10,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/handlers"
-	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/middleware"
-	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/models"
-	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/services"
+	"github.com/njoubert/nielsshootsfilm/backend/internal/handlers"
+	"github.com/njoubert/nielsshootsfilm/backend/internal/middleware"
+	"github.com/njoubert/nielsshootsfilm/backend/internal/models"
+	"github.com/njoubert/nielsshootsfilm/backend/internal/services"
 )
 
 func main() {

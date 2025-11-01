@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/services"
+	"github.com/njoubert/nielsshootsfilm/backend/internal/services"
 )
 
 // AuthHandler handles authentication requests.

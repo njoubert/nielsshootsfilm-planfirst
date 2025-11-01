@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Provision Script for nielsshootsfilm-planfirst
+# Provision Script for nielsshootsfilm
 #
 # This script sets up all dependencies needed to develop on this project.
 # Run this after cloning the repository for the first time.
@@ -528,48 +528,17 @@ verify_installation() {
 
 # Print next steps
 print_next_steps() {
-    print_header "Next Steps"
+    print_header "DONE"
 
-    echo "Your development environment is ready! Here's what you can do:"
     echo ""
-    echo -e "${GREEN}📚 Read the documentation:${NC}"
-    echo "   • Quick start: cat README.md"
-    echo "   • Full plan:   open docs/plan/PLAN_MVP.md"
-    echo ""
-    echo -e "${GREEN}🚀 Start development servers:${NC}"
-    echo "   Terminal 1: ./frontend/scripts/dev.sh"
-    echo "   Terminal 2: ./backend/scripts/dev.sh"
-    echo ""
-    echo "   Or use convenience script:"
-    echo "   ./dev.sh"
-    echo ""
-    echo -e "${GREEN}🧪 Run tests:${NC}"
-    echo "   Frontend: ./frontend/scripts/test.sh"
-    echo "   Backend:  ./backend/scripts/test.sh"
-    echo ""
-    echo -e "${GREEN}🎨 Format and lint:${NC}"
-    echo "   Format all: ./format.sh"
-    echo "   Lint frontend: ./frontend/scripts/lint.sh"
-    echo "   Lint backend:  ./backend/scripts/lint.sh"
-    echo ""
-    echo -e "${GREEN}📦 Build for production:${NC}"
-    echo "   Frontend: ./frontend/scripts/build.sh"
-    echo "   Backend:  ./backend/scripts/build.sh"
-    echo ""
-    echo -e "${GREEN}🔑 Setup admin credentials:${NC}"
-    if [ ! -f "admin_config.json" ]; then
-        echo "   ./bootstrap.sh"
-    else
-        echo "   ✓ Already configured"
-    fi
-    echo ""
+    echo "Your development environment is ready!"
     echo "Happy coding! 🎉"
     echo ""
 }
 
 # Main execution
 main() {
-    print_header "Provisioning nielsshootsfilm-planfirst Development Environment"
+    print_header "Provisioning nielsshootsfilm Development Environment"
 
     echo "This script will install all required dependencies:"
     echo "  • Node.js 24.11.0+ (frontend) - LTS version"

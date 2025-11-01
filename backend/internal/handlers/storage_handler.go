@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/services"
+	"github.com/njoubert/nielsshootsfilm/backend/internal/services"
 )
 
 // StorageHandler handles storage-related admin API endpoints.

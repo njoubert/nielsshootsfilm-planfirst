@@ -1,4 +1,4 @@
-module github.com/njoubert/nielsshootsfilm-planfirst/backend
+module github.com/njoubert/nielsshootsfilm/backend
 
 go 1.25.0
 

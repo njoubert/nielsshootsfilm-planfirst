@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/models"
-	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/services"
+	"github.com/njoubert/nielsshootsfilm/backend/internal/models"
+	"github.com/njoubert/nielsshootsfilm/backend/internal/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

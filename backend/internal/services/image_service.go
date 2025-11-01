@@ -13,7 +13,7 @@ import (
 
 	"github.com/davidbyttow/govips/v2/vips"
 	"github.com/google/uuid"
-	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/models"
+	"github.com/njoubert/nielsshootsfilm/backend/internal/models"
 	"github.com/rwcarlsen/goexif/exif"
 )
 

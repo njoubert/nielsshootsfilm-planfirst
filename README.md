@@ -50,7 +50,7 @@ Run the provisioning script to install all dependencies:
 ```bash
 # Clone repository
 git clone <repo-url>
-cd nielsshootsfilm-planfirst
+cd nielsshootsfilm
 
 # Run provisioning script (installs everything)
 ./provision.sh

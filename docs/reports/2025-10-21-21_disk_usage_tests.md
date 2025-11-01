@@ -111,9 +111,9 @@ Added 10 comprehensive test functions:
 **Command**: `cd backend && ./scripts/test.sh`
 
 ```text
-ok      github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/models   0.135s
-ok      github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/services 0.880s
-ok      github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/handlers 0.230s
+ok      github.com/njoubert/nielsshootsfilm/backend/internal/models   0.135s
+ok      github.com/njoubert/nielsshootsfilm/backend/internal/services 0.880s
+ok      github.com/njoubert/nielsshootsfilm/backend/internal/handlers 0.230s
 ```
 
 **Status**: ✅ All tests pass
