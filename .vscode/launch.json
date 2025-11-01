@@ -21,7 +21,6 @@
         "DATA_DIR": "${workspaceFolder}/data",
         "STATIC_DIR": "${workspaceFolder}/static",
         "PORT": "6180",
-        "DEV_MODE": "true"
       }
     },
     {

@@ -55,9 +55,6 @@ if [ -f "$PROJECT_ROOT/env" ]; then
   # shellcheck disable=SC2046
   export $(grep -E "^DEPLOY_(USER|HOST|PATH)=" "$PROJECT_ROOT/env" | xargs)
 fi
-DEPLOY_USER="${DEPLOY_USER:-njoubert}"
-DEPLOY_HOST="${DEPLOY_HOST:-njoubert.com}"
-DEPLOY_PATH="${DEPLOY_PATH:-/var/www/nielsshootsfilm.com/}"
 
 echo ""
 echo "✅ Build complete!"
@@ -69,14 +66,5 @@ echo "  ├── index.html"
 echo "  ├── assets/          (JS and CSS)"
 echo "  ├── data/            (JSON data files)"
 echo "  └── uploads/         (images)"
-echo ""
-echo "📦 Deployment:"
-echo "  1. Copy build-bin/frontend/ contents to your web server:"
-echo "     rsync -avz --delete $FINAL_BUILD_DIR/ $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH"
-echo ""
-echo ""
-echo "  3. See full deployment guide:"
-echo "     $PROJECT_ROOT/deployment/README.md"
-echo "     $PROJECT_ROOT/docs/DEPLOYMENT.md"
 echo ""
 echo "The site expects to be served from the domain root (e.g., nielsshootsfilm.com/)"
