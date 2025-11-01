@@ -118,7 +118,7 @@ fi
 
 # Initialize admin_config.json if it doesn't exist
 if [ ! -f "$PROJECT_ROOT/data/admin_config.json" ]; then
-    echo -e "${YELLOW}Admin credentials not configured.${NC}"
+    echo -e "${YELLOW}admin_config.json does not exist. Creating it now.${NC}"
     echo "You will be prompted to set an admin password."
     echo ""
 
@@ -187,10 +187,3 @@ else
 fi
 
 echo -e "${GREEN}=== Bootstrap Complete ===${NC}"
-echo ""
-echo "Next steps:"
-echo "1. Update site_config.json with your site details"
-echo "2. Run './frontend/scripts/dev.sh' to start the dev server"
-echo "3. Run './backend/scripts/dev.sh' to start the admin server"
-echo "   Or use './dev.sh' to start backend (frontend runs separately)"
-echo ""
