@@ -5,7 +5,6 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-PROJECT_ROOT="$(cd "$BACKEND_DIR/.." && pwd)"
 PID_FILE="$BACKEND_DIR/server.pid"
 LOG_FILE="$BACKEND_DIR/server.log"
 
@@ -22,29 +21,21 @@ if [ -f "$PID_FILE" ]; then
     fi
 fi
 
-# Check if env file exists and source it
-if [ -f "$BACKEND_DIR/env" ]; then
-    echo "Loading environment variables from env..."
-    set -a
-    # shellcheck source=/dev/null
-    source "$BACKEND_DIR/env"
-    set +a
+# Check if env file exists
+ENV_FILE="$BACKEND_DIR/env"
+if [ ! -f "$ENV_FILE" ]; then
+    echo "Error: env file not found at $ENV_FILE"
+    echo "Please create an env file (see env.example)"
+    exit 1
 fi
 
-# Set defaults if not provided
-export DATA_DIR="${DATA_DIR:-$PROJECT_ROOT/data}"
-export UPLOAD_DIR="${UPLOAD_DIR:-$PROJECT_ROOT/static/uploads}"
-export PORT="${PORT:-6180}"
-
 echo "Starting backend server..."
-echo "  Port: $PORT"
-echo "  Data directory: $DATA_DIR"
-echo "  Upload directory: $UPLOAD_DIR"
+echo "  Env file: $ENV_FILE"
 echo "  Log file: $LOG_FILE"
 
-# Start the server in the background
+# Start the server in the background with --env-file flag
 cd "$BACKEND_DIR"
-nohup go run ./cmd/admin/main.go > "$LOG_FILE" 2>&1 &
+nohup go run ./cmd/admin/main.go --env-file "$ENV_FILE" > "$LOG_FILE" 2>&1 &
 SERVER_PID=$!
 
 # Save the PID

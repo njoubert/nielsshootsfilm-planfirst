@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log/slog"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/joho/godotenv"
 	"github.com/njoubert/nielsshootsfilm/backend/internal/handlers"
 	"github.com/njoubert/nielsshootsfilm/backend/internal/middleware"
 	"github.com/njoubert/nielsshootsfilm/backend/internal/models"
@@ -17,10 +19,28 @@ import (
 )
 
 func main() {
+	// Parse CLI flags - env file is required
+	envFile := flag.String("env-file", "", "path to env file to load (required)")
+	flag.Parse()
+
+	// Require --env-file flag
+	if *envFile == "" {
+		slog.Error("--env-file flag is required")
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	// Load environment variables from the specified file
+	if err := godotenv.Load(*envFile); err != nil {
+		slog.Error("failed to load env file", slog.String("path", *envFile), slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
 	// Setup structured logging
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	}))
+	logger.Info("loaded env from file", slog.String("path", *envFile))
 
 	// Get configuration from environment
 	// This sets up where our plaintext database and our photo uploads are stored
