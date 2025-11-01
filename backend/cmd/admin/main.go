@@ -23,6 +23,7 @@ func main() {
 	}))
 
 	// Get configuration from environment
+	// This sets up where our plaintext database and our photo uploads are stored
 	dataDir := getEnv("DATA_DIR", "../data")
 	uploadDir := getEnv("UPLOAD_DIR", "../static/uploads")
 	port := getEnv("PORT", "6180")
@@ -47,14 +48,14 @@ func main() {
 	// Allow environment variables to override config file
 	adminUsername := getEnv("ADMIN_USERNAME", adminConfig.Username)
 
-	// Check for plain text password first (for development/testing)
-	// This takes precedence over ADMIN_PASSWORD_HASH and config file
-	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	// Now to retrieve the password hash
 	var adminPasswordHash string
 
+	// Check for password from environmental variables first (for development/testing)
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
 	if adminPassword != "" {
-		// Hash the plain text password
 		logger.Info("using ADMIN_PASSWORD from environment (dev mode)")
+		// Hash the plain text password
 		hash, err := services.HashPassword(adminPassword) // pragma: allowlist secret
 		if err != nil {
 			logger.Error("failed to hash ADMIN_PASSWORD",
@@ -65,7 +66,8 @@ func main() {
 		adminPasswordHash = hash // pragma: allowlist secret
 	} else {
 		// Fall back to hashed password from env or config file
-		adminPasswordHash = getEnv("ADMIN_PASSWORD_HASH", adminConfig.PasswordHash) // pragma: allowlist secret
+		logger.Info("using ADMIN_PASSWORD from admin_config.json (prod mode)")
+		adminPasswordHash = adminConfig.PasswordHash // pragma: allowlist secret
 	}
 
 	if adminPasswordHash == "" {
@@ -190,7 +192,7 @@ func main() {
 		Addr:         addr,
 		Handler:      r,
 		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		WriteTimeout: 120 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}
 

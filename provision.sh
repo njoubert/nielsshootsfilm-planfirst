@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Provision Script for nielsshootsfilm
+# Provision Script for nielsshootsfilm-planfirst
 #
 # This script sets up all dependencies needed to develop on this project.
 # Run this after cloning the repository for the first time.

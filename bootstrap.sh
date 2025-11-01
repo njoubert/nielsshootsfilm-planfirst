@@ -30,6 +30,25 @@ else
     echo -e "${YELLOW}⚠ env already exists, skipping${NC}\n"
 fi
 
+# Update DATA_DIR and UPLOAD_DIR with absolute paths
+if [ -f "$PROJECT_ROOT/env" ]; then
+    echo "Updating env with paths to DATA_DIR and UPLOAD_DIR..."
+    # Update or add DATA_DIR
+    if grep -q "^DATA_DIR=" "$PROJECT_ROOT/env"; then
+        sed -i.bak "s|^DATA_DIR=.*|DATA_DIR=$PROJECT_ROOT/data|" "$PROJECT_ROOT/env"
+    else
+        echo "DATA_DIR=$PROJECT_ROOT/data" >> "$PROJECT_ROOT/env"
+    fi
+    # Update or add UPLOAD_DIR
+    if grep -q "^UPLOAD_DIR=" "$PROJECT_ROOT/env"; then
+        sed -i.bak "s|^UPLOAD_DIR=.*|UPLOAD_DIR=$PROJECT_ROOT/static/uploads|" "$PROJECT_ROOT/env"
+    else
+        echo "UPLOAD_DIR=$PROJECT_ROOT/static/uploads" >> "$PROJECT_ROOT/env"
+    fi
+    rm -f "$PROJECT_ROOT/env.bak"
+    echo -e "${GREEN}✓ Updated DATA_DIR and UPLOAD_DIR with absolute paths${NC}\n"
+fi
+
 # Create symlinks for env in backend and frontend if they don't exist
 echo "Setting up env symlinks..."
 if [ ! -L "$PROJECT_ROOT/backend/env" ]; then
@@ -150,38 +169,6 @@ if [ ! -f "$PROJECT_ROOT/data/admin_config.json" ]; then
 }
 EOF
     echo -e "${GREEN}✓ admin_config.json created${NC}"
-
-    # Update env file with admin credentials and session secret if it exists
-    if [ -f "$PROJECT_ROOT/env" ]; then
-        echo "Updating env with admin credentials..."
-        # Update or add ADMIN_USERNAME
-        if grep -q "^ADMIN_USERNAME=" "$PROJECT_ROOT/env"; then
-            sed -i.bak "s/^ADMIN_USERNAME=.*/ADMIN_USERNAME=admin/" "$PROJECT_ROOT/env"
-        else
-            echo "ADMIN_USERNAME=admin" >> "$PROJECT_ROOT/env"
-        fi
-        # Update or add ADMIN_PASSWORD_HASH
-        if grep -q "^ADMIN_PASSWORD_HASH=" "$PROJECT_ROOT/env"; then
-            sed -i.bak "s|^ADMIN_PASSWORD_HASH=.*|ADMIN_PASSWORD_HASH=$HASH|" "$PROJECT_ROOT/env"
-        else
-            echo "ADMIN_PASSWORD_HASH=$HASH" >> "$PROJECT_ROOT/env"
-        fi
-
-        # Generate session secret if not set or is the default placeholder
-        if ! grep -q "^SESSION_SECRET=" "$PROJECT_ROOT/env" || grep -q "^SESSION_SECRET=your-secret-key-here" "$PROJECT_ROOT/env"; then
-            echo "Generating session secret..."
-            SESSION_SECRET=$(openssl rand -hex 32)
-            if grep -q "^SESSION_SECRET=" "$PROJECT_ROOT/env"; then
-                sed -i.bak "s|^SESSION_SECRET=.*|SESSION_SECRET=$SESSION_SECRET|" "$PROJECT_ROOT/env"
-            else
-                echo "SESSION_SECRET=$SESSION_SECRET" >> "$PROJECT_ROOT/env"
-            fi
-            echo -e "${GREEN}✓ Generated secure session secret${NC}"
-        fi
-
-        rm -f "$PROJECT_ROOT/env.bak"
-        echo -e "${GREEN}✓ env updated with admin credentials${NC}\n"
-    fi
 else
     echo -e "${YELLOW}⚠ admin_config.json already exists, skipping${NC}\n"
 fi
