@@ -12,6 +12,7 @@ import {
   createAlbum,
   deleteAlbum,
   deletePhoto,
+  fetchAdminSiteConfig,
   fetchAlbumById,
   reorderPhotos,
   setAlbumPassword,
@@ -20,7 +21,6 @@ import {
   uploadPhotos,
   type UploadProgress,
 } from '../utils/admin-api';
-import { fetchSiteConfig } from '../utils/api';
 import { onLogout } from '../utils/auth-state';
 import { navigateTo, navigateToAlbum, routes } from '../utils/navigation';
 
@@ -647,7 +647,7 @@ export class AdminAlbumEditorPage extends LitElement {
   private async loadSiteConfig() {
     console.debug('Loading site config for admin album editor');
     try {
-      this.siteConfig = await fetchSiteConfig();
+      this.siteConfig = await fetchAdminSiteConfig();
     } catch (err) {
       console.error('Failed to load site config:', err);
     }

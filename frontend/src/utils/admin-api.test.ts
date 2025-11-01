@@ -6,6 +6,7 @@ import {
   createAlbum,
   deleteAlbum,
   deletePhoto,
+  fetchAdminSiteConfig,
   fetchAlbumById,
   fetchAllAlbums,
   login,
@@ -506,6 +507,74 @@ describe('admin-api utilities', () => {
   });
 
   describe('Site Configuration', () => {
+    describe('fetchAdminSiteConfig', () => {
+      it('should fetch site config via admin API', async () => {
+        const mockConfig: SiteConfig = {
+          version: '1.0.0',
+          last_updated: '2025-10-20T00:00:00Z',
+          site: { title: 'Test Site', language: 'en', timezone: 'UTC' },
+          owner: { name: 'Test Owner' },
+          social: {},
+          branding: {
+            primary_color: '#000000',
+            secondary_color: '#666666',
+            accent_color: '#ff6b6b',
+            theme: {
+              mode: 'system',
+              light: {
+                background: '#ffffff',
+                surface: '#f5f5f5',
+                text_primary: '#000000',
+                text_secondary: '#666666',
+                border: '#e0e0e0',
+              },
+              dark: {
+                background: '#0a0a0a',
+                surface: '#1a1a1a',
+                text_primary: '#ffffff',
+                text_secondary: '#999999',
+                border: '#333333',
+              },
+            },
+          },
+          portfolio: { show_exif_data: true, enable_lightbox: true },
+          navigation: {
+            show_home: true,
+            show_albums: true,
+            show_about: true,
+            show_contact: true,
+          },
+          features: { enable_analytics: false },
+          storage: {
+            max_disk_usage_percent: 80,
+            max_image_size_mb: 50,
+          },
+        };
+
+        global.fetch = vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve(mockConfig),
+        } as Response);
+
+        const result = await fetchAdminSiteConfig();
+
+        expect(global.fetch).toHaveBeenCalledWith(`${API_BASE_URL}/api/config`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+        expect(result).toEqual(mockConfig);
+      });
+
+      it('should throw error on fetch failure', async () => {
+        global.fetch = vi.fn().mockResolvedValue({
+          ok: false,
+          text: () => Promise.resolve('Unauthorized'),
+        } as Response);
+
+        await expect(fetchAdminSiteConfig()).rejects.toThrow('Unauthorized');
+      });
+    });
+
     describe('updateSiteConfig', () => {
       it('should update site config successfully', async () => {
         const mockConfig: SiteConfig = {

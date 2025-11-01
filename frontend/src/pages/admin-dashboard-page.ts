@@ -9,8 +9,7 @@ import '../components/admin-header';
 import '../components/storage-stats';
 import '../components/toast-notification';
 import type { Album, SiteConfig } from '../types/data-models';
-import { fetchAllAlbums } from '../utils/admin-api';
-import { fetchSiteConfig } from '../utils/api';
+import { fetchAdminSiteConfig, fetchAllAlbums } from '../utils/admin-api';
 import { onLogout } from '../utils/auth-state';
 import { handleNavClick, routes } from '../utils/navigation';
 
@@ -213,7 +212,10 @@ export class AdminDashboardPage extends LitElement {
     this.error = '';
 
     try {
-      [this.albums, this.siteConfig] = await Promise.all([fetchAllAlbums(), fetchSiteConfig()]);
+      [this.albums, this.siteConfig] = await Promise.all([
+        fetchAllAlbums(),
+        fetchAdminSiteConfig(),
+      ]);
     } catch (err) {
       this.error = err instanceof Error ? err.message : 'Failed to load data';
     } finally {

@@ -10,11 +10,11 @@ import '../components/toast-notification';
 import type { Album, SiteConfig } from '../types/data-models';
 import {
   changePassword,
+  fetchAdminSiteConfig,
   fetchAllAlbums,
   setMainPortfolioAlbum,
   updateSiteConfig,
 } from '../utils/admin-api';
-import { fetchSiteConfig } from '../utils/api';
 import { onLogout } from '../utils/auth-state';
 
 @customElement('admin-settings-page')
@@ -244,7 +244,7 @@ export class AdminSettingsPage extends LitElement {
     this.error = '';
 
     try {
-      [this.config, this.albums] = await Promise.all([fetchSiteConfig(), fetchAllAlbums()]);
+      [this.config, this.albums] = await Promise.all([fetchAdminSiteConfig(), fetchAllAlbums()]);
     } catch (err) {
       this.error = err instanceof Error ? err.message : 'Failed to load settings';
     } finally {

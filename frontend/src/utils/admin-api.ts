@@ -489,6 +489,24 @@ export async function removeAlbumPassword(albumId: string): Promise<void> {
 // ============================================================================
 
 /**
+ * Fetch site configuration via admin API.
+ * Uses authenticated endpoint with session credentials.
+ */
+export async function fetchAdminSiteConfig(): Promise<SiteConfig> {
+  const response = await fetch(`${API_BASE_URL}/api/config`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error || 'Failed to fetch site config');
+  }
+
+  return response.json() as Promise<SiteConfig>;
+}
+
+/**
  * Update site configuration.
  */
 export async function updateSiteConfig(config: Partial<SiteConfig>): Promise<SiteConfig> {

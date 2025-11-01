@@ -7,8 +7,7 @@ import { customElement, state } from 'lit/decorators.js';
 import '../components/admin-header';
 import '../components/toast-notification';
 import type { Album, SiteConfig } from '../types/data-models';
-import { deleteAlbum, fetchAllAlbums } from '../utils/admin-api';
-import { fetchSiteConfig } from '../utils/api';
+import { deleteAlbum, fetchAdminSiteConfig, fetchAllAlbums } from '../utils/admin-api';
 import { onLogout } from '../utils/auth-state';
 import { handleNavClick, routes } from '../utils/navigation';
 
@@ -323,7 +322,7 @@ export class AdminAlbumsPage extends LitElement {
   private async loadSiteConfig() {
     console.debug('Loading site config for admin albums page');
     try {
-      this.siteConfig = await fetchSiteConfig();
+      this.siteConfig = await fetchAdminSiteConfig();
     } catch (err) {
       console.error('Failed to load site config:', err);
     }
