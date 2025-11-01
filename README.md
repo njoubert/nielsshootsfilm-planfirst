@@ -1,6 +1,12 @@
 # Photography Portfolio & Gallery Website
 
-A modern photography portfolio with a unique hybrid static/dynamic architecture, designed for speed, simplicity, and ease of content management.
+**V1.0.0 Released!** See the [release notes](docs/releases/v1.0.0.md).
+
+## What is this?
+
+nielsshootsfilm.com is my personal photography portfolio website, a experiment in a novel hybrid static/dynamic website architecture, and, a playground for agentic AI supported development.
+
+As a "product", this repository provides a modern photography portfolio with a unique hybrid static/dynamic architecture, designed for speed, simplicity, and ease of content management.
 
 ![albums view](image-2.png)
 
