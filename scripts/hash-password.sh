@@ -12,10 +12,6 @@ if [ ! -d "$BACKEND_DIR" ]; then
     exit 1
 fi
 
-echo "Password Hasher Utility"
-echo "======================="
-echo ""
-
 # Run the Go program from the backend directory where go.mod exists
 cd "$BACKEND_DIR"
 go run ./cmd/hash-password "$@"

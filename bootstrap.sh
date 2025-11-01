@@ -159,7 +159,7 @@ if [ ! -f "$PROJECT_ROOT/data/admin_config.json" ]; then
 
     # Generate bcrypt hash using Go from backend directory (where bcrypt is installed)
     echo "Generating password hash..."
-    HASH=$(cd "$PROJECT_ROOT/backend" && go run "$PROJECT_ROOT/scripts/hash_password.go" "$ADMIN_PASSWORD")
+    HASH=$(cd "$PROJECT_ROOT/backend" && "$PROJECT_ROOT/scripts/hash-password.sh" "$ADMIN_PASSWORD")
 
     # Create admin_config.json
     cat > "$PROJECT_ROOT/data/admin_config.json" <<EOF

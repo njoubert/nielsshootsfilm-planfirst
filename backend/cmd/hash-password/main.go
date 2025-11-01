@@ -4,26 +4,29 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/njoubert/nielsshootsfilm/backend/internal/services"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: hash-password <password>")
+	if len(os.Args) != 2 {
+		fmt.Fprintf(os.Stderr, "Usage: %s <password>\n", os.Args[0])
 		os.Exit(1)
 	}
 
 	password := os.Args[1]
 
-	hash, err := services.HashPassword(password)
-	if err != nil {
-		fmt.Printf("Error hashing password: %v\n", err)
+	if password == "" {
+		fmt.Fprintln(os.Stderr, "Error: password cannot be empty")
 		os.Exit(1)
 	}
 
-	fmt.Println("Password hash:")
-	fmt.Println(hash)
-	fmt.Println()
-	fmt.Println("Set this as the ADMIN_PASSWORD_HASH environment variable:")
-	fmt.Printf("export ADMIN_PASSWORD_HASH='%s'\n", hash)
+	// Generate bcrypt hash with cost of 12
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error generating hash: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Output just the hash (no newline for easy piping)
+	fmt.Print(string(hash))
 }
