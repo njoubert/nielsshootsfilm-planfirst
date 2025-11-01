@@ -86,3 +86,6 @@ backend/bin/
 # Temporary files
 tmp/
 temp/
+
+# Docker artifacts
+*.tar

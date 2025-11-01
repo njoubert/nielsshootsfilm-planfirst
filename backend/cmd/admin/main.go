@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/handlers"
 	"github.com/njoubert/nielsshootsfilm-planfirst/backend/internal/middleware"
@@ -105,6 +106,9 @@ func main() {
 	r.Use(middleware.Recoverer(logger))
 	r.Use(middleware.Logger(logger))
 	r.Use(middleware.SecurityHeaders)
+
+	// Strip trailing slashes to handle /api/albums and /api/albums/ consistently
+	r.Use(chimiddleware.StripSlashes)
 
 	// CORS middleware (allow frontend in development)
 	r.Use(cors.Handler(cors.Options{
