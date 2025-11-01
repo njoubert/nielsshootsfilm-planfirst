@@ -5,8 +5,8 @@ build/
 coverage.*
 
 # Development files
-.env
-.env.local
+env
+env.local
 
 # Git
 .git/

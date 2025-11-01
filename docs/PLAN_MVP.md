@@ -356,7 +356,7 @@ Add to `frontend/package.json`:
 - ✅ Install pre-commit framework
 - ✅ Create `.pre-commit-config.yaml` (see docs/DEVELOPMENT_SETUP.md)
 - ✅ Create `.gitignore` for secrets and build outputs
-- ✅ Create `.env.example` template
+- ✅ Create `env.example` template
 - ✅ Set up VS Code (optional, see docs/DEVELOPMENT_SETUP.md)
 - ✅ Test pre-commit hooks work
 
@@ -930,7 +930,7 @@ Albums display photos at full quality. Users can right-click to save individual 
 
 **Single Admin User Model**:
 
-- Admin credentials stored in environment variables (`.env`)
+- Admin credentials stored in environment variables (`env`)
 - Password hashed with bcrypt (stored hash in env or first-run setup)
 - Session-based authentication (not JWT - simpler for single-page admin)
 - Sessions stored in encrypted files or in-memory with persistence
@@ -995,7 +995,7 @@ Albums display photos at full quality. Users can right-click to save individual 
 
 **Environment/Config**:
 
-- ✅ Add auth variables to `.env.example`
+- ✅ Add auth variables to `env.example`
 - ✅ Document session configuration options
 - ✅ Add password requirements to docs
 - ✅ Security best practices documentation
@@ -1041,7 +1041,7 @@ Albums display photos at full quality. Users can right-click to save individual 
 - Reject filenames with path traversal attempts (`../`, `..\\`)
 - Strip special characters that could cause filesystem issues
 
-**Configuration** (`.env` or `site_config.json`):
+**Configuration** (`env` or `site_config.json`):
 
 #### 4.4.4 Upload Pipeline
 

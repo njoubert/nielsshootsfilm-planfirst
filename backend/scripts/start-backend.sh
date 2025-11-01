@@ -6,8 +6,8 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 PROJECT_ROOT="$(cd "$BACKEND_DIR/.." && pwd)"
-PID_FILE="$BACKEND_DIR/.server.pid"
-LOG_FILE="$BACKEND_DIR/.server.log"
+PID_FILE="$BACKEND_DIR/server.pid"
+LOG_FILE="$BACKEND_DIR/server.log"
 
 # Check if server is already running
 if [ -f "$PID_FILE" ]; then
@@ -22,12 +22,12 @@ if [ -f "$PID_FILE" ]; then
     fi
 fi
 
-# Check if .env file exists and source it (optional now that we have admin_config.json)
-if [ -f "$BACKEND_DIR/.env" ]; then
-    echo "Loading environment variables from .env..."
+# Check if env file exists and source it
+if [ -f "$BACKEND_DIR/env" ]; then
+    echo "Loading environment variables from env..."
     set -a
     # shellcheck source=/dev/null
-    source "$BACKEND_DIR/.env"
+    source "$BACKEND_DIR/env"
     set +a
 fi
 

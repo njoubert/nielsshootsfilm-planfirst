@@ -13,10 +13,10 @@ This project consists of two parts:
 
 For local testing with a simple password:
 
-1. Copy `.env.example` to `.env` (if not already done)
-2. Set `ADMIN_PASSWORD=admin` in `.env`
+1. Copy `env.example` to `env` (if not already done)
+2. Set `ADMIN_PASSWORD=admin` in `env`
 3. The backend will automatically hash this password when it starts
-4. `.env` is in `.gitignore` and won't be deployed
+4. `env` is in `.gitignore` and won't be deployed
 
 ### Production Deployment
 
@@ -197,7 +197,7 @@ Test the production build locally before deploying:
 
 ```bash
 cd frontend/build
-python3 -m http.server 6180
+python3 -m httpserver 6180
 ```
 
 Then open `http://localhost:6180` in your browser.

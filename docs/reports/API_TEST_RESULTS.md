@@ -11,7 +11,7 @@
 
    - Validates environment configuration
    - Starts server with proper process management (PID tracking)
-   - Logs to `backend/.server.log`
+   - Logs to `backend/server.log`
    - Verifies successful startup
 
 2. **`scripts/stop-backend.sh`** - Stop the backend server gracefully
@@ -58,7 +58,7 @@
 
 ### Prerequisites
 
-1. Backend server must have valid `.env` file with:
+1. Backend server must have valid `env` file with:
 
    ```bash
    ADMIN_USERNAME=admin
@@ -111,7 +111,7 @@
 
 **Problem**: The bcrypt hash `$2a$10$...` was being interpreted as shell variables, truncating to just "a".
 
-**Solution**: Added single quotes around the hash in `.env`:
+**Solution**: Added single quotes around the hash in `env`:
 
 ```bash
 ADMIN_PASSWORD_HASH='$2a$10$VPqUwu5tQ8xAsqdRFgzibeVQVewjXsBkKuhJClOVqpeGflWYwLZKm'

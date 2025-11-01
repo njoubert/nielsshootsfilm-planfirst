@@ -70,7 +70,7 @@ func main() {
 
 	if adminPasswordHash == "" {
 		logger.Error("admin password hash not configured",
-			slog.String("hint", "run ./bootstrap.sh to set admin password or set ADMIN_PASSWORD in .env"),
+			slog.String("hint", "run ./bootstrap.sh to set admin password or set ADMIN_PASSWORD in env"),
 		)
 		os.Exit(1)
 	}

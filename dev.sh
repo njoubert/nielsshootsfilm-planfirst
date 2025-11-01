@@ -209,7 +209,7 @@ start_backend() {
     echo "Admin:   http://localhost:5173/admin/login"
     echo ""
     echo "Press Ctrl+C to stop the server"
-    echo "View logs: tail -f backend/.server.log"
+    echo "View logs: tail -f backend/server.log"
     echo "=================================================="
 
     # Keep script running and wait for Ctrl+C
@@ -242,7 +242,7 @@ start_frontend() {
     echo "Admin:    http://localhost:5173/admin/login"
     echo ""
     echo "Press Ctrl+C to stop the server"
-    echo "View logs: tail -f frontend/.server.log"
+    echo "View logs: tail -f frontend/server.log"
     echo "=================================================="
 
     # Keep script running and wait for Ctrl+C
@@ -283,8 +283,8 @@ start_servers() {
     echo ""
     echo "Press Ctrl+C to stop both servers"
     echo "View logs:"
-    echo "  Frontend: tail -f frontend/.server.log"
-    echo "  Backend:  tail -f backend/.server.log"
+    echo "  Frontend: tail -f frontend/server.log"
+    echo "  Backend:  tail -f backend/server.log"
     echo "=================================================="
 
     # Keep script running and wait for Ctrl+C

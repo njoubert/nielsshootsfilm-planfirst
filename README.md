@@ -113,7 +113,7 @@ direnv allow
 **Benefits:**
 
 - Scripts available from anywhere: `dev.sh`, `build.sh`, `format.sh`, etc.
-- Automatic `.env` file loading
+- Automatic `env` file loading
 - Project-specific environment variables
 
 Without direnv, you'll need to run scripts with their full path (e.g., `./dev.sh` or `./scripts/test-api.sh`).

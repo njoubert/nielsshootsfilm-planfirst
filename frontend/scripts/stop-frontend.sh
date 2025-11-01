@@ -5,7 +5,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FRONTEND_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-PID_FILE="$FRONTEND_DIR/.server.pid"
+PID_FILE="$FRONTEND_DIR/server.pid"
 PORT=5173
 
 echo "Stopping frontend server..."

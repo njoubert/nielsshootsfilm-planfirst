@@ -98,9 +98,9 @@ scp ~/Desktop/nielsshootsfilm-admin-latest.tar user@server:/tmp/
 # Load the image
 docker load -i /tmp/nielsshootsfilm-admin-latest.tar
 
-# Create .env file
+# Create env file
 sudo mkdir -p /var/www/admin-backend
-sudo nano /var/www/admin-backend/.env
+sudo nano /var/www/admin-backend/env
 # Add: ADMIN_PASSWORD_HASH=...
 ```
 

@@ -408,14 +408,14 @@ setup_direnv() {
     print_header "Setting up direnv"
 
     if ! command_exists direnv; then
-        print_warning "direnv not installed - skipping .envrc setup"
+        print_warning "direnv not installed - skipping envrc setup"
         print_info "direnv was not installed (it's optional)"
         print_info "To use it later, install with: brew install direnv"
         return
     fi
 
-    if [ -f ".envrc" ]; then
-        print_info "Allowing .envrc for automatic environment loading..."
+    if [ -f "envrc" ]; then
+        print_info "Allowing envrc for automatic environment loading..."
         if direnv allow; then
             print_success "direnv configured - environment will load automatically"
             print_info "Note: You need to add the direnv hook to your shell if you haven't already:"
@@ -423,10 +423,10 @@ setup_direnv() {
             print_info "  For bash: echo 'eval \"\$(direnv hook bash)\"' >> ~/.bashrc"
             print_info "  Then restart your shell or run: source ~/.zshrc"
         else
-            print_warning "Failed to allow .envrc - you can run 'direnv allow' manually"
+            print_warning "Failed to allow envrc - you can run 'direnv allow' manually"
         fi
     else
-        print_warning ".envrc file not found - skipping"
+        print_warning "envrc file not found - skipping"
     fi
 }
 

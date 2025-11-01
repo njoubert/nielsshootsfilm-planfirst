@@ -33,7 +33,7 @@ Key features:
 Add to app-shell.ts connectedCallback:
 
 ```typescript
-if (import.meta.env.DEV) {
+if (import.meta.DEV) {
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.key === 'K') {
       e.preventDefault();

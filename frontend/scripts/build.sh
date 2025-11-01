@@ -16,16 +16,16 @@ rm -rf "$FINAL_BUILD_DIR"
 
 echo "📦 Copying frontend source to isolated build directory..."
 mkdir -p "$TEMP_BUILD_DIR"
-# Copy all source files excluding node_modules, dist, build artifacts, and .env symlink
-rsync -a --exclude='node_modules' --exclude='dist' --exclude='build' --exclude='*.log' --exclude='.env' \
+# Copy all source files excluding node_modules, dist, build artifacts, and env symlink
+rsync -a --exclude='node_modules' --exclude='dist' --exclude='build' --exclude='*.log' --exclude='env' \
   "$FRONTEND_DIR/" "$TEMP_BUILD_DIR/"
 
-echo "� Copying .env file from project root (if exists)..."
-if [ -f "$PROJECT_ROOT/.env" ]; then
-  cp "$PROJECT_ROOT/.env" "$TEMP_BUILD_DIR/.env"
-  echo "  ✓ Copied .env file"
+echo "� Copying env file from project root (if exists)..."
+if [ -f "$PROJECT_ROOT/env" ]; then
+  cp "$PROJECT_ROOT/env" "$TEMP_BUILD_DIR/env"
+  echo "  ✓ Copied env file"
 else
-  echo "  ℹ️  No .env file found (using defaults)"
+  echo "  ℹ️  No env file found (using defaults)"
 fi
 
 echo "�📥 Installing dependencies in build directory..."
@@ -49,11 +49,11 @@ echo "🖼️  Copying uploads directory..."
 mkdir -p "$FINAL_BUILD_DIR/uploads"
 cp -r "$PROJECT_ROOT/static/uploads/"* "$FINAL_BUILD_DIR/uploads/" 2>/dev/null || true
 
-# Load deployment configuration from .env if available
-if [ -f "$PROJECT_ROOT/.env" ]; then
-  # Source only the DEPLOY_* variables from .env
+# Load deployment configuration from env if available
+if [ -f "$PROJECT_ROOT/env" ]; then
+  # Source only the DEPLOY_* variables from env
   # shellcheck disable=SC2046
-  export $(grep -E "^DEPLOY_(USER|HOST|PATH)=" "$PROJECT_ROOT/.env" | xargs)
+  export $(grep -E "^DEPLOY_(USER|HOST|PATH)=" "$PROJECT_ROOT/env" | xargs)
 fi
 DEPLOY_USER="${DEPLOY_USER:-njoubert}"
 DEPLOY_HOST="${DEPLOY_HOST:-njoubert.com}"

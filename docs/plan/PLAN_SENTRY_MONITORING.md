@@ -41,9 +41,9 @@ Sentry provides:
    ```
 
 3. **Store DSN securely**
-   - Add to `.env` file: `VITE_SENTRY_DSN=your-dsn-here`
-   - Add to `.env.example` with placeholder
-   - Update `.gitignore` to ensure `.env` is ignored
+   - Add to `env` file: `VITE_SENTRY_DSN=your-dsn-here`
+   - Add to `env.example` with placeholder
+   - Update `.gitignore` to ensure `env` is ignored
 
 ### Phase 2: Integration (1 hour)
 
@@ -64,7 +64,7 @@ Sentry provides:
 
      Sentry.init({
        dsn,
-       environment: import.meta.env.MODE, // 'development' or 'production'
+       environment: import.meta.MODE, // 'development' or 'production'
 
        // Performance Monitoring
        tracesSampleRate: 1.0, // 100% of transactions (adjust for production)
@@ -89,7 +89,7 @@ Sentry provides:
        // Custom error filtering
        beforeSend(event, hint) {
          // Don't send errors in development
-         if (import.meta.env.DEV) {
+         if (import.meta.DEV) {
            console.log('Sentry event (dev mode):', event);
            return null;
          }
@@ -178,7 +178,7 @@ To see original TypeScript code in Sentry stack traces:
        sentryVitePlugin({
          org: 'your-org',
          project: 'nielsshootsfilm',
-         authToken: process.env.SENTRY_AUTH_TOKEN,
+         authToken: processenv.SENTRY_AUTH_TOKEN,
        }),
      ],
    });
@@ -258,7 +258,7 @@ Add custom instrumentation for the zoom crash issue:
 ### Environment Variables
 
 ```bash
-# .env (not committed)
+# env (not committed)
 VITE_SENTRY_DSN=https://xxxx@xxxx.ingest.sentry.io/xxxx
 
 # For source map uploads (CI/CD only)

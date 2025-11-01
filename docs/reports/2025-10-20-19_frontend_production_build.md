@@ -92,7 +92,7 @@ Then copy the entire `frontend/build/` directory to your web server root.
 
 ### Tested With
 
-- Local Python HTTP server (`python3 -m http.server`)
+- Local Python HTTP server (`python3 -m httpserver`)
 - Site loads correctly at `http://localhost:8888`
 - All asset paths resolve correctly
 - Data files load successfully

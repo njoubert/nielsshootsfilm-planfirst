@@ -16,16 +16,16 @@ rm -rf "$FINAL_BUILD_DIR"
 
 echo "📦 Copying backend source to isolated build directory..."
 mkdir -p "$TEMP_BUILD_DIR"
-# Copy all source files excluding build artifacts and .env symlink
-rsync -a --exclude='bin' --exclude='*.log' --exclude='coverage.*' --exclude='.env' \
+# Copy all source files excluding build artifacts and env symlink
+rsync -a --exclude='bin' --exclude='*.log' --exclude='coverage.*' --exclude='env' \
   "$BACKEND_DIR/" "$TEMP_BUILD_DIR/"
 
-echo "📋 Copying .env file from project root (if exists)..."
-if [ -f "$PROJECT_ROOT/.env" ]; then
-  cp "$PROJECT_ROOT/.env" "$TEMP_BUILD_DIR/.env"
-  echo "  ✓ Copied .env file"
+echo "📋 Copying env file from project root (if exists)..."
+if [ -f "$PROJECT_ROOT/env" ]; then
+  cp "$PROJECT_ROOT/env" "$TEMP_BUILD_DIR/env"
+  echo "  ✓ Copied env file"
 else
-  echo "  ℹ️  No .env file found (will use system environment variables)"
+  echo "  ℹ️  No env file found (will use system environment variables)"
 fi
 
 echo "�📥 Initializing Go modules in build directory..."
@@ -43,8 +43,8 @@ mkdir -p "$FINAL_BUILD_DIR"
 echo "📄 Moving binary to final location..."
 mv admin "$FINAL_BUILD_DIR/admin"
 
-echo "📄 Moving .env to final location..."
-cp .env "$FINAL_BUILD_DIR/.env"
+echo "📄 Moving env to final location..."
+cp env "$FINAL_BUILD_DIR/env"
 
 echo ""
 echo "✅ Build complete!"

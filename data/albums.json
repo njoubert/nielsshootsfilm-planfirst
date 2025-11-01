@@ -176,10 +176,10 @@
       "cover_photo_id": "518eb5d5-6f51-4d42-abb9-65a5cf105f19",
       "visibility": "public",
       "password_hash": "$2a$10$sojT1JM4.w.XhYCspXNvuOhOI0Fos5Z9wBOLqpBGtVGupyZwOQ5HW",
-      "allow_downloads": false,
+      "allow_downloads": true,
       "order": 0,
       "created_at": "2025-10-21T08:22:34.010723Z",
-      "updated_at": "2025-10-23T07:21:47.034854Z",
+      "updated_at": "2025-11-01T17:43:51.843288Z",
       "photos": [
         {
           "id": "518eb5d5-6f51-4d42-abb9-65a5cf105f19",

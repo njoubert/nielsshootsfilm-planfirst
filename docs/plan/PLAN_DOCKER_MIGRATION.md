@@ -44,7 +44,7 @@ nginx (native)
 2. **Create api/ directory on server**
 
    - `~/webserver/sites/nielsshootsfilm.com/api/`
-   - Contains: `Dockerfile`, `docker-compose.yml`, `.env`
+   - Contains: `Dockerfile`, `docker-compose.yml`, `env`
    - Volume mounts point to `../public/data` and `../public/uploads`
 
 3. **Update deployment scripts**

@@ -5,8 +5,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FRONTEND_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-PID_FILE="$FRONTEND_DIR/.server.pid"
-LOG_FILE="$FRONTEND_DIR/.server.log"
+PID_FILE="$FRONTEND_DIR/server.pid"
+LOG_FILE="$FRONTEND_DIR/server.log"
 
 # Check if server is already running
 if [ -f "$PID_FILE" ]; then
