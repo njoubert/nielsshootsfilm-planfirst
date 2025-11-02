@@ -136,7 +136,7 @@ export class UploadPlaceholder extends LitElement {
         `;
       case 'processing':
         return html`
-          <loading-spinner class="small"></loading-spinner>
+          <loading-spinner size="large"></loading-spinner>
           <div class="status-text">Processing...</div>
         `;
       case 'complete':
