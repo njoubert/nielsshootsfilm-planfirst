@@ -1,5 +1,6 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import './loading-spinner';
 
 /**
  * Upload placeholder component that shows upload progress.
@@ -111,22 +112,6 @@ export class UploadPlaceholder extends LitElement {
       color: var(--color-danger);
     }
 
-    /* Processing icon (spinning) */
-    .processing-icon {
-      font-size: 2rem;
-      color: var(--color-primary);
-      animation: spin 2s linear infinite;
-    }
-
-    @keyframes spin {
-      from {
-        transform: rotate(0deg);
-      }
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
     /* Complete checkmark */
     .complete-icon {
       font-size: 2rem;
@@ -151,7 +136,7 @@ export class UploadPlaceholder extends LitElement {
         `;
       case 'processing':
         return html`
-          <div class="processing-icon">⟳</div>
+          <loading-spinner class="small"></loading-spinner>
           <div class="status-text">Processing...</div>
         `;
       case 'complete':

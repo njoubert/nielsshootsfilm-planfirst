@@ -11,6 +11,36 @@ export class AlbumCoverHero extends LitElement {
   @property({ type: String }) title = '';
   @property({ type: String }) subtitle = '';
 
+  private handleScrollDown() {
+    // Scroll by exactly the hero height (100vh) with custom easing
+    const heroHeight = window.innerHeight;
+    const startPosition = window.scrollY;
+    const targetPosition = heroHeight;
+    const distance = targetPosition - startPosition;
+    const duration = 800; // 800ms for smooth scroll
+    let startTime: number | null = null;
+
+    // Ease-in-out cubic easing function
+    const easeInOutCubic = (t: number): number => {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    };
+
+    const animation = (currentTime: number) => {
+      if (startTime === null) startTime = currentTime;
+      const timeElapsed = currentTime - startTime;
+      const progress = Math.min(timeElapsed / duration, 1);
+      const ease = easeInOutCubic(progress);
+
+      window.scrollTo(0, startPosition + distance * ease);
+
+      if (progress < 1) {
+        requestAnimationFrame(animation);
+      }
+    };
+
+    requestAnimationFrame(animation);
+  }
+
   static styles = css`
     :host {
       display: block;
@@ -40,7 +70,7 @@ export class AlbumCoverHero extends LitElement {
     .overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5));
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.2));
       z-index: 1;
     }
 
@@ -94,10 +124,29 @@ export class AlbumCoverHero extends LitElement {
       color: white;
       font-size: 2rem;
       cursor: pointer;
+      animation: bounce 2s infinite;
+      transition: opacity 0.2s;
     }
 
     .scroll-indicator:hover {
       opacity: 0.7;
+      animation-play-state: paused;
+    }
+
+    @keyframes bounce {
+      0%,
+      20%,
+      50%,
+      80%,
+      100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-5px);
+      }
     }
 
     @media (max-width: 768px) {
@@ -126,7 +175,7 @@ export class AlbumCoverHero extends LitElement {
           <h1 class="title">${this.title}</h1>
           ${this.subtitle ? html`<p class="subtitle">${this.subtitle}</p>` : ''}
         </div>
-        <div class="scroll-indicator">↓</div>
+        <div class="scroll-indicator" @click=${() => this.handleScrollDown()}>↓</div>
       </div>
     `;
   }

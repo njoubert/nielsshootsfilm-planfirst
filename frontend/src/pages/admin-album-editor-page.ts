@@ -22,6 +22,7 @@ import {
   type UploadProgress,
 } from '../utils/admin-api';
 import { onLogout } from '../utils/auth-state';
+import { CONCURRENT_UPLOAD_COUNT, MAX_UPLOAD_BATCH_SIZE } from '../utils/constants';
 import { navigateTo, navigateToAlbum, routes } from '../utils/navigation';
 
 @customElement('admin-album-editor-page')
@@ -858,9 +859,9 @@ export class AdminAlbumEditorPage extends LitElement {
       return;
     }
 
-    // Limit to 100 files per batch
-    if (files.length > 100) {
-      this.error = `Too many files selected. Maximum 100 files per batch. You selected ${files.length} files.`;
+    // Limit to MAX_UPLOAD_BATCH_SIZE files per batch
+    if (files.length > MAX_UPLOAD_BATCH_SIZE) {
+      this.error = `Too many files selected. Maximum ${MAX_UPLOAD_BATCH_SIZE} files per batch. You selected ${files.length} files.`;
       return;
     }
 
@@ -878,7 +879,7 @@ export class AdminAlbumEditorPage extends LitElement {
         (progress: UploadProgress) => {
           this.updateFileProgress(progress);
         },
-        3 // Upload 3 files concurrently
+        CONCURRENT_UPLOAD_COUNT
       );
 
       // Append newly uploaded photos to the album (no need to reload!)

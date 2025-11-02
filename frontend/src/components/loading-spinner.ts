@@ -18,6 +18,16 @@ export class LoadingSpinner extends LitElement {
       border: 4px solid var(--color-surface, #f3f3f3);
       border-top: 4px solid var(--color-text-primary, #333);
       border-radius: 50%;
+      animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     .spinner.small {
