@@ -413,6 +413,25 @@ export async function deletePhoto(albumId: string, photoId: string): Promise<voi
 }
 
 /**
+ * Delete all photos from an album.
+ */
+export async function deleteAllPhotos(
+  albumId: string
+): Promise<{ deleted: number; total: number; errors?: string[] }> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/albums/${albumId}/photos`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error || 'Failed to delete all photos');
+  }
+
+  return (await response.json()) as { deleted: number; total: number; errors?: string[] };
+}
+
+/**
  * Set album cover photo.
  */
 export async function setCoverPhoto(albumId: string, photoId: string): Promise<void> {

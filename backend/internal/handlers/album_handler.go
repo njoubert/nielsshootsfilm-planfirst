@@ -239,6 +239,52 @@ func (h *AlbumHandler) DeletePhoto(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// DeleteAllPhotos deletes all photos from an album.
+func (h *AlbumHandler) DeleteAllPhotos(w http.ResponseWriter, r *http.Request) {
+	albumID := chi.URLParam(r, "id")
+
+	// Get album
+	album, err := h.albumService.GetByID(albumID)
+	if err != nil {
+		http.Error(w, "Album not found", http.StatusNotFound)
+		return
+	}
+
+	// Delete all photo files
+	var deletionErrors []string
+	for i := range album.Photos {
+		if err := h.imageService.DeletePhoto(&album.Photos[i]); err != nil {
+			h.logger.Warn("failed to delete photo files",
+				slog.String("photo_id", album.Photos[i].ID),
+				slog.String("error", err.Error()),
+			)
+			deletionErrors = append(deletionErrors, album.Photos[i].ID)
+		}
+	}
+
+	// Delete all photos from album
+	if err := h.albumService.DeleteAllPhotos(albumID); err != nil {
+		h.logger.Error("failed to delete all photos from album", slog.String("error", err.Error()))
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Return result
+	response := map[string]interface{}{
+		"deleted": len(album.Photos) - len(deletionErrors),
+		"total":   len(album.Photos),
+	}
+	if len(deletionErrors) > 0 {
+		response["errors"] = deletionErrors
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
+}
+
 // SetPassword sets a password for an album.
 func (h *AlbumHandler) SetPassword(w http.ResponseWriter, r *http.Request) {
 	albumID := chi.URLParam(r, "id")

@@ -260,6 +260,19 @@ func (s *AlbumService) DeletePhoto(albumID, photoID string) error {
 	return s.Update(albumID, album)
 }
 
+// DeleteAllPhotos deletes all photos from an album.
+func (s *AlbumService) DeleteAllPhotos(albumID string) error {
+	album, err := s.GetByID(albumID)
+	if err != nil {
+		return err
+	}
+
+	// Clear all photos
+	album.Photos = []models.Photo{}
+
+	return s.Update(albumID, album)
+}
+
 // SetCoverPhoto sets the cover photo for an album.
 func (s *AlbumService) SetCoverPhoto(albumID, photoID string) error {
 	album, err := s.GetByID(albumID)

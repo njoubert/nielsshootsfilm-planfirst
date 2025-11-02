@@ -11,6 +11,7 @@ import type { Album, Photo, SiteConfig } from '../types/data-models';
 import {
   createAlbum,
   deleteAlbum,
+  deleteAllPhotos,
   deletePhoto,
   fetchAdminSiteConfig,
   fetchAlbumById,
@@ -955,32 +956,18 @@ export class AdminAlbumEditorPage extends LitElement {
     this.success = '';
 
     try {
-      // Delete photos sequentially to avoid race conditions with JSON file writes
-      // Each deletion is a read-modify-write cycle on albums.json
-      let successCount = 0;
-      let failCount = 0;
-
-      for (const photo of this.album.photos) {
-        try {
-          await deletePhoto(this.albumId, photo.id);
-          successCount++;
-        } catch (err) {
-          console.error(`Failed to delete photo ${photo.id}:`, err);
-          failCount++;
-        }
-      }
+      // Call bulk delete endpoint
+      const result = await deleteAllPhotos(this.albumId);
 
       // Reload album to get fresh state from server
       await this.loadAlbum();
       await this.loadStorageStats();
 
       // Report results
-      if (failCount === 0) {
-        this.success = `Successfully deleted all ${successCount} photo(s)`;
-      } else if (successCount > 0) {
-        this.error = `Deleted ${successCount} photo(s), but ${failCount} failed`;
+      if (result.errors && result.errors.length > 0) {
+        this.error = `Deleted ${result.deleted} of ${result.total} photo(s). ${result.errors.length} failed.`;
       } else {
-        this.error = `Failed to delete all ${photoCount} photo(s)`;
+        this.success = `Successfully deleted all ${result.deleted} photo(s)`;
       }
     } catch (err) {
       this.error = err instanceof Error ? err.message : 'Failed to delete photos';

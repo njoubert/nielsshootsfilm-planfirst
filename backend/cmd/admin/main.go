@@ -181,6 +181,7 @@ func main() {
 			r.Put("/albums/{id}", albumHandler.Update)
 			r.Delete("/albums/{id}", albumHandler.Delete)
 			r.Post("/albums/{id}/photos/upload", albumHandler.UploadPhotos)
+			r.Delete("/albums/{id}/photos", albumHandler.DeleteAllPhotos)
 			r.Delete("/albums/{id}/photos/{photoId}", albumHandler.DeletePhoto)
 			r.Post("/albums/{id}/set-cover", albumHandler.SetCoverPhoto)
 			r.Post("/albums/{id}/reorder-photos", albumHandler.ReorderPhotos)
